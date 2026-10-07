@@ -1,0 +1,172 @@
+/* AdPilot v10 - Mission Control Theme & Global Stylesheet (Invente '26 Neo-Brutalist) */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+/* ==========================================================================
+   CSS Variables & Design Tokens (Invente '26 Neo-Brutalist)
+   ========================================================================== */
+
+:root,
+[data-theme="invente"],
+[data-theme="dark"],
+[data-theme="light"] {
+  --bg-base: #f3f3ed;
+  --bg-grid: #e1e1d8;
+  --bg-card: #ffffff;
+  --border-color: #000000;
+  --border-width: 3px;
+  --shadow-hard: 5px 5px 0px #000000;
+  --shadow-hard-sm: 3px 3px 0px #000000;
+  --accent-lime: #82e66f;
+  --accent-pink: #f364cb;
+  --accent-cyan: #78dbf6;
+  --accent-yellow: #ffd23f;
+  --text-primary: #000000;
+  --text-secondary: #4a4a46;
+  --text-muted: #8a8a82;
+  --font-main: 'Space Grotesk', system-ui, sans-serif;
+  --font-sans: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'Space Grotesk', monospace;
+  --radius-xl: 0px;
+
+  /* Aliases for legacy component compatibility */
+  --bg-primary: #f3f3ed;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e1e1d8;
+  --card-glass: #ffffff;
+  --card-glass-elevated: #ffffff;
+  --card-border: #000000;
+  --card-border-hover: #000000;
+
+  --accent-neon-green: #82e66f;
+  --accent-amber: #ffd23f;
+  --accent-red: #f364cb;
+  --accent-cyan: #78dbf6;
+  --accent-purple: #f364cb;
+}
+
+/* ==========================================================================
+   Base Resets & Grid Paper Background
+   ========================================================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  background-color: var(--bg-base);
+  background-image:
+    linear-gradient(var(--bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  font-family: var(--font-main);
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* Accessibility focus-visible */
+:focus-visible {
+  outline: 3px solid #000000;
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Invente '26 Neo-Brutalist Utility Classes
+   ========================================================================== */
+
+.brutal-card {
+  background: var(--bg-card);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-hard);
+  border-radius: 0;
+}
+
+.brutal-card-hover:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0px #000000;
+  transition: all 120ms ease;
+}
+
+.brutal-btn {
+  border: 3px solid #000;
+  box-shadow: 3px 3px 0px #000;
+  border-radius: 0;
+  font-weight: 700;
+  transition: all 100ms ease;
+}
+
+.brutal-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px #000;
+}
+
+/* Monospace font utility */
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* Skeleton pulse */
+@keyframes opacity-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.skeleton-shimmer {
+  background: #e1e1d8;
+  border: 3px solid #000000;
+  animation: opacity-pulse 1.4s ease-in-out infinite;
+}
+
+/* Status Badge Pulse Animation */
+@keyframes status-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Kill Switch Active Keyframe */
+@keyframes killswitch-pulse {
+  0%, 100% {
+    background-color: #f364cb;
+    color: #ffffff;
+  }
+  50% {
+    background-color: #ffffff;
+    color: #000000;
+  }
+}
+
+/* Verified Numbers and Evidence Glow */
+.verified-number {
+  background: transparent;
+  text-decoration: underline 3px solid #82e66f;
+  text-underline-offset: 4px;
+  font-family: var(--font-mono, 'Space Grotesk', monospace);
+  font-weight: 700;
+  color: #000000;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-block;
+}
+.verified-number.highlighted {
+  background: #82e66f;
+  color: #000000;
+  padding: 0 4px;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  text-decoration: none;
+}
+
