@@ -1,0 +1,121 @@
+import pytest
+from unittest.mock import patch, MagicMock
+from backend.contracts import Incident, EvidenceItem
+from backend.contracts.enums import Cause
+from backend.investigator.playbook import diagnose_from_playbook
+from backend.investigator.tools import (
+    compare_periods, funnel_breakdown, creative_breakdown,
+    inventory_status, price_and_discount_changes, platform_split,
+    tracking_health_check, recall_similar_incidents
+)
+
+@patch("backend.investigator.tools.get_db")
+def test_tools_return_evidence_items(mock_get_db):
+    mock_conn = MagicMock()
+    mock_get_db.return_value = mock_conn
+    mock_conn.execute.return_value.fetchone.return_value = [1, 2, 3, 4, 5]
+    mock_conn.execute.return_value.fetchall.return_value = [[1, 2, 3, 4, 5, 6, 7]]
+    
+    # Specific adjustments for unpacking sizes
+    def side_effect(query, *args, **kwargs):
+        m = MagicMock()
+        if "compare_periods" in query or "ad_performance" in query:
+            m.fetchone.return_value = [1.0, 2.0, 3.0, 4.0, 5.0]
+        if "ga_funnel" in query:
+            m.fetchone.return_value = [100, 20, 10, 5]
+        if "creatives" in query:
+            m.fetchall.return_value = [["c1", "video", 10, "hook1", 0.05, 10.0, 2.5]]
+        if "inventory" in query:
+            m.fetchone.return_value = [100, 10.5]
+        if "sales" in query:
+            m.fetchone.return_value = [100.0, 10.0, 90.0, 50.0, 40.0]
+        if "platform_split" in query or "GROUP BY platform" in query:
+            m.fetchall.return_value = [["meta", 1000.0, 2000.0]]
+        if "tracking health" in query or ("pixel_purchases" in query):
+            m.fetchone.return_value = [100, 80]
+        if "memory" in query:
+            m.fetchall.return_value = [["inc_old", "old summary", True]]
+        return m
+    
+    mock_conn.execute.side_effect = side_effect
+
+    res = compare_periods("inc1")
+    assert all(isinstance(r, EvidenceItem) for r in res)
+    
+    res = funnel_breakdown("meta", "2026-10-01")
+    assert all(isinstance(r, EvidenceItem) for r in res)
+    
+    res = creative_breakdown("camp1")
+    assert all(isinstance(r, EvidenceItem) for r in res)
+    
+    res = inventory_status("SKU1")
+    assert all(isinstance(r, EvidenceItem) for r in res)
+    
+    res = price_and_discount_changes("SKU1")
+    assert all(isinstance(r, EvidenceItem) for r in res)
+    
+    res = platform_split("2026-10-01")
+    assert all(isinstance(r, EvidenceItem) for r in res)
+    
+    res = tracking_health_check("meta", "2026-10-01")
+    assert all(isinstance(r, EvidenceItem) for r in res)
+    
+    res = recall_similar_incidents("fatigue")
+    assert all(isinstance(r, EvidenceItem) for r in res)
+
+
+@patch("backend.investigator.playbook.creative_breakdown")
+def test_creative_fatigue(mock_tool):
+    # Setup mock to trigger the condition
+    mock_tool.return_value = [EvidenceItem(id="1", tool="t", description="d", values={"avg_frequency": 6.0}, provenance="measured")]
+    inc = Incident(id="inc1", metric="ctr", campaign_id="camp1")
+    
+    evidence, diagnosis = diagnose_from_playbook(inc)
+    
+    assert diagnosis.cause == Cause.CREATIVE_FATIGUE
+    assert diagnosis.source == "playbook"
+    assert "1" in diagnosis.evidence_ids
+
+@patch("backend.investigator.playbook.inventory_status")
+def test_stockout(mock_tool):
+    mock_tool.return_value = [EvidenceItem(id="2", tool="t", description="d", values={"days_of_cover": 1.0, "stock_units": 0}, provenance="measured")]
+    inc = Incident(id="inc2", metric="sales", scope_sku="SKU1")
+    
+    evidence, diagnosis = diagnose_from_playbook(inc)
+    
+    assert diagnosis.cause == Cause.STOCKOUT
+    assert diagnosis.source == "playbook"
+    assert "2" in diagnosis.evidence_ids
+
+@patch("backend.investigator.playbook.inventory_status")
+@patch("backend.investigator.playbook.price_and_discount_changes")
+def test_margin_squeeze(mock_price, mock_inv):
+    # Pass stockout check by making it not trigger
+    mock_inv.return_value = [EvidenceItem(id="3", tool="t", description="d", values={"days_of_cover": 10.0, "stock_units": 100}, provenance="measured")]
+    mock_price.return_value = [EvidenceItem(id="4", tool="t", description="d", values={"margin": 15.0}, provenance="measured")]
+    
+    inc = Incident(id="inc3", metric="profit", scope_sku="SKU2")
+    
+    evidence, diagnosis = diagnose_from_playbook(inc)
+    
+    assert diagnosis.cause == Cause.MARGIN_SQUEEZE
+    assert diagnosis.source == "playbook"
+    assert "4" in diagnosis.evidence_ids
+
+@patch("backend.investigator.playbook.tracking_health_check")
+def test_tracking_break(mock_tool):
+    mock_tool.return_value = [EvidenceItem(id="5", tool="t", description="d", values={}, provenance="measured")]
+    inc = Incident(id="inc4", metric="purchases", platform="meta")
+    
+    evidence, diagnosis = diagnose_from_playbook(inc)
+    
+    assert diagnosis.cause == Cause.TRACKING_BREAK
+    assert diagnosis.source == "playbook"
+    assert "5" in diagnosis.evidence_ids
+
+def test_default_unknown():
+    inc = Incident(id="inc5", metric="unknown")
+    evidence, diagnosis = diagnose_from_playbook(inc)
+    
+    assert diagnosis.cause == Cause.UNKNOWN
+    assert diagnosis.source == "playbook"
