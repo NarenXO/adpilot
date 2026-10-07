@@ -113,9 +113,13 @@ const STATUS_CONFIG: Record<Incident['status'], { statusType: 'safe' | 'warning'
   resolved:      { statusType: 'safe',    label: 'Resolved' },
 };
 
+interface MissionControlProps {
+  onNavigateToDiagnosis?: () => void;
+}
+
 // ─── MissionControl page ──────────────────────────────────────────────────────
 
-export const MissionControl: React.FC = () => {
+export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiagnosis }) => {
   // TODO: wire to global Zustand store in Phase 3 (Naren's store/)
   const [activeIncidents, setActiveIncidents] = useState<Incident[]>(MOCK_INCIDENTS);
   const [liveEvents, setLiveEvents] = useState<SSEEvent[]>(MOCK_SSE_EVENTS);
@@ -828,12 +832,18 @@ export const MissionControl: React.FC = () => {
                 variant="primary"
                 size="sm"
                 onClick={() => {
-                  setSelectedIncident(null);
-                  // TODO: wire to router / diagnosis deep-link in integration
-                  console.log('Navigate to Diagnosis for', selectedIncident.id);
-                  if (typeof window !== 'undefined' && window.location) {
-                    window.location.href = `/diagnosis?incident=${selectedIncident.id}`;
+                  if (selectedIncident) {
+                    const newEvent: SSEEvent = {
+                      ts: new Date().toISOString(),
+                      type: 'investigation',
+                      module: 'investigator',
+                      message: `Opening deep-dive diagnosis for ${selectedIncident.id} (${selectedIncident.scope})`,
+                      severity: 'info',
+                    };
+                    setLiveEvents((prev) => [newEvent, ...prev].slice(0, 8));
                   }
+                  setSelectedIncident(null);
+                  onNavigateToDiagnosis?.();
                 }}
               >
                 View Full Diagnosis →
