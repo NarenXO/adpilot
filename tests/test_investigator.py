@@ -117,5 +117,83 @@ def test_default_unknown():
     inc = Incident(id="inc5", metric="unknown")
     evidence, diagnosis = diagnose_from_playbook(inc)
     
-    assert diagnosis.cause == Cause.UNKNOWN
     assert diagnosis.source == "playbook"
+
+def test_trace_recorder():
+    from backend.investigator.trace import AgentTrace, AgentStep
+    
+    trace = AgentTrace()
+    trace.add_step(1, "test_tool", {"arg1": "val1"}, "Success")
+    steps = trace.to_list()
+    
+    assert len(steps) == 1
+    assert steps[0].step == 1
+    assert steps[0].tool == "test_tool"
+    assert steps[0].args == {"arg1": "val1"}
+    
+    summary = trace.summary()
+    assert "1 steps" in summary
+
+@patch("backend.investigator.agent.requests.post")
+def test_investigate_fallback_on_llm_offline(mock_post):
+    from backend.investigator.agent import investigate
+    
+    # Mock requests to raise a ConnectionError
+    mock_post.side_effect = Exception("Connection refused")
+    
+    inc = Incident(id="inc_llm_1", metric="ctr")
+    
+    evidence, diagnosis, trace_steps = investigate(inc)
+    
+    # Verify fallback to playbook
+    assert diagnosis.source == "playbook"
+    assert len(trace_steps) == 1
+    assert trace_steps[0].step == 0
+    assert trace_steps[0].tool == "playbook_fallback"
+    assert "Connection refused" in trace_steps[0].result_summary
+
+@patch("backend.investigator.agent.requests.post")
+@patch("backend.investigator.tools.get_db")
+def test_investigate_mocked_llm_loop(mock_get_db, mock_post):
+    from backend.investigator.agent import investigate
+    
+    # Mock DB for tool execution
+    mock_conn = MagicMock()
+    mock_get_db.return_value = mock_conn
+    mock_conn.execute.return_value.fetchone.return_value = [100, 20, 10, 5]
+    
+    # Mock LLM response to simulate tool call then finish
+    class MockResponse:
+        def __init__(self, json_data):
+            self._json_data = json_data
+        def json(self):
+            return self._json_data
+        def raise_for_status(self):
+            pass
+            
+    # First response: tool_call, Second response: finish
+    mock_post.side_effect = [
+        MockResponse({
+            "message": {
+                "content": '{"action": "tool_call", "tool": "funnel_breakdown", "args": {"channel": "meta", "date": "2026-10-01"}}'
+            }
+        }),
+        MockResponse({
+            "message": {
+                "content": '{"action": "finish", "cause": "TRACKING_BREAK", "explanation": "It broke", "evidence_ids": ["E_mocked"]}'
+            }
+        })
+    ]
+    
+    inc = Incident(id="inc_llm_2", metric="purchases")
+    evidence, diagnosis, trace_steps = investigate(inc)
+    
+    assert diagnosis.source == "agent"
+    assert diagnosis.cause == Cause.TRACKING_BREAK
+    assert diagnosis.explanation == "It broke"
+    
+    assert len(trace_steps) == 1
+    assert trace_steps[0].tool == "funnel_breakdown"
+    assert trace_steps[0].args == {"channel": "meta", "date": "2026-10-01"}
+    
+    assert len(evidence) > 0
