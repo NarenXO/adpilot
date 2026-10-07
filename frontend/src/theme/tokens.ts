@@ -1,6 +1,16 @@
 export type ThemeMode = 'invente' | 'dark' | 'light';
+export const ThemeMode = {
+  INVENTE: 'invente',
+  DARK: 'dark',
+  LIGHT: 'light',
+};
 
 export type ProvenanceType = 'measured' | 'derived' | 'scenario' | 'Measured' | 'Derived' | 'Scenario';
+export const ProvenanceType = {
+  MEASURED: 'measured',
+  DERIVED: 'derived',
+  SCENARIO: 'scenario',
+};
 
 export const provenanceColor: Record<string, string> = {
   measured: '#78dbf6',
