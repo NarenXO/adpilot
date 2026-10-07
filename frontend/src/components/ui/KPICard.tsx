@@ -21,8 +21,8 @@ const useAnimatedNumber = (target: number | string, duration = 750): string => {
   const isNumeric = typeof target === 'number' || (!isNaN(Number(target)) && target !== '');
   const numericTarget = typeof target === 'number' ? target : Number(target);
 
-  const [displayValue, setDisplayValue] = useState<number>(isNumeric ? 0 : 0);
-  const prevTargetRef = useRef<number>(0);
+  const [displayValue, setDisplayValue] = useState<number>(isNumeric ? numericTarget : 0);
+  const prevTargetRef = useRef<number>(numericTarget);
   const animationFrameRef = useRef<number | null>(null);
 
   // Check how many decimal places the target has (up to 2)
@@ -206,8 +206,7 @@ export const KPICard: React.FC<KPICardProps> = ({
                 gap: '0.2rem',
               }}
             >
-              <span>{isPositive ? '↑ +' : isNegative ? '↓ ' : ''}</span>
-              <span>{Math.abs(deltaPct).toFixed(1)}%</span>
+              <span>{`${isPositive ? '↑ +' : isNegative ? '↓ ' : ''}${Math.abs(deltaPct).toFixed(1)}%`}</span>
             </Badge>
           )}
         </div>

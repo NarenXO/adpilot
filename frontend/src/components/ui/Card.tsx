@@ -2,7 +2,7 @@ import React from 'react';
 
 export type CardVariant = 'default' | 'elevated' | 'flat';
 
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface CardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   title?: React.ReactNode;
   action?: React.ReactNode;
   variant?: CardVariant;
