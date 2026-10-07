@@ -8,9 +8,8 @@ router = APIRouter()
 @router.get("/stream")
 async def sse_stream():
     async def event_generator():
-        for ev in event_bus.get_history():
-            yield {"event": ev["type"], "data": json.dumps(ev)}
+        # Live subscription with a simulated AI "thinking" delay for presentation effect
         async for ev in event_bus.subscribe():
+            await asyncio.sleep(0.6) # Creates a visual typing/processing effect
             yield {"event": ev["type"], "data": json.dumps(ev)}
-
     return EventSourceResponse(event_generator())
