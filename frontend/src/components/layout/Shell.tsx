@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
+import { AppStateProvider } from '../../context/AppStateContext';
 
 export interface ShellProps {
   children: React.ReactNode;
@@ -64,6 +65,7 @@ export const Shell: React.FC<ShellProps> = ({
   }, []);
 
   return (
+    <AppStateProvider>
     <div
       id="adpilot-shell"
       style={{
@@ -171,6 +173,7 @@ export const Shell: React.FC<ShellProps> = ({
         {children}
       </main>
     </div>
+    </AppStateProvider>
   );
 };
 

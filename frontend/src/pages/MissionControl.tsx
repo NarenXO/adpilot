@@ -7,6 +7,7 @@ import { Badge } from '../components/ui/Badge';
 import { RiskGauge } from '../components/ui/RiskGauge';
 import { AgentFeed } from '../components/ui/AgentFeed';
 import type { SSEEvent } from '../components/ui/AgentFeed';
+import { useAppState } from '../context/AppStateContext';
 
 // ─── Contract types (mirrored locally) ───────────────────────────────────────
 
@@ -119,6 +120,10 @@ export const MissionControl: React.FC = () => {
   const [activeIncidents, setActiveIncidents] = useState<Incident[]>(MOCK_INCIDENTS);
   const [liveEvents, setLiveEvents] = useState<SSEEvent[]>(MOCK_SSE_EVENTS);
   const [sseIndex, setSseIndex] = useState<number>(0);
+
+  // Shared simulation state from context
+  const { appState, toggleAutonomy } = useAppState();
+  const isAutopilot = appState.autonomy_level === 'autopilot';
 
   // Inject modal state
   const [showInjectModal, setShowInjectModal] = useState<boolean>(false);
@@ -268,8 +273,8 @@ export const MissionControl: React.FC = () => {
             {' '}·{' '}Real-time ad operations command center
           </p>
         </div>
-        <StatusBadge status="warning" pulse>
-          Supervised Mode
+        <StatusBadge status={isAutopilot ? 'safe' : 'warning'} pulse>
+          {isAutopilot ? 'Autopilot Mode' : 'Supervised Mode'}
         </StatusBadge>
       </div>
 
@@ -306,21 +311,32 @@ export const MissionControl: React.FC = () => {
         <Card title="Autonomy Mode">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <StatusBadge status="warning" pulse>
-                Supervised
+              <StatusBadge status={isAutopilot ? 'safe' : 'warning'} pulse>
+                {isAutopilot ? 'Autopilot' : 'Supervised'}
               </StatusBadge>
               <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary, #94a3b8)' }}>
                 Active mode
               </span>
             </div>
             <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--text-secondary, #94a3b8)', lineHeight: 1.55 }}>
-              In <strong style={{ color: 'var(--accent-amber, #f59e0b)' }}>Supervised</strong> mode, all
-              recommendations require human approval before execution. Switch to{' '}
-              <strong style={{ color: 'var(--accent-neon-green, #10b981)' }}>Autopilot</strong> to let the
-              agent execute approved action classes automatically within risk budget.
+              {isAutopilot ? (
+                <>
+                  In <strong style={{ color: 'var(--accent-neon-green, #10b981)' }}>Autopilot</strong> mode, the
+                  agent executes approved action classes automatically within risk budget. Switch to{' '}
+                  <strong style={{ color: 'var(--accent-amber, #f59e0b)' }}>Supervised</strong> to require
+                  human approval before execution.
+                </>
+              ) : (
+                <>
+                  In <strong style={{ color: 'var(--accent-amber, #f59e0b)' }}>Supervised</strong> mode, all
+                  recommendations require human approval before execution. Switch to{' '}
+                  <strong style={{ color: 'var(--accent-neon-green, #10b981)' }}>Autopilot</strong> to let the
+                  agent execute approved action classes automatically within risk budget.
+                </>
+              )}
             </p>
-            <Button variant="secondary" size="sm">
-              Switch to Autopilot
+            <Button variant="secondary" size="sm" onClick={toggleAutonomy}>
+              {isAutopilot ? 'Switch to Supervised' : 'Switch to Autopilot'}
             </Button>
           </div>
         </Card>

@@ -2,34 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../../theme/ThemeProvider';
 import { StatusBadge } from '../ui/StatusBadge';
 import { Button } from '../ui/Button';
+import { useAppState } from '../../context/AppStateContext';
+import type { PlaySpeed } from '../../context/AppStateContext';
 
-// Frozen Contract Fields Mirror (AppState from backend/contracts/schemas.py)
-export interface RiskBudget {
-  used_pct: number;
-  cap_pct: number;
-}
-
-export type AutonomyLevel = 'supervised' | 'autopilot';
-export type PlaySpeed = 1 | 2 | 5;
-
-export interface AppState {
-  sim_date: string;
-  autonomy_level: AutonomyLevel;
-  risk_budget: RiskBudget;
-  is_playing: boolean;
-  play_speed: PlaySpeed;
-  killswitch_active: boolean;
-}
-
-// TODO: wire to global store in Phase 3
-const INITIAL_APP_STATE: AppState = {
-  sim_date: '2024-06-15',
-  autonomy_level: 'supervised',
-  risk_budget: { used_pct: 4.2, cap_pct: 10.0 },
-  is_playing: false,
-  play_speed: 1,
-  killswitch_active: false,
-};
+// Re-export types for backward compatibility
+export type { RiskBudget, AutonomyLevel, PlaySpeed, AppState } from '../../context/AppStateContext';
 
 // Hand-written inline SVG icons
 export const PlayIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
@@ -93,47 +70,27 @@ export const TopBar: React.FC<TopBarProps> = ({
 }) => {
   const { theme, toggleTheme } = useTheme();
 
-  // Local state mirroring AppState for Phase 2
-  // TODO: wire to global store in Phase 3
-  const [appState, setAppState] = useState<AppState>(INITIAL_APP_STATE);
+  // Shared simulation state from context
+  const {
+    appState,
+    togglePlay,
+    stepForward,
+    setSpeed,
+    toggleAutonomy,
+    activateKillSwitch,
+    deactivateKillSwitch,
+  } = useAppState();
+
+  // Kill switch modal is UI-only, stays local
   const [showKillSwitchModal, setShowKillSwitchModal] = useState<boolean>(false);
-
-  // Play / Pause toggle
-  const togglePlay = () => {
-    setAppState((prev) => ({ ...prev, is_playing: !prev.is_playing }));
-  };
-
-  // Step-forward by 1 day
-  const stepForward = () => {
-    setAppState((prev) => {
-      const parts = prev.sim_date.split('-');
-      const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-      d.setDate(d.getDate() + 1);
-      const nextDate = d.toISOString().split('T')[0];
-      return { ...prev, sim_date: nextDate };
-    });
-  };
-
-  // Change simulation speed
-  const setSpeed = (speed: PlaySpeed) => {
-    setAppState((prev) => ({ ...prev, play_speed: speed }));
-  };
-
-  // Toggle autonomy level between supervised and autopilot
-  const toggleAutonomy = () => {
-    setAppState((prev) => ({
-      ...prev,
-      autonomy_level: prev.autonomy_level === 'supervised' ? 'autopilot' : 'supervised',
-    }));
-  };
 
   // Kill Switch confirmation handler
   const handleConfirmKillSwitch = () => {
-    setAppState((prev) => ({
-      ...prev,
-      killswitch_active: !prev.killswitch_active,
-      is_playing: prev.killswitch_active ? prev.is_playing : false, // pause when killswitch activates
-    }));
+    if (appState.killswitch_active) {
+      deactivateKillSwitch();
+    } else {
+      activateKillSwitch();
+    }
     setShowKillSwitchModal(false);
   };
 
