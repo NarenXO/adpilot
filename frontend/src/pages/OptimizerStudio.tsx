@@ -391,7 +391,7 @@ export default function OptimizerStudio() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: T.bg, fontFamily: T.fontSans, color: T.textPrimary }}>
+    <div style={{ margin: '-2rem', minHeight: 'calc(100vh - 130px)', background: T.bg, fontFamily: T.fontSans, color: T.textPrimary }}>
       {/* Header */}
       <div style={{ background: T.black, borderBottom: '3px solid #000', padding: '20px 32px 18px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
