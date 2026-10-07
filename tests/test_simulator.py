@@ -475,3 +475,130 @@ def test_derived_columns_recalculated_after_injection(golden_world):
         expected = ad.loc[m_impr, "clicks"] / ad.loc[m_impr, "impressions"]
         assert np.allclose(ad.loc[m_impr, "ctr"].values, expected.values, rtol=1e-4), \
             "ctr recalculation is inconsistent after injection"
+
+
+# ===========================================================================
+# PHASE 3 TESTS — Outcome Twin Evaluation
+# ===========================================================================
+from backend.simulator.outcome_twin import OutcomeTwin
+
+@pytest.fixture(scope="module")
+def twin_and_world(golden_world):
+    base, mod_dfs, truth_df = golden_world
+    twin = OutcomeTwin(base, seed=99)
+    return twin, base
+
+# 1
+def test_outcome_twin_initializes_with_different_params(twin_and_world):
+    twin, base = twin_and_world
+    assert twin.eta_twin == 1.1, "Twin eta should be 1.1"
+    assert len(twin.k_twin) > 0, "Twin K should be populated"
+    assert len(twin.emax_twin) > 0, "Twin Emax should be populated"
+
+# 2
+def test_simulate_action_positive_reallocation(twin_and_world):
+    twin, base = twin_and_world
+    ad = base["ad_performance"]
+    
+    camps = ad["campaign_id"].unique()
+    camp_a = camps[0]
+    camp_b = camps[1]
+    
+    budget_changes = {
+        camp_a: 500.0,
+        camp_b: 800.0
+    }
+    
+    outcome = twin.simulate_action_outcome("act_001", budget_changes, rollout_pct=1.0)
+    
+    assert outcome["action_id"] == "act_001"
+    assert "observed_profit_delta" in outcome
+    assert "success" in outcome
+    assert isinstance(outcome["success"], bool)
+
+# 3
+def test_simulate_action_pause_campaign(twin_and_world):
+    twin, base = twin_and_world
+    camps = base["ad_performance"]["campaign_id"].unique()
+    camp_id = camps[0]
+    
+    outcome = twin.simulate_action_outcome("act_002", {camp_id: 0.0})
+    assert outcome["action_id"] == "act_002"
+
+# 4
+def test_simulate_action_empty_changes(twin_and_world):
+    twin, base = twin_and_world
+    outcome = twin.simulate_action_outcome("act_003", {})
+    assert not outcome["success"]
+    assert abs(outcome["observed_profit_delta"]) < 0.5  # Only noise
+
+# 5
+def test_simulate_action_zero_rollout(twin_and_world):
+    twin, base = twin_and_world
+    camps = base["ad_performance"]["campaign_id"].unique()
+    camp_id = camps[0]
+    outcome = twin.simulate_action_outcome("act_004", {camp_id: 1000.0}, rollout_pct=0.0)
+    assert not outcome["success"]
+    assert abs(outcome["observed_profit_delta"]) < 0.5
+
+# 6
+def test_outcome_twin_determinism(twin_and_world):
+    _, base = twin_and_world
+    twinA = OutcomeTwin(base, seed=123)
+    twinB = OutcomeTwin(base, seed=123)
+    
+    camps = base["ad_performance"]["campaign_id"].unique()
+    camp_id = camps[0]
+    
+    out1 = twinA.simulate_action_outcome("act_005", {camp_id: 500.0})
+    out2 = twinB.simulate_action_outcome("act_005", {camp_id: 500.0})
+    
+    assert out1["observed_profit_delta"] == out2["observed_profit_delta"]
+
+# 7
+def test_outcome_twin_counterfactual_bounds(twin_and_world):
+    twin, base = twin_and_world
+    camps = base["ad_performance"]["campaign_id"].unique()
+    camp_id = camps[0]
+    
+    outcome = twin.simulate_action_outcome("act_006", {camp_id: 2000.0})
+    assert outcome["counterfactual_low"] <= outcome["counterfactual_mid"]
+    assert outcome["counterfactual_mid"] <= outcome["counterfactual_high"]
+
+# 8
+def test_simulate_batch_returns_outcomes_df(twin_and_world):
+    twin, base = twin_and_world
+    camps = base["ad_performance"]["campaign_id"].unique()
+    actions = [
+        {"action_id": "a1", "budget_changes": {camps[0]: 500.0}, "rollout_pct": 1.0},
+        {"action_id": "a2", "budget_changes": {camps[1]: 0.0}, "rollout_pct": 0.5},
+        {"action_id": "a3", "budget_changes": {}, "rollout_pct": 1.0},
+    ]
+    
+    df = twin.simulate_batch(actions)
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == 3
+    expected_cols = {
+        "action_id", "observed_profit_delta", "counterfactual_low",
+        "counterfactual_mid", "counterfactual_high", "success", "created_at"
+    }
+    assert set(df.columns) == expected_cols
+
+# 9
+def test_outcome_twin_does_not_grade_own_homework(twin_and_world):
+    twin, base = twin_and_world
+    camps = base["ad_performance"]["campaign_id"].unique()
+    camp_id = camps[0]
+    spend = 1000.0
+    
+    twin_rev = twin._twin_hill_revenue(spend, camp_id)
+    
+    from backend.simulator.outcome_twin import _get_main_world_params
+    k_main, emax_main = _get_main_world_params()
+    k = k_main.get(camp_id, 1000.0)
+    emax = emax_main.get(camp_id, 5000.0)
+    eta = 1.3
+    
+    main_rev = (emax * (spend ** eta)) / ((k ** eta) + (spend ** eta))
+    
+    assert twin_rev != main_rev, "Twin revenue should differ from main world revenue"
