@@ -19,3 +19,25 @@ export const palette = {
     subtle: '#666666',
   }
 };
+
+// Backwards-compatible quadrant colors
+export const colors = {
+  bg:       '#0a0d14',
+  surface:  '#111827',
+  surface2: '#1a2235',
+  border:   '#1f2d45',
+  text:     '#e2e8f0',
+  muted:    '#64748b',
+  accent:   '#3b82f6',
+  scale:    '#00ff88',
+  protect:  '#ffb800',
+  pause:    '#ff4466',
+  fix:      '#a855f7',
+} as const;
+
+export const quadrantMeta = {
+  scale:   { color: colors.scale,   label: 'Scale',   bg: 'rgba(0,255,136,0.1)' },
+  protect: { color: colors.protect, label: 'Protect', bg: 'rgba(255,184,0,0.1)' },
+  pause:   { color: colors.pause,   label: 'Pause',   bg: 'rgba(255,68,102,0.1)' },
+  fix:     { color: colors.fix,     label: 'Fix',     bg: 'rgba(168,85,247,0.1)' },
+} as const;

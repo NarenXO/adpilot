@@ -7,6 +7,7 @@ import {
   Radio, Sparkles, Send, Layers
 } from 'lucide-react';
 import { palette } from './theme/tokens';
+import OptimizerStudio from './pages/OptimizerStudio';
 
 const cardStyle: React.CSSProperties = {
   background: palette.bg.card, border: `3px solid ${palette.bg.border}`,
@@ -324,7 +325,7 @@ export default function App() {
           <Route path="/incidents" element={<Placeholder title="INCIDENTS DATA" />} />
           <Route path="/diagnosis" element={<Diagnosis />} />
           <Route path="/inventory" element={<Placeholder title="INVENTORY MATRIX" />} />
-          <Route path="/optimizer" element={<Placeholder title="OPTIMIZER STUDIO" />} />
+          <Route path="/optimizer" element={<OptimizerStudio />} />
           <Route path="/proof" element={<Placeholder title="EVALUATION PROOF" />} />
         </Routes>
       </Shell>
