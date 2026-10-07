@@ -1,6 +1,29 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, Component, type ErrorInfo, type ReactNode } from 'react';
 import ReactECharts from 'echarts-for-react';
 import type { EChartsOption } from 'echarts';
+
+class CurveErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode; fallback?: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.warn('Response curve chart caught rendering error:', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback ?? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-[#1f2d45] bg-[#111827] p-8 text-center text-xs text-[#94a3b8]">
+          Unable to render response curve chart.
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export interface CurvePointData {
   spend: number;
@@ -291,7 +314,8 @@ export const ResponseCurve: React.FC<ResponseCurveProps> = ({
   }, [sortedPoints, currentSpend, recommendedSpend, curRev, recRev]);
 
   return (
-    <div className="relative w-full rounded-xl border border-[#1f2d45] bg-[#111827] p-4">
+    <CurveErrorBoundary>
+      <div className="relative w-full rounded-xl border border-[#1f2d45] bg-[#111827] p-4">
       {/* Header Bar */}
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -348,7 +372,8 @@ export const ResponseCurve: React.FC<ResponseCurveProps> = ({
         </div>
       </div>
     </div>
-  );
+  </CurveErrorBoundary>
+);
 };
 
 export default ResponseCurve;

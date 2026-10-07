@@ -1,7 +1,30 @@
-﻿import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, Component, type ErrorInfo, type ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ResponseCurve } from '../components/charts/ResponseCurve';
 import { SankeyChart } from '../components/charts/SankeyChart';
+
+class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode; fallback?: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.warn('OptimizerStudio caught component error:', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback ?? (
+        <div style={{ padding: 16, background: '#111827', border: '1px solid #1f2d45', borderRadius: 10, textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
+          Chart temporarily unavailable.
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 interface OpportunityScore {
   sim_date: string; campaign_id: string; sku: string;
@@ -224,21 +247,25 @@ function WhatIfPanel({ curves }: { curves: CurveData[] }) {
     Object.fromEntries(curves.map(c => [c.campaign_id, c.current_spend]))
   );
   const interpolate = useCallback((curve: CurveData, spend: number) => {
+    if (!curve || !curve.data_points || curve.data_points.length === 0) return 0;
     const pts = [...curve.data_points].sort((a, b) => a.spend - b.spend);
-    if (spend <= pts[0].spend) return pts[0].revenue_mid;
-    if (spend >= pts[pts.length - 1].spend) return pts[pts.length - 1].revenue_mid;
+    if (pts.length === 0) return 0;
+    if (spend <= pts[0].spend) return pts[0].revenue_mid ?? 0;
+    if (spend >= pts[pts.length - 1].spend) return pts[pts.length - 1].revenue_mid ?? 0;
     for (let i = 0; i < pts.length - 1; i++) {
       if (spend >= pts[i].spend && spend <= pts[i + 1].spend) {
-        const r = (spend - pts[i].spend) / (pts[i + 1].spend - pts[i].spend);
-        return pts[i].revenue_mid + r * (pts[i + 1].revenue_mid - pts[i].revenue_mid);
+        const denom = pts[i + 1].spend - pts[i].spend;
+        if (denom === 0) return pts[i].revenue_mid ?? 0;
+        const r = (spend - pts[i].spend) / denom;
+        return (pts[i].revenue_mid ?? 0) + r * ((pts[i + 1].revenue_mid ?? 0) - (pts[i].revenue_mid ?? 0));
       }
     }
-    return 0;
+    return pts[0].revenue_mid ?? 0;
   }, []);
-  const curRev  = useMemo(() => curves.reduce((s, c) => s + interpolate(c, c.current_spend), 0), [curves, interpolate]);
-  const simRev  = useMemo(() => curves.reduce((s, c) => s + interpolate(c, sliders[c.campaign_id] ?? c.current_spend), 0), [curves, sliders, interpolate]);
-  const totSim  = useMemo(() => Object.values(sliders).reduce((a, b) => a + b, 0), [sliders]);
-  const totCur  = useMemo(() => curves.reduce((s, c) => s + c.current_spend, 0), [curves]);
+  const curRev  = useMemo(() => curves.reduce((s, c) => s + (interpolate(c, c?.current_spend ?? 0) || 0), 0), [curves, interpolate]);
+  const simRev  = useMemo(() => curves.reduce((s, c) => s + (interpolate(c, sliders[c?.campaign_id] ?? c?.current_spend ?? 0) || 0), 0), [curves, sliders, interpolate]);
+  const totSim  = useMemo(() => Object.values(sliders).reduce((a, b) => a + (Number(b) || 0), 0), [sliders]);
+  const totCur  = useMemo(() => curves.reduce((s, c) => s + (Number(c?.current_spend) || 0), 0), [curves]);
   const sankeyChanges = useMemo(() => curves.map(c => ({ campaignId: c.campaign_id, fromSpend: c.current_spend, toSpend: sliders[c.campaign_id] ?? c.current_spend })), [curves, sliders]);
   return (
     <div>
@@ -284,7 +311,9 @@ function WhatIfPanel({ curves }: { curves: CurveData[] }) {
           ))}
         </div>
       </div>
-      <SankeyChart changes={sankeyChanges} height="280px" />
+      <ErrorBoundary>
+        <SankeyChart changes={sankeyChanges} height="280px" />
+      </ErrorBoundary>
     </div>
   );
 }
@@ -415,7 +444,9 @@ export default function OptimizerStudio() {
           {activeTab === 'curves' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {activeCurves.map(curve => (
-                <ResponseCurve key={curve.campaign_id} campaignId={curve.campaign_id} sku={curve.sku} dataPoints={curve.data_points} currentSpend={curve.current_spend} recommendedSpend={curve.recommended_spend} opportunityScore={curve.opportunity_score} height="280px" />
+                <ErrorBoundary key={curve.campaign_id}>
+                  <ResponseCurve campaignId={curve.campaign_id} sku={curve.sku} dataPoints={curve.data_points} currentSpend={curve.current_spend} recommendedSpend={curve.recommended_spend} opportunityScore={curve.opportunity_score} height="280px" />
+                </ErrorBoundary>
               ))}
             </div>
           )}
