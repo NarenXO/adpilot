@@ -99,11 +99,11 @@ const INJECT_TYPES = [
 
 // ─── Severity config ──────────────────────────────────────────────────────────
 
-const SEVERITY_CONFIG: Record<Incident['severity'], { color: string; label: string }> = {
-  low:      { color: '#38bdf8', label: 'LOW' },
-  medium:   { color: '#f59e0b', label: 'MED' },
-  high:     { color: '#ef4444', label: 'HIGH' },
-  critical: { color: '#ff2c2c', label: 'CRIT' },
+const SEVERITY_CONFIG: Record<Incident['severity'], { color: string; bg: string; label: string }> = {
+  low:      { color: '#000000', bg: '#78dbf6', label: 'LOW' },
+  medium:   { color: '#000000', bg: '#ffd23f', label: 'MED' },
+  high:     { color: '#000000', bg: '#f364cb', label: 'HIGH' },
+  critical: { color: '#000000', bg: '#f364cb', label: 'CRIT' },
 };
 
 const STATUS_CONFIG: Record<Incident['status'], { statusType: 'safe' | 'warning' | 'danger' | 'info' | 'neutral'; label: string }> = {
@@ -258,32 +258,34 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '1.25rem',
+        gap: '1.5rem',
         width: '100%',
         boxSizing: 'border-box',
+        fontFamily: "'Space Grotesk', system-ui, sans-serif",
       }}
       aria-label="Mission Control Dashboard"
     >
       {/* ── Page heading ────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
           <h1
             style={{
-              fontSize: '1.375rem',
+              fontSize: '1.75rem',
               fontWeight: 700,
-              letterSpacing: '-0.02em',
-              color: 'var(--text-primary, #f8fafc)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.02em',
+              color: '#000000',
               margin: 0,
             }}
           >
             Mission Control
           </h1>
-          <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: 'var(--text-secondary, #94a3b8)' }}>
+          <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: '#4a4a46', fontWeight: 600 }}>
             SIM DATE:{' '}
-            <span style={{ fontFamily: 'var(--font-mono, monospace)', color: 'var(--accent-cyan, #38bdf8)' }}>
+            <span style={{ fontFamily: "'Space Grotesk', monospace", color: '#000000', backgroundColor: '#78dbf6', padding: '0.1rem 0.4rem', border: '2px solid #000' }}>
               {MOCK_APP_STATE.sim_date}
             </span>
-            {' '}·{' '}Real-time ad operations command center
+            {' '}·{' '}REAL-TIME AD OPERATIONS COMMAND CENTER
           </p>
         </div>
         <StatusBadge status={isAutopilot ? 'safe' : 'warning'} pulse>
@@ -296,7 +298,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '1rem',
+          gap: '1.5rem',
         }}
       >
         {MOCK_APP_STATE.kpis.map((kpi) => (
@@ -316,39 +318,39 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '1rem',
+          gap: '1.5rem',
           alignItems: 'start',
         }}
       >
         {/* Autonomy Card */}
-        <Card title="Autonomy Mode">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+        <Card title="Autonomy Level">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <StatusBadge status={isAutopilot ? 'safe' : 'warning'} pulse>
                 {isAutopilot ? 'Autopilot' : 'Supervised'}
               </StatusBadge>
-              <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary, #94a3b8)' }}>
-                Active mode
+              <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#4a4a46', textTransform: 'uppercase' }}>
+                Active Mode
               </span>
             </div>
-            <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--text-secondary, #94a3b8)', lineHeight: 1.55 }}>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: '#000000', lineHeight: 1.55, fontWeight: 500 }}>
               {isAutopilot ? (
                 <>
-                  In <strong style={{ color: 'var(--accent-neon-green, #10b981)' }}>Autopilot</strong> mode, the
+                  In <strong style={{ backgroundColor: '#82e66f', padding: '0 4px', border: '1px solid #000' }}>Autopilot</strong> mode, the
                   agent executes approved action classes automatically within risk budget. Switch to{' '}
-                  <strong style={{ color: 'var(--accent-amber, #f59e0b)' }}>Supervised</strong> to require
+                  <strong style={{ backgroundColor: '#ffd23f', padding: '0 4px', border: '1px solid #000' }}>Supervised</strong> to require
                   human approval before execution.
                 </>
               ) : (
                 <>
-                  In <strong style={{ color: 'var(--accent-amber, #f59e0b)' }}>Supervised</strong> mode, all
+                  In <strong style={{ backgroundColor: '#ffd23f', padding: '0 4px', border: '1px solid #000' }}>Supervised</strong> mode, all
                   recommendations require human approval before execution. Switch to{' '}
-                  <strong style={{ color: 'var(--accent-neon-green, #10b981)' }}>Autopilot</strong> to let the
+                  <strong style={{ backgroundColor: '#82e66f', padding: '0 4px', border: '1px solid #000' }}>Autopilot</strong> to let the
                   agent execute approved action classes automatically within risk budget.
                 </>
               )}
             </p>
-            <Button variant="secondary" size="sm" onClick={toggleAutonomy}>
+            <Button variant={isAutopilot ? 'secondary' : 'primary'} size="sm" onClick={toggleAutonomy}>
               {isAutopilot ? 'Switch to Supervised' : 'Switch to Autopilot'}
             </Button>
           </div>
@@ -356,14 +358,14 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
 
         {/* Risk Budget Card */}
         <Card title="Daily Risk Budget">
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
             <RiskGauge
               usedPct={MOCK_APP_STATE.risk_budget.used_pct}
               capPct={MOCK_APP_STATE.risk_budget.cap_pct}
               size={170}
               label="Spend at Risk"
             />
-            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', textAlign: 'center' }}>
+            <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, color: '#4a4a46', textAlign: 'center', textTransform: 'uppercase' }}>
               Daily budget consumed safely. Cap resets at 00:00 UTC.
             </p>
           </div>
@@ -373,12 +375,12 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
         <Card
           title="Active Incidents"
           action={
-            <Badge variant="warning" style={{ fontSize: '0.625rem' }}>
-              {activeIncidents.filter((i) => i.status !== 'resolved').length} open
+            <Badge variant="warning" style={{ fontSize: '0.6875rem' }}>
+              {activeIncidents.filter((i) => i.status !== 'resolved').length} OPEN
             </Badge>
           }
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
             {activeIncidents.map((inc) => {
               const sev = SEVERITY_CONFIG[inc.severity];
               const statusCfg = STATUS_CONFIG[inc.status];
@@ -396,29 +398,29 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
                       setSelectedIncident(inc);
                     }
                   }}
-                  className="cursor-pointer hover:bg-slate-800/60"
+                  className="cursor-pointer brutal-card-hover"
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: '8px auto 1fr auto auto',
+                    gridTemplateColumns: '10px auto 1fr auto auto',
                     alignItems: 'center',
                     gap: '0.5rem',
-                    padding: '0.5rem',
-                    borderRadius: '0.375rem',
-                    backgroundColor: 'rgba(255,255,255,0.03)',
-                    border: '1px solid var(--card-border, #1e293b)',
-                    color: 'inherit',
-                    transition: 'all var(--transition-fast, 150ms ease)',
+                    padding: '0.625rem',
+                    borderRadius: '0px',
+                    backgroundColor: '#ffffff',
+                    border: '2px solid #000000',
+                    boxShadow: '3px 3px 0px #000000',
+                    color: '#000000',
+                    transition: 'all 100ms ease',
                   }}
                   aria-label={`Incident ${inc.id}: ${inc.metric} ${inc.scope} ${dirSign}${inc.magnitude_pct.toFixed(1)}%`}
                 >
-                  {/* Severity dot */}
+                  {/* Severity square */}
                   <span
                     style={{
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      backgroundColor: sev.color,
-                      boxShadow: `0 0 5px ${sev.color}`,
+                      width: '10px',
+                      height: '10px',
+                      backgroundColor: sev.bg,
+                      border: '1.5px solid #000000',
                       flexShrink: 0,
                     }}
                     aria-hidden="true"
@@ -427,10 +429,10 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
                   {/* Severity label */}
                   <span
                     style={{
-                      fontSize: '0.625rem',
+                      fontSize: '0.6875rem',
                       fontWeight: 700,
-                      fontFamily: 'var(--font-mono, monospace)',
-                      color: sev.color,
+                      fontFamily: "'Space Grotesk', monospace",
+                      color: '#000000',
                       letterSpacing: '0.04em',
                     }}
                   >
@@ -439,8 +441,8 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
 
                   {/* Metric + Scope */}
                   <span style={{ fontSize: '0.8125rem' }}>
-                    <span style={{ fontWeight: 600, color: 'var(--text-primary, #f8fafc)' }}>{inc.metric}</span>
-                    <span style={{ color: 'var(--text-muted, #64748b)', marginLeft: '0.35rem', fontSize: '0.75rem', fontFamily: 'var(--font-mono, monospace)' }}>
+                    <span style={{ fontWeight: 700, color: '#000000' }}>{inc.metric}</span>
+                    <span style={{ color: '#4a4a46', marginLeft: '0.35rem', fontSize: '0.75rem', fontFamily: "'Space Grotesk', monospace", fontWeight: 600 }}>
                       {inc.scope}
                     </span>
                   </span>
@@ -450,11 +452,12 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
                     style={{
                       fontSize: '0.6875rem',
                       fontWeight: 700,
-                      fontFamily: 'var(--font-mono, monospace)',
-                      color: inc.direction === 'down' ? 'var(--accent-red, #ef4444)' : 'var(--accent-neon-green, #10b981)',
-                      padding: '0.1rem 0.35rem',
-                      borderRadius: '0.25rem',
-                      backgroundColor: inc.direction === 'down' ? 'rgba(239,68,68,0.12)' : 'rgba(16,185,129,0.12)',
+                      fontFamily: "'Space Grotesk', monospace",
+                      color: '#000000',
+                      padding: '0.1rem 0.4rem',
+                      borderRadius: '0px',
+                      border: '1.5px solid #000000',
+                      backgroundColor: inc.direction === 'down' ? '#f364cb' : '#82e66f',
                       whiteSpace: 'nowrap',
                     }}
                   >
@@ -462,7 +465,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
                   </span>
 
                   {/* Chevron */}
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted, #64748b)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="3" strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true">
                     <polyline points="9 18 15 12 9 6" />
                   </svg>
                 </div>
@@ -477,7 +480,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
         style={{
           display: 'grid',
           gridTemplateColumns: '2fr 1fr',
-          gap: '1rem',
+          gap: '1.5rem',
           alignItems: 'start',
         }}
       >
@@ -488,17 +491,17 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span
                 style={{
-                  width: '6px',
-                  height: '6px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--accent-neon-green, #10b981)',
-                  boxShadow: '0 0 6px var(--accent-neon-green, #10b981)',
-                  animation: 'status-pulse 1.8s ease-in-out infinite',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '0px',
+                  backgroundColor: '#82e66f',
+                  border: '1px solid #000000',
+                  animation: 'status-pulse 1.4s ease-in-out infinite',
                   display: 'inline-block',
                 }}
                 aria-hidden="true"
               />
-              <span style={{ fontSize: '0.6875rem', color: 'var(--accent-neon-green, #10b981)', fontFamily: 'var(--font-mono, monospace)', fontWeight: 600, letterSpacing: '0.04em' }}>
+              <span style={{ fontSize: '0.6875rem', color: '#000000', fontFamily: "'Space Grotesk', monospace", fontWeight: 700, letterSpacing: '0.04em' }}>
                 LIVE
               </span>
             </div>
@@ -511,7 +514,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
         <Card title="Quick Demo Controls">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
-              <p style={{ margin: '0 0 0.75rem', fontSize: '0.8125rem', color: 'var(--text-secondary, #94a3b8)', lineHeight: 1.5 }}>
+              <p style={{ margin: '0 0 0.75rem', fontSize: '0.8125rem', color: '#4a4a46', lineHeight: 1.5, fontWeight: 600 }}>
                 Inject a synthetic incident event into the simulation to observe the full agent pipeline response.
               </p>
               <Button
@@ -526,25 +529,25 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
 
             <div
               style={{
-                height: '1px',
-                backgroundColor: 'var(--card-border, #1e293b)',
+                height: '3px',
+                backgroundColor: '#000000',
               }}
             />
 
             <div>
-              <p style={{ margin: '0 0 0.75rem', fontSize: '0.8125rem', color: 'var(--text-secondary, #94a3b8)', lineHeight: 1.5 }}>
+              <p style={{ margin: '0 0 0.75rem', fontSize: '0.8125rem', color: '#4a4a46', lineHeight: 1.5, fontWeight: 600 }}>
                 Fast-forward through {simDuration} simulation days and observe KPI trajectories and agent decisions.
               </p>
 
-              <div className="flex items-center gap-2 mb-4 bg-slate-900/50 p-1 rounded-lg border border-slate-800">
+              <div className="flex items-center gap-2 mb-4 bg-white p-1 border-2 border-black">
                 {[7, 14, 30].map((days) => (
                   <button
                     key={days}
                     onClick={() => setSimDuration(days)}
-                    className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-colors ${
+                    className={`flex-1 text-xs font-bold py-1.5 transition-colors brutal-btn ${
                       simDuration === days 
-                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' 
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                        ? 'bg-[#ffd23f] text-black border-2 border-black shadow-[2px_2px_0px_#000]' 
+                        : 'bg-white text-black hover:bg-[#e1e1d8] border border-black'
                     }`}
                   >
                     {days} Days
@@ -555,7 +558,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
               <Button
                 variant="secondary"
                 size="sm"
-                style={{ width: '100%' }}
+                style={{ width: '100%', backgroundColor: '#82e66f' }}
                 onClick={handlePlaySimulation}
               >
                 Play {simDuration}-Day Simulation
@@ -565,16 +568,18 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
             <div
               style={{
                 padding: '0.625rem',
-                borderRadius: '0.5rem',
-                backgroundColor: 'rgba(56, 189, 248, 0.06)',
-                border: '1px solid rgba(56, 189, 248, 0.2)',
+                borderRadius: '0px',
+                backgroundColor: '#ffd23f',
+                border: '2px solid #000000',
+                boxShadow: '3px 3px 0px #000000',
                 fontSize: '0.75rem',
-                color: 'var(--text-muted, #64748b)',
+                color: '#000000',
                 lineHeight: 1.5,
-                fontFamily: 'var(--font-mono, monospace)',
+                fontFamily: "'Space Grotesk', monospace",
+                fontWeight: 600,
               }}
             >
-              <span style={{ color: 'var(--accent-cyan, #38bdf8)', fontWeight: 600 }}>NOTE</span>{' '}
+              <span style={{ color: '#000000', fontWeight: 700 }}>NOTE:</span>{' '}
               Controls are simulation-only. Real budget execution requires Autopilot mode + guardian sign-off.
             </div>
           </div>
@@ -590,9 +595,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.75)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
+            backgroundColor: 'rgba(0,0,0,0.6)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -603,10 +606,10 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
         >
           <div
             style={{
-              backgroundColor: 'var(--card-glass-elevated, rgba(30, 41, 59, 0.95))',
-              border: '1px solid var(--card-border-hover, #334155)',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-              borderRadius: 'var(--radius-xl, 0.875rem)',
+              backgroundColor: '#ffffff',
+              border: '3px solid #000000',
+              boxShadow: '8px 8px 0px #000000',
+              borderRadius: '0px',
               padding: '1.75rem',
               maxWidth: '440px',
               width: '100%',
@@ -617,17 +620,17 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
           >
             <h2
               id="inject-modal-title"
-              style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary, #f8fafc)' }}
+              style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, textTransform: 'uppercase', color: '#000000' }}
             >
               Inject Synthetic Incident
             </h2>
 
-            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary, #94a3b8)', lineHeight: 1.5 }}>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: '#4a4a46', lineHeight: 1.5, fontWeight: 600 }}>
               Choose an incident type to inject into the simulation. The agent pipeline will detect and respond automatically.
             </p>
 
             {/* Incident type selector */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
               {INJECT_TYPES.map((t) => (
                 <label
                   key={t.id}
@@ -635,12 +638,13 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: '0.75rem',
-                    padding: '0.625rem 0.75rem',
-                    borderRadius: '0.5rem',
+                    padding: '0.75rem',
+                    borderRadius: '0px',
                     cursor: 'pointer',
-                    backgroundColor: selectedIncidentType === t.id ? 'rgba(56,189,248,0.1)' : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${selectedIncidentType === t.id ? 'rgba(56,189,248,0.35)' : 'var(--card-border, #1e293b)'}`,
-                    transition: 'all var(--transition-fast, 150ms ease)',
+                    backgroundColor: selectedIncidentType === t.id ? '#78dbf6' : '#ffffff',
+                    border: '2px solid #000000',
+                    boxShadow: selectedIncidentType === t.id ? '3px 3px 0px #000000' : 'none',
+                    transition: 'all 100ms ease',
                   }}
                 >
                   <input
@@ -649,13 +653,13 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
                     value={t.id}
                     checked={selectedIncidentType === t.id}
                     onChange={() => setSelectedIncidentType(t.id)}
-                    style={{ marginTop: '2px', accentColor: 'var(--accent-cyan, #38bdf8)' }}
+                    style={{ marginTop: '3px', accentColor: '#000000' }}
                   />
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary, #f8fafc)' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#000000', textTransform: 'uppercase' }}>
                       {t.label}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', marginTop: '0.15rem' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#000000', marginTop: '0.15rem', fontWeight: 500 }}>
                       {t.desc}
                     </div>
                   </div>
@@ -667,7 +671,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
               <Button variant="ghost" size="sm" onClick={() => setShowInjectModal(false)}>
                 Cancel
               </Button>
-              <Button variant="primary" size="sm" onClick={handleInjectIncident} autoFocus>
+              <Button variant="primary" size="sm" style={{ backgroundColor: '#82e66f' }} onClick={handleInjectIncident} autoFocus>
                 Confirm — Inject
               </Button>
             </div>
@@ -684,9 +688,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.75)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
+            backgroundColor: 'rgba(0,0,0,0.6)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -697,10 +699,10 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
         >
           <div
             style={{
-              backgroundColor: 'var(--card-glass-elevated, rgba(30, 41, 59, 0.95))',
-              border: '1px solid var(--card-border-hover, #334155)',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-              borderRadius: 'var(--radius-xl, 0.875rem)',
+              backgroundColor: '#ffffff',
+              border: '3px solid #000000',
+              boxShadow: '8px 8px 0px #000000',
+              borderRadius: '0px',
               padding: '1.75rem',
               maxWidth: '480px',
               width: '100%',
@@ -716,19 +718,18 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
                   style={{
                     fontSize: '0.75rem',
                     fontWeight: 700,
-                    fontFamily: 'var(--font-mono, monospace)',
-                    color: SEVERITY_CONFIG[selectedIncident.severity].color,
-                    backgroundColor: `${SEVERITY_CONFIG[selectedIncident.severity].color}20`,
+                    fontFamily: "'Space Grotesk', monospace",
+                    color: '#000000',
+                    backgroundColor: SEVERITY_CONFIG[selectedIncident.severity].bg,
                     padding: '0.2rem 0.5rem',
-                    borderRadius: '0.25rem',
-                    border: `1px solid ${SEVERITY_CONFIG[selectedIncident.severity].color}40`,
+                    border: '2px solid #000000',
                   }}
                 >
                   {SEVERITY_CONFIG[selectedIncident.severity].label}
                 </span>
                 <h2
                   id="incident-modal-title"
-                  style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary, #f8fafc)', fontFamily: 'var(--font-mono, monospace)' }}
+                  style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#000000', fontFamily: "'Space Grotesk', monospace" }}
                 >
                   {selectedIncident.id}
                 </h2>
@@ -737,12 +738,15 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
                 onClick={() => setSelectedIncident(null)}
                 style={{
                   background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted, #64748b)',
+                  border: '2px solid #000000',
+                  color: '#000000',
+                  backgroundColor: '#ffffff',
                   cursor: 'pointer',
-                  padding: '0.25rem',
-                  fontSize: '1.25rem',
+                  padding: '0.1rem 0.4rem',
+                  fontSize: '1rem',
+                  fontWeight: 700,
                   lineHeight: 1,
+                  boxShadow: '2px 2px 0px #000000',
                 }}
                 aria-label="Close detail modal"
               >
@@ -751,7 +755,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
             </div>
 
             {/* Description One-Liner */}
-            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary, #94a3b8)', lineHeight: 1.5 }}>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: '#000000', lineHeight: 1.5, fontWeight: 600 }}>
               {selectedIncident.metric === 'CTR' && 'Click-through rate anomaly detected on this campaign.'}
               {selectedIncident.metric === 'ROAS' && 'Return on ad spend has shifted beyond expected bounds.'}
               {selectedIncident.metric === 'CVR' && 'Conversion rate collapse — possible stockout or tracking issue.'}
@@ -766,55 +770,56 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '0.875rem',
-                backgroundColor: 'rgba(15, 23, 42, 0.6)',
+                backgroundColor: '#f3f3ed',
                 padding: '1rem',
-                borderRadius: '0.5rem',
-                border: '1px solid var(--card-border, #1e293b)',
+                borderRadius: '0px',
+                border: '2px solid #000000',
               }}
             >
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', marginBottom: '0.2rem' }}>Metric</div>
-                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary, #f8fafc)' }}>{selectedIncident.metric}</div>
+                <div style={{ fontSize: '0.75rem', color: '#4a4a46', marginBottom: '0.2rem', fontWeight: 700, textTransform: 'uppercase' }}>Metric</div>
+                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#000000' }}>{selectedIncident.metric}</div>
               </div>
 
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', marginBottom: '0.2rem' }}>Scope</div>
-                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary, #f8fafc)', fontFamily: 'var(--font-mono, monospace)' }}>{selectedIncident.scope}</div>
+                <div style={{ fontSize: '0.75rem', color: '#4a4a46', marginBottom: '0.2rem', fontWeight: 700, textTransform: 'uppercase' }}>Scope</div>
+                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#000000', fontFamily: "'Space Grotesk', monospace" }}>{selectedIncident.scope}</div>
               </div>
 
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', marginBottom: '0.2rem' }}>Direction / Magnitude</div>
+                <div style={{ fontSize: '0.75rem', color: '#4a4a46', marginBottom: '0.2rem', fontWeight: 700, textTransform: 'uppercase' }}>Direction / Magnitude</div>
                 <div
                   style={{
                     fontWeight: 700,
                     fontSize: '0.875rem',
-                    color: selectedIncident.direction === 'down' ? 'var(--accent-red, #ef4444)' : 'var(--accent-neon-green, #10b981)',
+                    color: '#000000',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.25rem',
                   }}
                 >
-                  <span>{selectedIncident.direction === 'up' ? '▲ +' : '▼ '}</span>
-                  <span>{selectedIncident.magnitude_pct.toFixed(1)}%</span>
+                  <span style={{ backgroundColor: selectedIncident.direction === 'down' ? '#f364cb' : '#82e66f', padding: '0 4px', border: '1px solid #000' }}>
+                    {selectedIncident.direction === 'up' ? '▲ +' : '▼ '}{selectedIncident.magnitude_pct.toFixed(1)}%
+                  </span>
                 </div>
               </div>
 
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', marginBottom: '0.2rem' }}>Confidence</div>
-                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary, #f8fafc)', fontFamily: 'var(--font-mono, monospace)' }}>
+                <div style={{ fontSize: '0.75rem', color: '#4a4a46', marginBottom: '0.2rem', fontWeight: 700, textTransform: 'uppercase' }}>Confidence</div>
+                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#000000', fontFamily: "'Space Grotesk', monospace" }}>
                   {Math.round(selectedIncident.confidence * 100)}%
                 </div>
               </div>
 
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', marginBottom: '0.2rem' }}>Severity</div>
-                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: SEVERITY_CONFIG[selectedIncident.severity].color, textTransform: 'capitalize' }}>
+                <div style={{ fontSize: '0.75rem', color: '#4a4a46', marginBottom: '0.2rem', fontWeight: 700, textTransform: 'uppercase' }}>Severity</div>
+                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#000000', textTransform: 'capitalize' }}>
                   {selectedIncident.severity}
                 </div>
               </div>
 
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', marginBottom: '0.2rem' }}>Status</div>
+                <div style={{ fontSize: '0.75rem', color: '#4a4a46', marginBottom: '0.2rem', fontWeight: 700, textTransform: 'uppercase' }}>Status</div>
                 <div>
                   <StatusBadge status={STATUS_CONFIG[selectedIncident.status].statusType}>
                     {STATUS_CONFIG[selectedIncident.status].label}
