@@ -215,8 +215,21 @@ const Diagnosis = () => {
     { step: 2, tool: 'compare_periods', result_summary: 'Confirmed 35.2% performance drop on camp_meta_03' }
   ];
 
+  // Helper to highlight evidence numbers like E12
+  const highlightEvidence = (text: string) => {
+    if (!text) return text;
+    const parts = text.split(/(E\d+)/g);
+    return parts.map((part, i) => 
+      /E\d+/.test(part) ? (
+        <span key={i} style={{ background: palette.accent.lime, borderBottom: '2px solid #000', padding: '0 2px', fontWeight: 900, color: '#000' }}>
+          {part}
+        </span>
+      ) : part
+    );
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', fontFamily: '"Space Grotesk", sans-serif' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 900, textTransform: 'uppercase' }}>
           Root Cause AI Diagnosis & Guardian Fact-Check
@@ -225,7 +238,7 @@ const Diagnosis = () => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-        <div style={{ ...cardStyle, background: palette.accent.yellow }}>
+        <div style={{ ...cardStyle, background: palette.accent.yellow, border: '3px solid #000', boxShadow: '5px 5px 0px #000' }}>
           <div style={{ fontSize: '1rem', fontWeight: 900, textTransform: 'uppercase', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Cpu size={20} /> Verified AI Agent Cause Analysis
           </div>
@@ -233,7 +246,7 @@ const Diagnosis = () => {
             CAUSE: <span style={{ background: palette.accent.pink, border: '2px solid #000', padding: '0 0.4rem' }}>{diagnosis.cause}</span>
           </div>
           <p style={{ fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.6, margin: '1rem 0' }}>
-            {diagnosis.explanation}
+            {highlightEvidence(diagnosis.explanation)}
           </p>
           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
             <span style={badgeStyle('AUTO')}>Fact-Checked: 100% Match</span>
@@ -247,9 +260,9 @@ const Diagnosis = () => {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {agentTrace.map((step: any, i: number) => (
-              <div key={i} style={{ background: '#fff', border: '2px solid #000', boxShadow: '3px 3px 0px #000', padding: '0.75rem' }}>
+              <div key={i} style={{ background: palette.accent.cyan, border: '2px solid #000', boxShadow: '3px 3px 0px #000', padding: '0.75rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 900 }}>
-                  <span style={{ background: palette.accent.cyan, border: '1px solid #000', padding: '0 0.3rem' }}>STEP {step.step}: {step.tool}</span>
+                  <span style={{ background: '#fff', border: '1px solid #000', padding: '0 0.3rem' }}>STEP {step.step}: {step.tool}</span>
                   <CheckCircle size={16} color="#000" />
                 </div>
                 <div style={{ fontSize: '0.85rem', fontWeight: 700, marginTop: '0.4rem', color: '#000' }}>
