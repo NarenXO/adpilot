@@ -1,9 +1,8 @@
 // frontend/src/pages/InventoryMargin.tsx
 // Invente '26 Neo-Brutalist — Inventory × Margin Studio
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Search, RefreshCw, AlertTriangle, TrendingUp, Package, BarChart3 } from 'lucide-react';
 import { BubbleChart } from '../components/charts/BubbleChart';
-import { useInventoryMargin } from '../api/hooks';
 import type { SKUBubble, Quadrant, Provenance } from '../types/api';
 import { palette, quadrantMeta } from '../theme/tokens';
 
@@ -259,40 +258,70 @@ const tdStyle: React.CSSProperties = {
 
 // ─── Main Inner Component ──────────────────────────────────────────────────────
 function InventoryMarginInner() {
-  const { data, refetch, dataUpdatedAt } = useInventoryMargin();
+  const [skus, setSkus] = useState<SKUBubble[]>(DEFAULT_20_SKUS);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [lastUpdated, setLastUpdated] = useState<string>('LIVE');
+
+  const fetchInventoryData = useCallback(() => {
+    let isMounted = true;
+    setIsLoading(true);
+    fetch('/api/inventory-margin')
+      .then((res) => {
+        if (!res.ok) throw new Error('Network response was not ok');
+        return res.json();
+      })
+      .then((data) => {
+        if (!isMounted) return;
+        let list: any[] = [];
+        if (Array.isArray(data) && data.length > 0) {
+          list = data;
+        } else if (data && Array.isArray(data.skus) && data.skus.length > 0) {
+          list = data.skus;
+        }
+        if (list.length > 0) {
+          const parsed = list.map(item => ({
+            sku: item?.sku || 'SKU-000',
+            name: item?.name || 'Unknown Product',
+            category: item?.category || 'general',
+            margin_pct: typeof item?.margin_pct === 'number' ? item.margin_pct : 0.5,
+            days_of_cover: typeof item?.days_of_cover === 'number' ? item.days_of_cover : 14,
+            spend: typeof item?.spend === 'number' ? item.spend : 0,
+            revenue: typeof item?.revenue === 'number' ? item.revenue : 0,
+            quadrant: (['scale','protect','pause','fix'].includes(item?.quadrant) ? item.quadrant : 'scale') as Quadrant,
+            opportunity_score: typeof item?.opportunity_score === 'number' ? item.opportunity_score : 50,
+            provenance: (item?.provenance || 'scenario') as Provenance,
+          }));
+          setSkus(parsed);
+          setLastUpdated(new Date().toLocaleTimeString());
+        }
+      })
+      .catch((err) => {
+        console.warn('Using default 20 SKUs fallback:', err);
+        if (isMounted) setSkus(DEFAULT_20_SKUS);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const cleanup = fetchInventoryData();
+    return cleanup;
+  }, [fetchInventoryData]);
+
+  const refetch = () => {
+    fetchInventoryData();
+  };
 
   const [activeFilter, setActiveFilter] = useState<FilterValue>(ALL);
   const [highlightedSku, setHighlightedSku] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortField>('opportunity_score');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
-
-  // Defensive data resolution
-  const skus: SKUBubble[] = useMemo(() => {
-    let list: any[] = [];
-    if (data) {
-      if (Array.isArray(data)) {
-        list = data;
-      } else if (typeof data === 'object' && Array.isArray((data as any).skus)) {
-        list = (data as any).skus;
-      }
-    }
-    if (!list || list.length === 0) {
-      list = DEFAULT_20_SKUS;
-    }
-    return list.map(item => ({
-      sku: item?.sku || 'SKU-000',
-      name: item?.name || 'Unknown Product',
-      category: item?.category || 'general',
-      margin_pct: typeof item?.margin_pct === 'number' ? item.margin_pct : 0.5,
-      days_of_cover: typeof item?.days_of_cover === 'number' ? item.days_of_cover : 14,
-      spend: typeof item?.spend === 'number' ? item.spend : 0,
-      revenue: typeof item?.revenue === 'number' ? item.revenue : 0,
-      quadrant: (['scale','protect','pause','fix'].includes(item?.quadrant) ? item.quadrant : 'scale') as Quadrant,
-      opportunity_score: typeof item?.opportunity_score === 'number' ? item.opportunity_score : 50,
-      provenance: (item?.provenance || 'scenario') as Provenance,
-    }));
-  }, [data]);
 
   const totalSkus  = skus.length;
   const avgMargin  = totalSkus > 0 ? skus.reduce((s, b) => s + normMargin(b?.margin_pct ?? 0), 0) / totalSkus : 0;
@@ -343,8 +372,6 @@ function InventoryMarginInner() {
     if (k === sortKey) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortKey(k); setSortDir('desc'); }
   }
-
-  const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : 'LIVE';
 
   const filterBtns: { value: FilterValue; label: string; accent: string }[] = [
     { value: ALL, label: `ALL (${skus.length})`, accent: P?.bg?.border || '#000000' },
