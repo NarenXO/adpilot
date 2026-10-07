@@ -7,6 +7,8 @@ import {
   Radio, Sparkles, Send, Layers
 } from 'lucide-react';
 import { palette } from './theme/tokens';
+import { Incidents } from './pages/Incidents';
+import { Proof } from './pages/Proof';
 
 const cardStyle: React.CSSProperties = {
   background: palette.bg.card, border: `3px solid ${palette.bg.border}`,
@@ -321,11 +323,11 @@ export default function App() {
       <Shell state={state} onTick={handleTick} onInject={handleInject} isTicking={isTicking}>
         <Routes>
           <Route path="/" element={<MissionControl state={state} sseEvents={sseEvents} activeStage={activeStage} />} />
-          <Route path="/incidents" element={<Placeholder title="INCIDENTS DATA" />} />
+          <Route path="/incidents" element={<Incidents />} />
           <Route path="/diagnosis" element={<Diagnosis />} />
           <Route path="/inventory" element={<Placeholder title="INVENTORY MATRIX" />} />
           <Route path="/optimizer" element={<Placeholder title="OPTIMIZER STUDIO" />} />
-          <Route path="/proof" element={<Placeholder title="EVALUATION PROOF" />} />
+          <Route path="/proof" element={<Proof />} />
         </Routes>
       </Shell>
     </BrowserRouter>
