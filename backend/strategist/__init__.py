@@ -11,6 +11,10 @@ from backend.strategist.curves import (
     compute_confidence_bands,
     generate_response_curve,
 )
+from backend.strategist.opportunity import (
+    compute_opportunity_score,
+    compute_scores_for_campaigns,
+)
 
 __all__ = [
     "holt_winters_forecast",
@@ -22,4 +26,6 @@ __all__ = [
     "fit_hill_curve",
     "compute_confidence_bands",
     "generate_response_curve",
+    "compute_opportunity_score",
+    "compute_scores_for_campaigns",
 ]

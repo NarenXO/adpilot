@@ -1,6 +1,8 @@
 import numpy as np
 import pytest
-from backend.contracts import ResponseCurve, CurvePoint
+from datetime import date
+from backend.contracts import ResponseCurve, CurvePoint, OpportunityScore
+from backend.db.connection import get_connection
 from backend.strategist.forecast import (
     holt_winters_forecast,
     ridge_forecast,
@@ -14,6 +16,14 @@ from backend.strategist.curves import (
     compute_confidence_bands,
     generate_response_curve,
 )
+from backend.strategist.opportunity import (
+    compute_opportunity_score,
+    compute_scores_for_campaigns,
+)
+
+@pytest.fixture
+def db_conn():
+    return get_connection()
 
 def test_holt_winters_forecast_seasonal():
     # 21 days of data with weekly seasonality (7-day pattern)
@@ -147,3 +157,89 @@ def test_generate_response_curve_validates_schema():
     assert len(validated.data_points) == 15
     for dp in validated.data_points:
         assert dp.revenue_low <= dp.revenue_mid <= dp.revenue_high
+
+# ────────────────────────────────────────────────────────────────────────────
+# PHASE 2 TESTS: Predictive Opportunity Score Engine
+# ────────────────────────────────────────────────────────────────────────────
+
+def test_opportunity_score_returns_valid_schema(db_conn):
+    score = compute_opportunity_score("camp_meta_03", "SKU-007", db_conn, sim_date="2024-06-15")
+    
+    assert isinstance(score, OpportunityScore)
+    assert 0.0 <= score.forecast_component <= 25.0
+    assert 0.0 <= score.curve_component <= 25.0
+    assert 0.0 <= score.margin_component <= 25.0
+    assert 0.0 <= score.stock_component <= 25.0
+    assert 0.0 <= score.total_score <= 100.0
+    
+    component_sum = score.forecast_component + score.curve_component + score.margin_component + score.stock_component
+    assert pytest.approx(score.total_score, abs=0.1) == component_sum
+    assert score.campaign_id == "camp_meta_03"
+    assert score.sku == "SKU-007"
+    assert score.sim_date == date(2024, 6, 15)
+
+def test_opportunity_score_handles_missing_sku(db_conn):
+    score = compute_opportunity_score("camp_meta_03", None, db_conn)
+    
+    assert isinstance(score, OpportunityScore)
+    assert score.margin_component == 10.0
+    assert score.stock_component == 10.0
+    assert score.sku == ""
+    assert 0.0 <= score.total_score <= 100.0
+
+def test_opportunity_score_handles_missing_campaign(db_conn):
+    score = compute_opportunity_score("camp_does_not_exist", "SKU-UNKNOWN", db_conn)
+    
+    assert isinstance(score, OpportunityScore)
+    assert 0.0 <= score.total_score <= 100.0
+    assert 0.0 <= score.forecast_component <= 25.0
+    assert 0.0 <= score.curve_component <= 25.0
+
+def test_opportunity_score_stockout_zero_stock_component(db_conn):
+    # Seed an SKU with days_of_cover=1.0 (stockout risk)
+    db_conn.execute("DELETE FROM inventory WHERE sku = 'SKU-STOCKOUT-TEST'")
+    db_conn.execute(
+        "INSERT INTO inventory (date, sku, stock_units, days_of_cover) VALUES ('2024-06-15', 'SKU-STOCKOUT-TEST', 5, 1.0)"
+    )
+    
+    score = compute_opportunity_score("camp_meta_03", "SKU-STOCKOUT-TEST", db_conn)
+    assert score.stock_component == 0.0
+
+def test_batch_scores_deterministic_order(db_conn):
+    pairs = [
+        ("camp_meta_01", "SKU-001"),
+        ("camp_meta_02", "SKU-002"),
+        ("camp_meta_03", "SKU-003"),
+    ]
+    
+    batch_1 = compute_scores_for_campaigns(pairs, db_conn, sim_date="2024-06-15")
+    batch_2 = compute_scores_for_campaigns(pairs, db_conn, sim_date="2024-06-15")
+    
+    assert len(batch_1) == len(pairs)
+    assert len(batch_2) == len(pairs)
+    
+    for s1, s2 in zip(batch_1, batch_2):
+        assert s1.campaign_id == s2.campaign_id
+        assert s1.sku == s2.sku
+        assert s1.total_score == s2.total_score
+        assert s1.forecast_component == s2.forecast_component
+        assert s1.curve_component == s2.curve_component
+        assert s1.margin_component == s2.margin_component
+        assert s1.stock_component == s2.stock_component
+
+def test_opportunity_score_component_bounds(db_conn):
+    test_pairs = [
+        ("camp_alpha", "SKU-A"),
+        ("camp_beta", None),
+        ("camp_gamma", "SKU-C"),
+        ("camp_delta", "SKU-D"),
+        ("camp_omega", "SKU-E"),
+    ]
+    
+    for camp, s in test_pairs:
+        score = compute_opportunity_score(camp, s, db_conn)
+        assert 0.0 <= score.forecast_component <= 25.0
+        assert 0.0 <= score.curve_component <= 25.0
+        assert 0.0 <= score.margin_component <= 25.0
+        assert 0.0 <= score.stock_component <= 25.0
+        assert 0.0 <= score.total_score <= 100.0
