@@ -12,7 +12,7 @@ from backend.investigator.tools import (
     tracking_health_check,
     recall_similar_incidents
 )
-from backend.db.connection import get_db
+from backend.db.connection import get_connection as get_db
 
 def diagnose_from_playbook(incident: Incident, db_conn=None) -> Tuple[List[EvidenceItem], Diagnosis]:
     db = db_conn or get_db()

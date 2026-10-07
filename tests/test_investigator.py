@@ -9,17 +9,25 @@ from backend.investigator.tools import (
     tracking_health_check, recall_similar_incidents
 )
 
-from backend.db.connection import get_db
+from backend.db.connection import get_connection as get_db
 
 def setup_module():
     conn = get_db()
-    conn.execute("INSERT INTO ad_performance VALUES (CURRENT_DATE - INTERVAL 10 DAY, 'meta', 'camp1', 'c1', 100, 1000, 50, 5, 200.0, 2.0)")
-    conn.execute("INSERT INTO ga_funnel VALUES ('2026-10-01', 'meta', 100, 20, 10, 5)")
-    conn.execute("INSERT INTO creatives VALUES ('c1', 'camp1', 'video', 10, 'hook1')")
-    conn.execute("INSERT INTO inventory VALUES ('SKU1', 100, 10.5)")
-    conn.execute("INSERT INTO sku_master VALUES ('SKU1', 40.0)")
-    conn.execute("INSERT INTO sales VALUES ('2026-10-01', 'SKU1', 100.0, 10.0, 90.0)")
-    conn.execute("INSERT INTO memory VALUES ('inc_old', 'fatigue', 'old summary', true)")
+    conn.execute("DELETE FROM ad_performance")
+    conn.execute("DELETE FROM ga_funnel")
+    conn.execute("DELETE FROM creatives")
+    conn.execute("DELETE FROM inventory")
+    conn.execute("DELETE FROM sku_master")
+    conn.execute("DELETE FROM sales")
+    conn.execute("DELETE FROM memory")
+    
+    conn.execute("INSERT INTO ad_performance (date, platform, campaign_id, creative_id, spend, impressions, clicks, purchases, revenue, ctr) VALUES (CURRENT_DATE - INTERVAL 10 DAY, 'meta', 'camp1', 'c1', 100, 1000, 50, 5, 200.0, 2.0)")
+    conn.execute("INSERT INTO ga_funnel (date, channel, sessions, add_to_cart, checkout, transactions) VALUES ('2026-10-01', 'meta', 100, 20, 10, 5)")
+    conn.execute("INSERT INTO creatives (creative_id, campaign_id, format, age_days, hook_type) VALUES ('c1', 'camp1', 'video', 10, 'hook1')")
+    conn.execute("INSERT INTO inventory (sku, stock_units, days_of_cover) VALUES ('SKU1', 100, 10.5)")
+    conn.execute("INSERT INTO sku_master (sku, cogs) VALUES ('SKU1', 40.0)")
+    conn.execute("INSERT INTO sales (date, sku, price, discount, revenue) VALUES ('2026-10-01', 'SKU1', 100.0, 10.0, 90.0)")
+    conn.execute("INSERT INTO memory (id, incident_id, cause, summary, outcome_success) VALUES ('m1', 'inc_old', 'fatigue', 'old summary', true)")
 
 def test_tools_return_evidence_items():
     res = compare_periods("inc1")
@@ -235,8 +243,8 @@ def test_investigate_timeout_handling():
         assert "Timed out" in trace_steps[0].result_summary
 
 def test_tools_handle_empty_database_tables():
-    from backend.db.connection import get_db
-    conn = get_db()
+    from backend.db.connection import get_connection
+    conn = get_connection()
     # Create empty db for this test using a fresh connection
     import duckdb
     from backend.db.ddl import init_db

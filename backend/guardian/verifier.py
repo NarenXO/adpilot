@@ -48,16 +48,19 @@ def verify(diagnosis: Diagnosis, evidence: List[EvidenceItem]) -> Diagnosis:
     sig_valid, reason = check_cause_signature(diagnosis.cause, evidence)
     
     # 3. Verdict Determination
-    new_diagnosis = replace(diagnosis)
+    updates = {}
     
+    # Handle whether cause is an enum or string
+    cause_str = diagnosis.cause.value if hasattr(diagnosis.cause, 'value') else diagnosis.cause
+
     if numbers_valid and sig_valid:
-        new_diagnosis.guardian = "PASS"
+        updates["guardian"] = "PASS"
     elif sig_valid and not numbers_valid:
-        new_diagnosis.guardian = "DOWNGRADED"
-        new_diagnosis.explanation = f"[Guardian Sanitized] Verified {diagnosis.cause.value} based on raw evidence metrics without unverified numerical claims."
+        updates["guardian"] = "DOWNGRADED"
+        updates["explanation"] = f"[Guardian Sanitized] Verified {cause_str} based on raw evidence metrics without unverified numerical claims."
     elif not sig_valid:
-        new_diagnosis.guardian = "FAIL"
-        new_diagnosis.cause = Cause.UNKNOWN
-        new_diagnosis.explanation = f"[Guardian Rejected] Claimed cause {diagnosis.cause.value} failed signature validation. Root cause unverified."
+        updates["guardian"] = "FAIL"
+        updates["cause"] = Cause.UNKNOWN.value if hasattr(Cause.UNKNOWN, 'value') else "UNKNOWN"
+        updates["explanation"] = f"[Guardian Rejected] Claimed cause {cause_str} failed signature validation. Root cause unverified."
         
-    return new_diagnosis
+    return diagnosis.model_copy(update=updates)

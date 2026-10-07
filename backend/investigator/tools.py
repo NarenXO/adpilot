@@ -2,7 +2,7 @@ import uuid
 from typing import List
 
 from backend.contracts import EvidenceItem
-from backend.db.connection import get_db
+from backend.db.connection import get_connection as get_db
 
 def _generate_id() -> str:
     return "E_" + uuid.uuid4().hex[:6]
