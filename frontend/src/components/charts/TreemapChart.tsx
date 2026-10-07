@@ -48,14 +48,14 @@ export const MOCK_TREEMAP: TreemapNode[] = [
   ]},
 ];
 
-// ─── ROAS-delta diverging color scale ────────────────────────────────────────
+// ─── ROAS-delta color scale (Invente '26 Neo-Brutalist) ───────────────────────
 
 const roasDeltaColor = (delta: number): string => {
-  if (delta < -1.0) return '#991b1b';
-  if (delta < 0)    return '#ef4444';
-  if (delta === 0)  return '#475569';
-  if (delta <= 1.0) return '#10b981';
-  return '#065f46';
+  if (delta < -1.0) return '#f364cb'; // pink
+  if (delta < 0)    return '#f364cb'; // pink
+  if (delta === 0)  return '#e1e1d8'; // muted gray
+  if (delta <= 1.0) return '#78dbf6'; // cyan
+  return '#82e66f'; // lime
 };
 
 // ─── Flatten tree to extract min/max roas_delta for visualMap ────────────────
@@ -71,16 +71,15 @@ const collectDeltas = (nodes: TreemapNode[]): number[] => {
 };
 
 // ─── Transform TreemapNode[] → ECharts treemap data ──────────────────────────
-// ECharts treemap expects: { name, value, itemStyle: { color }, children }
 
 const transformNode = (node: TreemapNode): Record<string, unknown> => ({
   name: node.name,
   value: node.value ?? (node.children?.reduce((s, c) => s + (c.value ?? 0), 0) ?? 0),
   roasDelta: node.roas_delta,
   itemStyle: {
-    color: node.roas_delta !== undefined ? roasDeltaColor(node.roas_delta) : '#475569',
-    borderColor: 'rgba(0,0,0,0.4)',
-    borderWidth: 1,
+    color: node.roas_delta !== undefined ? roasDeltaColor(node.roas_delta) : '#e1e1d8',
+    borderColor: '#000000',
+    borderWidth: 2,
     gapWidth: 2,
   },
   children: node.children?.map(transformNode),
@@ -114,10 +113,10 @@ export const TreemapChart: React.FC<TreemapChartProps> = ({
       backgroundColor: 'transparent',
       tooltip: {
         trigger: 'item',
-        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-        borderColor: '#334155',
-        borderWidth: 1,
-        textStyle: { color: '#e2e8f0', fontFamily: "'JetBrains Mono', monospace", fontSize: 12 },
+        backgroundColor: '#ffffff',
+        borderColor: '#000000',
+        borderWidth: 2,
+        extraCssText: 'box-shadow: 3px 3px 0px #000000; font-family: Space Grotesk, sans-serif; color: #000000; font-weight: 600;',
         formatter: (params: Record<string, unknown>) => {
           const d = params.data as Record<string, unknown>;
           const treePath = (params.treePathInfo as Record<string, unknown>[])
@@ -132,14 +131,14 @@ export const TreemapChart: React.FC<TreemapChartProps> = ({
             : '—';
           return `
             <div style="padding:4px 2px;max-width:260px">
-              <div style="font-weight:700;color:#f8fafc;margin-bottom:4px;word-break:break-all">${treePath || d.name}</div>
+              <div style="font-weight:700;color:#000000;margin-bottom:4px;word-break:break-all">${treePath || d.name}</div>
               <div style="display:flex;gap:16px;margin-top:2px">
-                <span style="color:#94a3b8">Spend</span>
-                <span style="color:#e2e8f0;font-weight:600">${spend}</span>
+                <span style="color:#4a4a46">Spend</span>
+                <span style="color:#000000;font-weight:700">${spend}</span>
               </div>
               <div style="display:flex;gap:8px;margin-top:2px">
-                <span style="color:#94a3b8">ROAS Δ</span>
-                <span style="color:${Number(d.roasDelta ?? 0) >= 0 ? '#10b981' : '#ef4444'};font-weight:700">${roasDelta}</span>
+                <span style="color:#4a4a46">ROAS Δ</span>
+                <span style="color:#000000;background-color:${Number(d.roasDelta ?? 0) >= 0 ? '#82e66f' : '#f364cb'};padding:0 4px;border:1px solid #000;font-weight:700">${roasDelta}</span>
               </div>
             </div>
           `;
@@ -151,10 +150,10 @@ export const TreemapChart: React.FC<TreemapChartProps> = ({
         min: minDelta,
         max: maxDelta,
         inRange: {
-          color: ['#991b1b', '#ef4444', '#475569', '#10b981', '#065f46'],
+          color: ['#f364cb', '#e1e1d8', '#78dbf6', '#82e66f'],
         },
         text: ['+ROAS', '-ROAS'],
-        textStyle: { color: '#94a3b8', fontSize: 11, fontFamily: "'JetBrains Mono', monospace" },
+        textStyle: { color: '#000000', fontSize: 11, fontFamily: "'Space Grotesk', monospace", fontWeight: 'bold' },
         orient: 'horizontal',
         left: 'right',
         top: 8,
@@ -177,14 +176,15 @@ export const TreemapChart: React.FC<TreemapChartProps> = ({
             top: 4,
             height: 28,
             textStyle: {
-              color: '#94a3b8',
+              color: '#000000',
               fontSize: 11,
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'Space Grotesk', monospace",
+              fontWeight: 700,
             },
             itemStyle: {
-              color: 'rgba(255,255,255,0.05)',
-              borderColor: '#334155',
-              borderWidth: 1,
+              color: '#ffffff',
+              borderColor: '#000000',
+              borderWidth: 2,
             },
           },
           label: {
@@ -197,46 +197,61 @@ export const TreemapChart: React.FC<TreemapChartProps> = ({
               }
               return String(d.name);
             },
-            color: '#f8fafc',
+            color: '#000000',
+            fontFamily: "'Space Grotesk', sans-serif",
             fontSize: 11,
-            fontFamily: "'JetBrains Mono', monospace",
-            fontWeight: 600,
-            overflow: 'truncate',
+            fontWeight: 700,
+          },
+          itemStyle: {
+            borderColor: '#000000',
+            borderWidth: 2,
+            gapWidth: 2,
           },
           upperLabel: {
             show: true,
-            height: 28,
-            color: '#e2e8f0',
-            fontWeight: 700,
+            height: 22,
+            color: '#000000',
+            fontFamily: "'Space Grotesk', sans-serif",
             fontSize: 12,
-            fontFamily: 'Inter, sans-serif',
-            backgroundColor: 'rgba(0,0,0,0.35)',
-            padding: [4, 8],
+            fontWeight: 700,
           },
           levels: [
             // Platform level
             {
               itemStyle: {
-                borderColor: '#0a0d14',
+                borderColor: '#000000',
                 borderWidth: 3,
                 gapWidth: 3,
               },
-              upperLabel: { show: true },
+              upperLabel: {
+                show: true,
+                color: '#000000',
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontWeight: 700,
+                backgroundColor: '#e1e1d8',
+                borderColor: '#000000',
+                borderWidth: 1,
+              },
             },
             // Campaign level
             {
               itemStyle: {
-                borderColor: 'rgba(0,0,0,0.4)',
+                borderColor: '#000000',
                 borderWidth: 2,
                 gapWidth: 2,
               },
-              upperLabel: { show: true },
+              upperLabel: {
+                show: true,
+                color: '#000000',
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontWeight: 700,
+              },
             },
             // SKU leaf level
             {
               itemStyle: {
-                borderColor: 'rgba(0,0,0,0.2)',
-                borderWidth: 1,
+                borderColor: '#000000',
+                borderWidth: 2,
                 gapWidth: 1,
               },
             },

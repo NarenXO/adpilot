@@ -21,13 +21,13 @@ export const MOCK_WATERFALL: WaterfallStep[] = [
   { label: 'Net Profit',       value: 93170,  type: 'total' },
 ];
 
-// ─── Color map ────────────────────────────────────────────────────────────────
+// ─── Color map (Invente '26 Neo-Brutalist) ───────────────────────────────────
 
 const TYPE_COLORS: Record<WaterfallStep['type'], string> = {
-  base:     '#38bdf8', // cyan
-  positive: '#10b981', // green
-  negative: '#ef4444', // red
-  total:    '#f59e0b', // amber
+  base:     '#78dbf6', // cyan
+  positive: '#82e66f', // lime
+  negative: '#f364cb', // pink
+  total:    '#ffd23f', // yellow
 };
 
 // ─── Formatting helpers ───────────────────────────────────────────────────────
@@ -61,10 +61,6 @@ export const WaterfallChart: React.FC<WaterfallChartProps> = ({
   const option = useMemo(() => {
     if (!data || data.length === 0) return null;
 
-    // Build floating-bar series. ECharts waterfall uses a transparent "base"
-    // bar stacked under the visible bar to create the floating effect.
-    //
-    // For each step, track a running "floor" — the bottom of the visible bar.
     let runningTotal = 0;
     const bases: number[]    = [];
     const values: number[]   = [];
@@ -78,14 +74,12 @@ export const WaterfallChart: React.FC<WaterfallChartProps> = ({
       } else if (step.type === 'total') {
         bases.push(0);
         values.push(step.value);
-        // Don't accumulate; total shows absolute
       } else if (step.type === 'positive') {
         bases.push(runningTotal);
         values.push(step.value);
         runningTotal += step.value;
       } else {
-        // negative
-        runningTotal += step.value; // step.value is already negative
+        runningTotal += step.value;
         bases.push(runningTotal);
         values.push(Math.abs(step.value));
       }
@@ -106,10 +100,10 @@ export const WaterfallChart: React.FC<WaterfallChartProps> = ({
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
-        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-        borderColor: '#334155',
-        borderWidth: 1,
-        textStyle: { color: '#e2e8f0', fontFamily: "'JetBrains Mono', monospace", fontSize: 12 },
+        backgroundColor: '#ffffff',
+        borderColor: '#000000',
+        borderWidth: 2,
+        extraCssText: 'box-shadow: 3px 3px 0px #000000; font-family: Space Grotesk, sans-serif; color: #000000; font-weight: 600;',
         formatter: (params: Record<string, unknown>[]) => {
           const visibleBar = (params as Record<string, unknown>[]).find(
             (p) => (p as Record<string, unknown>).seriesName === 'value'
@@ -120,8 +114,8 @@ export const WaterfallChart: React.FC<WaterfallChartProps> = ({
           const sign = step.type === 'negative' ? '-' : '';
           return `
             <div style="padding:4px 2px">
-              <div style="font-weight:700;color:#f8fafc;margin-bottom:4px">${step.label}</div>
-              <div style="color:${TYPE_COLORS[step.type]};font-size:13px">${sign}${formatFull(step.value)}</div>
+              <div style="font-weight:700;color:#000000;margin-bottom:4px">${step.label}</div>
+              <div style="color:#000000;background-color:${TYPE_COLORS[step.type]};padding:2px 6px;border:1px solid #000;font-size:13px;font-weight:700;display:inline-block">${sign}${formatFull(step.value)}</div>
             </div>
           `;
         },
@@ -130,30 +124,31 @@ export const WaterfallChart: React.FC<WaterfallChartProps> = ({
         type: 'category',
         data: labels,
         axisLabel: {
-          color: '#94a3b8',
+          color: '#000000',
           fontSize: 11,
-          fontFamily: 'Inter, sans-serif',
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontWeight: 600,
           rotate: 0,
           interval: 0,
         },
-        axisLine: { lineStyle: { color: '#334155' } },
+        axisLine: { lineStyle: { color: '#000000', width: 2 } },
         axisTick: { show: false },
         splitLine: { show: false },
       },
       yAxis: {
         type: 'value',
         axisLabel: {
-          color: '#94a3b8',
+          color: '#000000',
           fontSize: 11,
-          fontFamily: "'JetBrains Mono', monospace",
+          fontFamily: "'Space Grotesk', monospace",
+          fontWeight: 600,
           formatter: (v: number) => formatKM(v),
         },
-        axisLine: { show: false },
+        axisLine: { lineStyle: { color: '#000000', width: 2 } },
         axisTick: { show: false },
-        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } },
+        splitLine: { lineStyle: { color: '#e1e1d8', type: 'dashed' } },
       },
       series: [
-        // Invisible base bars (transparent stack layer)
         {
           name: 'base',
           type: 'bar',
@@ -163,7 +158,6 @@ export const WaterfallChart: React.FC<WaterfallChartProps> = ({
           data: bases,
           animation: false,
         },
-        // Visible colored bars
         {
           name: 'value',
           type: 'bar',
@@ -177,20 +171,23 @@ export const WaterfallChart: React.FC<WaterfallChartProps> = ({
               const sign = step.type === 'negative' ? '-' : '';
               return `${sign}${formatKM(step.value)}`;
             },
-            color: '#e2e8f0',
-            fontFamily: "'JetBrains Mono', monospace",
+            color: '#000000',
+            fontFamily: "'Space Grotesk', monospace",
             fontSize: 11,
-            fontWeight: 600,
+            fontWeight: 700,
           },
           itemStyle: {
             color: (params: Record<string, unknown>) =>
-              itemColors[params.dataIndex as number] ?? '#94a3b8',
-            borderRadius: [3, 3, 0, 0],
+              itemColors[params.dataIndex as number] ?? '#e1e1d8',
+            borderColor: '#000000',
+            borderWidth: 2,
+            borderRadius: 0,
           },
           emphasis: {
             itemStyle: {
-              shadowBlur: 12,
-              shadowColor: 'rgba(255,255,255,0.15)',
+              shadowBlur: 0,
+              borderColor: '#000000',
+              borderWidth: 3,
             },
           },
           data: values,

@@ -114,16 +114,16 @@ export const HeatmapChart: React.FC<HeatmapChartProps> = ({
       grid: {
         top: 20,
         bottom: 60,
-        left: 110,
+        left: 120,
         right: 80,
         containLabel: false,
       },
       tooltip: {
         trigger: 'item',
-        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-        borderColor: '#334155',
-        borderWidth: 1,
-        textStyle: { color: '#e2e8f0', fontFamily: "'JetBrains Mono', monospace", fontSize: 12 },
+        backgroundColor: '#ffffff',
+        borderColor: '#000000',
+        borderWidth: 2,
+        extraCssText: 'box-shadow: 3px 3px 0px #000000; font-family: Space Grotesk, sans-serif; color: #000000; font-weight: 600;',
         formatter: (params: Record<string, unknown>) => {
           const val = params.data as [number, number, number];
           const dayLabel  = days[val[0]]  ?? '—';
@@ -131,9 +131,9 @@ export const HeatmapChart: React.FC<HeatmapChartProps> = ({
           const roas      = val[2].toFixed(1);
           return `
             <div style="padding:4px 2px">
-              <div style="font-weight:700;color:#f8fafc;margin-bottom:3px">${campLabel}</div>
-              <div style="color:#94a3b8">${dayLabel}</div>
-              <div style="color:#38bdf8;font-weight:700;font-size:14px;margin-top:3px">ROAS: ${roas}x</div>
+              <div style="font-weight:700;color:#000000;margin-bottom:3px">${campLabel}</div>
+              <div style="color:#4a4a46;font-weight:600">${dayLabel}</div>
+              <div style="color:#000000;background-color:#78dbf6;padding:2px 6px;border:1px solid #000;font-weight:700;font-size:13px;margin-top:3px;display:inline-block">ROAS: ${roas}x</div>
             </div>
           `;
         },
@@ -144,29 +144,30 @@ export const HeatmapChart: React.FC<HeatmapChartProps> = ({
         min: minVal,
         max: maxVal,
         inRange: {
-          // dark-blue → cyan → neon-green sequential scale
-          color: ['#1e3a5f', '#0e7490', '#38bdf8', '#34d399', '#10b981'],
+          // Pink -> Yellow -> Lime scale
+          color: ['#f364cb', '#ffd23f', '#82e66f'],
         },
         text: [`${maxVal.toFixed(1)}x`, `${minVal.toFixed(1)}x`],
-        textStyle: { color: '#94a3b8', fontSize: 10, fontFamily: "'JetBrains Mono', monospace" },
+        textStyle: { color: '#000000', fontSize: 10, fontFamily: "'Space Grotesk', monospace", fontWeight: 'bold' },
         orient: 'vertical',
         right: 4,
         top: 'middle',
-        itemWidth: 12,
-        itemHeight: 100,
+        itemWidth: 14,
+        itemHeight: 110,
         precision: 1,
       },
       xAxis: {
         type: 'category',
         data: days,
         axisLabel: {
-          color: '#94a3b8',
+          color: '#000000',
           fontSize: 10,
-          fontFamily: "'JetBrains Mono', monospace",
+          fontFamily: "'Space Grotesk', monospace",
+          fontWeight: 600,
           rotate: 30,
           interval: 0,
         },
-        axisLine: { lineStyle: { color: '#334155' } },
+        axisLine: { lineStyle: { color: '#000000', width: 2 } },
         axisTick: { show: false },
         splitArea: { show: false },
       },
@@ -174,17 +175,17 @@ export const HeatmapChart: React.FC<HeatmapChartProps> = ({
         type: 'category',
         data: campaigns,
         axisLabel: {
-          color: '#94a3b8',
+          color: '#000000',
           fontSize: 10,
-          fontFamily: "'JetBrains Mono', monospace",
-          // Highlight the fatiguing campaign label in red
+          fontFamily: "'Space Grotesk', monospace",
+          fontWeight: 600,
           rich: {
-            fatigue: { color: '#ef4444', fontWeight: 700 },
+            fatigue: { color: '#000000', backgroundColor: '#f364cb', padding: [2, 4], fontWeight: 700 },
           },
           formatter: (v: string) =>
             v === 'camp_meta_03' ? `{fatigue|${v}}` : v,
         },
-        axisLine: { lineStyle: { color: '#334155' } },
+        axisLine: { lineStyle: { color: '#000000', width: 2 } },
         axisTick: { show: false },
         splitArea: { show: false },
       },
@@ -199,28 +200,28 @@ export const HeatmapChart: React.FC<HeatmapChartProps> = ({
               const val = (params.data as [number, number, number])[2];
               return val.toFixed(1);
             },
-            color: '#e2e8f0',
+            color: '#000000',
             fontSize: 10,
-            fontFamily: "'JetBrains Mono', monospace",
-            fontWeight: 600,
+            fontFamily: "'Space Grotesk', monospace",
+            fontWeight: 700,
           },
           itemStyle: {
-            borderColor: 'rgba(0,0,0,0.3)',
+            borderColor: '#000000',
             borderWidth: 1,
           },
           emphasis: {
             itemStyle: {
-              shadowBlur: 10,
-              shadowColor: 'rgba(56,189,248,0.4)',
+              borderWidth: 2,
+              borderColor: '#000000',
             },
           },
-          // Overlay to flag the fatigue row
+          // Overlay to flag the fatigue row with pink callout border
           markArea: fatigueIdx >= 0
             ? {
                 silent: true,
                 data: [
                   [
-                    { yAxis: fatigueIdx - 0.5, itemStyle: { color: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.45)', borderWidth: 1 } },
+                    { yAxis: fatigueIdx - 0.5, itemStyle: { color: 'rgba(243,100,203,0.15)', borderColor: '#f364cb', borderWidth: 2 } },
                     { yAxis: fatigueIdx + 0.5 },
                   ],
                 ],
