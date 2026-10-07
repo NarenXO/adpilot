@@ -21,8 +21,11 @@ def get_current_state():
 def tick(sim_date: date | None = None) -> TickResult:
     start_time = time.time()
     
-    # Advance time by 1 day
-    GLOBAL_STATE["current_date"] += timedelta(days=1)
+    # Advance time by 1 day or set to provided sim_date
+    if sim_date is not None:
+        GLOBAL_STATE["current_date"] = sim_date
+    else:
+        GLOBAL_STATE["current_date"] += timedelta(days=1)
     current_date = GLOBAL_STATE["current_date"]
     
     # Fluctuate KPIs slightly to make the dashboard look "alive"

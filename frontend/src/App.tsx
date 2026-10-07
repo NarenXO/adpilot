@@ -3,32 +3,45 @@ import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-do
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ReactECharts from 'echarts-for-react';
 import {
-  Activity, AlertTriangle, ShieldCheck, PieChart, Sliders, Award,
-  Play, Pause, Zap, Power, Smile, Cpu, CheckCircle, ArrowUpRight,
-  Radio, Sparkles, Send, Layers
+  Smile, Cpu, CheckCircle, Send, Layers
 } from 'lucide-react';
 import { palette } from './theme/tokens';
+
+// Real Merged Teammate Pages
 import InventoryMargin from './pages/InventoryMargin';
 import { Incidents } from './pages/Incidents';
 import { Proof } from './pages/Proof';
+import OptimizerStudio from './pages/OptimizerStudio';
 
 const queryClient = new QueryClient();
 
 const cardStyle: React.CSSProperties = {
-  background: palette.bg.card, border: `3px solid ${palette.bg.border}`,
-  borderRadius: '0px', padding: '1.25rem', boxShadow: `5px 5px 0px ${palette.bg.shadow}`,
+  background: palette.bg.card,
+  border: `3px solid ${palette.bg.border}`,
+  borderRadius: '0px',
+  padding: '1.25rem',
+  boxShadow: `5px 5px 0px ${palette.bg.shadow}`,
 };
 
 const badgeStyle = (type: string): React.CSSProperties => {
-  const colors: any = {
-    measured: { bg: palette.accent.cyan, color: '#000' }, derived: { bg: palette.accent.pink, color: '#000' },
-    scenario: { bg: palette.accent.yellow, color: '#000' }, AUTO: { bg: palette.accent.lime, color: '#000' },
-    PASS: { bg: palette.accent.lime, color: '#000' }, BLOCK: { bg: palette.accent.pink, color: '#000' },
+  const colors: Record<string, { bg: string; color: string }> = {
+    measured: { bg: palette.accent.cyan, color: '#000' },
+    derived: { bg: palette.accent.pink, color: '#000' },
+    scenario: { bg: palette.accent.yellow, color: '#000' },
+    AUTO: { bg: palette.accent.lime, color: '#000' },
+    PASS: { bg: palette.accent.lime, color: '#000' },
+    BLOCK: { bg: palette.accent.pink, color: '#000' },
   };
   const conf = colors[type] || colors.measured;
   return {
-    fontSize: '0.75rem', fontWeight: 900, padding: '0.2rem 0.6rem', background: conf.bg,
-    color: conf.color, border: '2px solid #000', boxShadow: '2px 2px 0px #000', textTransform: 'uppercase'
+    fontSize: '0.75rem',
+    fontWeight: 900,
+    padding: '0.2rem 0.6rem',
+    background: conf.bg,
+    color: conf.color,
+    border: '2px solid #000',
+    boxShadow: '2px 2px 0px #000',
+    textTransform: 'uppercase',
   };
 };
 
@@ -40,15 +53,28 @@ const Shell = ({ children, state, onTick, onInject, isTicking }: any) => {
 
   useEffect(() => {
     let interval: any;
-    if (isPlaying) { interval = setInterval(() => { onTick(); }, 2000); }
+    if (isPlaying) {
+      interval = setInterval(() => { onTick(); }, 2500);
+    }
     return () => clearInterval(interval);
-  }, [isPlaying]);
+  }, [isPlaying, onTick]);
 
   return (
-    <div style={{ minHeight: '100vh', background: palette.bg.base, backgroundImage: `linear-gradient(${palette.bg.gridLine} 1px, transparent 1px), linear-gradient(90deg, ${palette.bg.gridLine} 1px, transparent 1px)`, backgroundSize: '24px 24px', color: '#000', display: 'flex', flexDirection: 'column', fontFamily: '"Space Grotesk", sans-serif' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: palette.bg.base,
+      backgroundImage: `linear-gradient(${palette.bg.gridLine} 1px, transparent 1px), linear-gradient(90deg, ${palette.bg.gridLine} 1px, transparent 1px)`,
+      backgroundSize: '24px 24px',
+      color: '#000',
+      display: 'flex',
+      flexDirection: 'column',
+      fontFamily: '"Space Grotesk", sans-serif'
+    }}>
       <header style={{ borderBottom: '3px solid #000', padding: '0.85rem 2rem', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <div style={{ width: '42px', height: '42px', background: palette.accent.yellow, border: '3px solid #000', boxShadow: '3px 3px 0px #000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Smile size={24} color="#000" /></div>
+          <div style={{ width: '42px', height: '42px', background: palette.accent.yellow, border: '3px solid #000', boxShadow: '3px 3px 0px #000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Smile size={24} color="#000" />
+          </div>
           <div>
             <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900, textTransform: 'uppercase', color: '#000' }}>AdPilot</h1>
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#333' }}>AUTONOMOUS D2C DECISION ENGINE</span>
@@ -62,8 +88,12 @@ const Shell = ({ children, state, onTick, onInject, isTicking }: any) => {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', background: '#fff', padding: '0.35rem 0.8rem', border: '3px solid #000', boxShadow: '3px 3px 0px #000' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>DATE:</span>
-            <span style={{ fontSize: '0.9rem', fontWeight: 900, background: palette.accent.cyan, padding: '0.1rem 0.4rem', border: '1px solid #000' }}>{state?.sim_date || '2024-06-15'}</span>
-            <button onClick={() => setIsPlaying(!isPlaying)} style={{ background: isPlaying ? palette.accent.pink : palette.accent.lime, border: '3px solid #000', fontWeight: 900, padding: '0.2rem 0.6rem', cursor: 'pointer', boxShadow: '2px 2px 0px #000' }}>{isPlaying ? 'PAUSE' : 'PLAY'}</button>
+            <span style={{ fontSize: '0.9rem', fontWeight: 900, background: palette.accent.cyan, padding: '0.1rem 0.4rem', border: '1px solid #000' }}>
+              {state?.sim_date || '2024-06-15'}
+            </span>
+            <button onClick={() => setIsPlaying(!isPlaying)} style={{ background: isPlaying ? palette.accent.pink : palette.accent.lime, border: '3px solid #000', fontWeight: 900, padding: '0.2rem 0.6rem', cursor: 'pointer', boxShadow: '2px 2px 0px #000' }}>
+              {isPlaying ? 'PAUSE' : 'PLAY'}
+            </button>
             <button onClick={onTick} disabled={isTicking} style={{ background: isTicking ? palette.accent.yellow : '#fff', border: '3px solid #000', fontWeight: 900, padding: '0.2rem 0.6rem', cursor: 'pointer', boxShadow: '2px 2px 0px #000' }}>
               {isTicking ? 'RUNNING...' : '+1 DAY'}
             </button>
@@ -90,14 +120,40 @@ const Shell = ({ children, state, onTick, onInject, isTicking }: any) => {
       )}
 
       <nav style={{ background: '#fff', borderBottom: '3px solid #000', padding: '0 2rem', display: 'flex', gap: '0.75rem' }}>
-        {['/', '/incidents', '/diagnosis', '/inventory', '/optimizer', '/proof'].map((path, i) => {
-          const labels = ['Control', 'Incidents', 'Diagnosis', 'Inventory', 'Optimizer', 'Proof'];
+        {[
+          { path: '/', label: 'Control' },
+          { path: '/incidents', label: 'Incidents' },
+          { path: '/diagnosis', label: 'Diagnosis' },
+          { path: '/inventory', label: 'Inventory' },
+          { path: '/optimizer', label: 'Optimizer' },
+          { path: '/proof', label: 'Proof' },
+        ].map(({ path, label }) => {
           const isActive = location.pathname === path;
-          return <Link key={path} to={path} style={{ padding: '0.85rem 1.25rem', color: '#000', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 900, textTransform: 'uppercase', background: isActive ? palette.accent.cyan : 'transparent', borderLeft: isActive ? '3px solid #000' : 'none', borderRight: isActive ? '3px solid #000' : 'none' }}>{labels[i]}</Link>;
+          return (
+            <Link
+              key={path}
+              to={path}
+              style={{
+                padding: '0.85rem 1.25rem',
+                color: '#000',
+                textDecoration: 'none',
+                fontSize: '0.85rem',
+                fontWeight: 900,
+                textTransform: 'uppercase',
+                background: isActive ? palette.accent.cyan : 'transparent',
+                borderLeft: isActive ? '3px solid #000' : 'none',
+                borderRight: isActive ? '3px solid #000' : 'none',
+              }}
+            >
+              {label}
+            </Link>
+          );
         })}
       </nav>
 
-      <main style={{ flex: 1, padding: '2rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>{children}</main>
+      <main style={{ flex: 1, padding: '2rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
+        {children}
+      </main>
     </div>
   );
 };
@@ -215,21 +271,8 @@ const Diagnosis = () => {
     { step: 2, tool: 'compare_periods', result_summary: 'Confirmed 35.2% performance drop on camp_meta_03' }
   ];
 
-  // Helper to highlight evidence numbers like E12
-  const highlightEvidence = (text: string) => {
-    if (!text) return text;
-    const parts = text.split(/(E\d+)/g);
-    return parts.map((part, i) => 
-      /E\d+/.test(part) ? (
-        <span key={i} style={{ background: palette.accent.lime, borderBottom: '2px solid #000', padding: '0 2px', fontWeight: 900, color: '#000' }}>
-          {part}
-        </span>
-      ) : part
-    );
-  };
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', fontFamily: '"Space Grotesk", sans-serif' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 900, textTransform: 'uppercase' }}>
           Root Cause AI Diagnosis & Guardian Fact-Check
@@ -238,7 +281,7 @@ const Diagnosis = () => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-        <div style={{ ...cardStyle, background: palette.accent.yellow, border: '3px solid #000', boxShadow: '5px 5px 0px #000' }}>
+        <div style={{ ...cardStyle, background: palette.accent.yellow }}>
           <div style={{ fontSize: '1rem', fontWeight: 900, textTransform: 'uppercase', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Cpu size={20} /> Verified AI Agent Cause Analysis
           </div>
@@ -246,7 +289,7 @@ const Diagnosis = () => {
             CAUSE: <span style={{ background: palette.accent.pink, border: '2px solid #000', padding: '0 0.4rem' }}>{diagnosis.cause}</span>
           </div>
           <p style={{ fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.6, margin: '1rem 0' }}>
-            {highlightEvidence(diagnosis.explanation)}
+            {diagnosis.explanation}
           </p>
           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
             <span style={badgeStyle('AUTO')}>Fact-Checked: 100% Match</span>
@@ -260,9 +303,9 @@ const Diagnosis = () => {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {agentTrace.map((step: any, i: number) => (
-              <div key={i} style={{ background: palette.accent.cyan, border: '2px solid #000', boxShadow: '3px 3px 0px #000', padding: '0.75rem' }}>
+              <div key={i} style={{ background: '#fff', border: '2px solid #000', boxShadow: '3px 3px 0px #000', padding: '0.75rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 900 }}>
-                  <span style={{ background: '#fff', border: '1px solid #000', padding: '0 0.3rem' }}>STEP {step.step}: {step.tool}</span>
+                  <span style={{ background: palette.accent.cyan, border: '1px solid #000', padding: '0 0.3rem' }}>STEP {step.step}: {step.tool}</span>
                   <CheckCircle size={16} color="#000" />
                 </div>
                 <div style={{ fontSize: '0.85rem', fontWeight: 700, marginTop: '0.4rem', color: '#000' }}>
@@ -276,8 +319,6 @@ const Diagnosis = () => {
     </div>
   );
 };
-
-const Placeholder = ({ title }: any) => <div style={cardStyle}><h2 style={{ fontWeight: 900, margin: 0 }}>{title}</h2><p style={{ fontWeight: 600 }}>UI Module rendered. Awaiting feature integration.</p></div>;
 
 export default function App() {
   const [state, setState] = useState<any>(null);
@@ -345,7 +386,7 @@ export default function App() {
             <Route path="/diagnosis" element={<Diagnosis />} />
             <Route path="/inventory" element={<InventoryMargin />} />
             <Route path="/inventory-margin" element={<InventoryMargin />} />
-            <Route path="/optimizer" element={<Placeholder title="OPTIMIZER STUDIO" />} />
+            <Route path="/optimizer" element={<OptimizerStudio />} />
             <Route path="/proof" element={<Proof />} />
           </Routes>
         </Shell>
