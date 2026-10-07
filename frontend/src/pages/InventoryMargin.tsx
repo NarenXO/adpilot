@@ -17,6 +17,7 @@ const cardStyle: React.CSSProperties = {
   boxShadow: '5px 5px 0px #000000',
   borderRadius: 0,
   padding: 20,
+  color: '#000000',
 };
 
 // ─── Rich Built-In 20 SKU Fallback Dataset ─────────────────────────────────────
@@ -43,7 +44,71 @@ const DEFAULT_20_SKUS: SKUBubble[] = [
   { sku: 'SKU-020', name: 'Heat Protectant Spray', category: 'haircare', margin_pct: 0.41, days_of_cover: 19.0, spend: 170, revenue: 620, quadrant: 'scale', opportunity_score: 43, provenance: 'derived' },
 ];
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
+// ─── Inline React Error Boundary ───────────────────────────────────────────────
+class InventoryErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("InventoryMargin ErrorBoundary caught an error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          padding: 40,
+          background: '#f3f3ed',
+          minHeight: '100vh',
+          fontFamily: FONT,
+          color: '#000000',
+        }}>
+          <div style={{
+            background: '#ffffff',
+            border: '3px solid #000000',
+            boxShadow: '5px 5px 0px #000000',
+            padding: 24,
+            maxWidth: 600,
+            margin: '40px auto',
+          }}>
+            <h2 style={{ fontSize: 18, fontWeight: 900, textTransform: 'uppercase', color: '#000000', marginTop: 0 }}>
+              INVENTORY MATRIX — STUDIO RECOVERY
+            </h2>
+            <p style={{ fontSize: 13, fontWeight: 600, color: '#333333' }}>
+              Notice: {this.state.error?.message || 'A render issue occurred'}
+            </p>
+            <button
+              onClick={() => this.setState({ hasError: false, error: null })}
+              style={{
+                background: P?.accent?.lime || '#82e66f',
+                border: '2px solid #000000',
+                boxShadow: '2px 2px 0px #000000',
+                padding: '6px 16px',
+                fontWeight: 900,
+                fontSize: 12,
+                cursor: 'pointer',
+                fontFamily: FONT,
+                textTransform: 'uppercase',
+                color: '#000000',
+              }}
+            >
+              RELOAD STUDIO
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ─── Types & Helpers ───────────────────────────────────────────────────────────
 type SortField =
   | 'sku' | 'name' | 'category' | 'margin_pct' | 'days_of_cover'
   | 'spend' | 'revenue' | 'roas' | 'opportunity_score' | 'quadrant';
@@ -51,15 +116,16 @@ type SortField =
 const ALL = 'all' as const;
 type FilterValue = Quadrant | typeof ALL;
 
-// Helper to normalize margin percentage (e.g. 0.62 -> 62.0%, 62.0 -> 62.0%)
 function normMargin(pct: number): number {
-  return pct <= 1 ? pct * 100 : pct;
+  const safe = pct ?? 0;
+  return safe <= 1 ? safe * 100 : safe;
 }
 
 // ─── Mini Components ───────────────────────────────────────────────────────────
 const QuadrantBadge: React.FC<{ quadrant: Quadrant }> = ({ quadrant }) => {
-  const color = quadrantMeta[quadrant]?.color ?? '#cccccc';
-  const label = quadrantMeta[quadrant]?.label ?? quadrant.toUpperCase();
+  const qKey = quadrant || 'scale';
+  const color = quadrantMeta[qKey]?.color ?? '#cccccc';
+  const label = quadrantMeta[qKey]?.label ?? qKey.toUpperCase();
   return (
     <span style={{
       display: 'inline-block',
@@ -79,12 +145,13 @@ const QuadrantBadge: React.FC<{ quadrant: Quadrant }> = ({ quadrant }) => {
 };
 
 const ProvenanceBadge: React.FC<{ provenance: Provenance | string }> = ({ provenance }) => {
+  const pKey = provenance || 'scenario';
   const styles: Record<string, { bg: string; color: string }> = {
-    measured: { bg: P.accent.cyan,   color: '#000' },
-    derived:  { bg: P.bg.gridLine,   color: '#000' },
-    scenario: { bg: P.accent.yellow, color: '#000' },
+    measured: { bg: P?.accent?.cyan   || '#78dbf6', color: '#000000' },
+    derived:  { bg: P?.bg?.gridLine   || '#e1e1d8', color: '#000000' },
+    scenario: { bg: P?.accent?.yellow || '#ffd23f', color: '#000000' },
   };
-  const s = styles[provenance] ?? styles.derived;
+  const s = styles[pKey] ?? styles.derived;
   return (
     <span style={{
       display: 'inline-block',
@@ -100,30 +167,31 @@ const ProvenanceBadge: React.FC<{ provenance: Provenance | string }> = ({ proven
       verticalAlign: 'middle',
       letterSpacing: '0.04em',
     }}>
-      {provenance}
+      {pKey}
     </span>
   );
 };
 
 const OpportunityBar: React.FC<{ score: number }> = ({ score }) => {
+  const safeScore = score ?? 0;
   const barColor =
-    score >= 70 ? P.accent.lime :
-    score >= 40 ? P.accent.yellow :
-                  P.accent.pink;
+    safeScore >= 70 ? (P?.accent?.lime   || '#82e66f') :
+    safeScore >= 40 ? (P?.accent?.yellow || '#ffd23f') :
+                      (P?.accent?.pink   || '#f364cb');
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <div style={{
-        flex: 1, height: 8, background: P.bg.gridLine,
+        flex: 1, height: 8, background: '#e1e1d8',
         border: '1.5px solid #000000', position: 'relative', minWidth: 60,
       }}>
         <div style={{
-          width: `${Math.min(100, Math.max(0, score))}%`, height: '100%',
+          width: `${Math.min(100, Math.max(0, safeScore))}%`, height: '100%',
           background: barColor,
           transition: 'width 0.4s ease',
         }} />
       </div>
-      <span style={{ fontSize: 12, fontWeight: 900, fontFamily: FONT, minWidth: 28 }}>
-        {score}
+      <span style={{ fontSize: 12, fontWeight: 900, fontFamily: FONT, color: '#000000', minWidth: 28 }}>
+        {safeScore}
       </span>
     </div>
   );
@@ -136,17 +204,17 @@ const KPICard: React.FC<{
   <div style={{ ...cardStyle, flex: 1 }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
       <span style={{
-        fontSize: 10, fontWeight: 900, color: P.text.subtle, letterSpacing: '0.08em',
+        fontSize: 10, fontWeight: 900, color: '#555555', letterSpacing: '0.08em',
         textTransform: 'uppercase', fontFamily: FONT,
       }}>{label}</span>
       <span style={{ background: accent, border: '2px solid #000000', padding: '2px 6px', color: '#000000' }}>
         {icon}
       </span>
     </div>
-    <div style={{ fontSize: 32, fontWeight: 900, color: P.text.primary, fontFamily: FONT, lineHeight: 1 }}>
+    <div style={{ fontSize: 32, fontWeight: 900, color: '#000000', fontFamily: FONT, lineHeight: 1 }}>
       {value}
     </div>
-    {sub && <div style={{ fontSize: 11, color: P.text.subtle, marginTop: 4, fontFamily: FONT }}>{sub}</div>}
+    {sub && <div style={{ fontSize: 11, color: '#555555', marginTop: 4, fontFamily: FONT, fontWeight: 600 }}>{sub}</div>}
   </div>
 );
 
@@ -163,19 +231,19 @@ const Th: React.FC<{
       fontSize: 10,
       fontWeight: 900,
       fontFamily: FONT,
-      color: sortKey === col ? P.text.primary : P.text.subtle,
+      color: sortKey === col ? '#000000' : '#555555',
       textTransform: 'uppercase',
       letterSpacing: '0.07em',
       cursor: 'pointer',
       borderBottom: '3px solid #000000',
       userSelect: 'none',
       whiteSpace: 'nowrap',
-      background: sortKey === col ? P.bg.gridLine : 'transparent',
+      background: sortKey === col ? '#e1e1d8' : 'transparent',
     }}
   >
     {label}
     {sortKey === col && (
-      <span style={{ marginLeft: 4, fontWeight: 900 }}>{sortDir === 'asc' ? '↑' : '↓'}</span>
+      <span style={{ marginLeft: 4, fontWeight: 900, color: '#000000' }}>{sortDir === 'asc' ? '↑' : '↓'}</span>
     )}
   </th>
 );
@@ -185,12 +253,12 @@ const tdStyle: React.CSSProperties = {
   fontSize: 13,
   fontFamily: FONT,
   fontWeight: 500,
-  color: P.text.primary,
-  borderBottom: `1px solid ${P.bg.gridLine}`,
+  color: '#000000',
+  borderBottom: '1px solid #e1e1d8',
 };
 
-// ─── Main Page ─────────────────────────────────────────────────────────────────
-export default function InventoryMargin() {
+// ─── Main Inner Component ──────────────────────────────────────────────────────
+function InventoryMarginInner() {
   const { data, refetch, dataUpdatedAt } = useInventoryMargin();
 
   const [activeFilter, setActiveFilter] = useState<FilterValue>(ALL);
@@ -199,35 +267,54 @@ export default function InventoryMargin() {
   const [sortKey, setSortKey] = useState<SortField>('opportunity_score');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
-  // Fall back to built-in 20 SKUs so the UI ALWAYS renders immediately without placeholder stub
+  // Defensive data resolution
   const skus: SKUBubble[] = useMemo(() => {
-    if (data && Array.isArray(data) && data.length > 0) {
-      return data;
+    let list: any[] = [];
+    if (data) {
+      if (Array.isArray(data)) {
+        list = data;
+      } else if (typeof data === 'object' && Array.isArray((data as any).skus)) {
+        list = (data as any).skus;
+      }
     }
-    return DEFAULT_20_SKUS;
+    if (!list || list.length === 0) {
+      list = DEFAULT_20_SKUS;
+    }
+    return list.map(item => ({
+      sku: item?.sku || 'SKU-000',
+      name: item?.name || 'Unknown Product',
+      category: item?.category || 'general',
+      margin_pct: typeof item?.margin_pct === 'number' ? item.margin_pct : 0.5,
+      days_of_cover: typeof item?.days_of_cover === 'number' ? item.days_of_cover : 14,
+      spend: typeof item?.spend === 'number' ? item.spend : 0,
+      revenue: typeof item?.revenue === 'number' ? item.revenue : 0,
+      quadrant: (['scale','protect','pause','fix'].includes(item?.quadrant) ? item.quadrant : 'scale') as Quadrant,
+      opportunity_score: typeof item?.opportunity_score === 'number' ? item.opportunity_score : 50,
+      provenance: (item?.provenance || 'scenario') as Provenance,
+    }));
   }, [data]);
 
   const totalSkus  = skus.length;
-  const avgMargin  = totalSkus > 0 ? skus.reduce((s, b) => s + normMargin(b.margin_pct), 0) / totalSkus : 0;
-  const avgCover   = totalSkus > 0 ? skus.reduce((s, b) => s + b.days_of_cover, 0) / totalSkus : 0;
-  const atRisk     = skus.filter(b => b.quadrant === 'pause' || b.quadrant === 'fix').length;
+  const avgMargin  = totalSkus > 0 ? skus.reduce((s, b) => s + normMargin(b?.margin_pct ?? 0), 0) / totalSkus : 0;
+  const avgCover   = totalSkus > 0 ? skus.reduce((s, b) => s + (b?.days_of_cover ?? 0), 0) / totalSkus : 0;
+  const atRisk     = skus.filter(b => (b?.quadrant || '') === 'pause' || (b?.quadrant || '') === 'fix').length;
 
   const filteredSkus = useMemo(
     () => skus
-      .filter(b => activeFilter === ALL || b.quadrant === activeFilter)
+      .filter(b => activeFilter === ALL || (b?.quadrant || '') === activeFilter)
       .filter(b => {
         if (!search) return true;
         const q = search.trim().toLowerCase();
         return (
-          b.sku.toLowerCase().includes(q) ||
-          b.name.toLowerCase().includes(q) ||
-          b.category.toLowerCase().includes(q)
+          (b?.sku || '').toLowerCase().includes(q) ||
+          (b?.name || '').toLowerCase().includes(q) ||
+          (b?.category || '').toLowerCase().includes(q)
         );
       }),
     [skus, activeFilter, search],
   );
 
-  const getRoas = (b: SKUBubble) => b.spend > 0 ? b.revenue / b.spend : 0;
+  const getRoas = (b: SKUBubble) => (b?.spend ?? 0) > 0 ? (b?.revenue ?? 0) / (b?.spend ?? 1) : 0;
 
   const sortedSkus = useMemo(() => {
     const copy = [...filteredSkus];
@@ -239,11 +326,11 @@ export default function InventoryMargin() {
         va = getRoas(a);
         vb = getRoas(b);
       } else if (sortKey === 'margin_pct') {
-        va = normMargin(a.margin_pct);
-        vb = normMargin(b.margin_pct);
+        va = normMargin(a?.margin_pct ?? 0);
+        vb = normMargin(b?.margin_pct ?? 0);
       } else {
-        va = a[sortKey as keyof SKUBubble] as number | string;
-        vb = b[sortKey as keyof SKUBubble] as number | string;
+        va = (a?.[sortKey as keyof SKUBubble] ?? 0) as number | string;
+        vb = (b?.[sortKey as keyof SKUBubble] ?? 0) as number | string;
       }
 
       const cmp = va < vb ? -1 : va > vb ? 1 : 0;
@@ -260,11 +347,11 @@ export default function InventoryMargin() {
   const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : 'LIVE';
 
   const filterBtns: { value: FilterValue; label: string; accent: string }[] = [
-    { value: ALL, label: `ALL (${skus.length})`, accent: P.bg.border },
-    { value: 'scale',   label: `SCALE (${skus.filter(s => s.quadrant === 'scale').length})`,   accent: P.accent.lime },
-    { value: 'protect', label: `PROTECT (${skus.filter(s => s.quadrant === 'protect').length})`, accent: P.accent.yellow },
-    { value: 'pause',   label: `PAUSE (${skus.filter(s => s.quadrant === 'pause').length})`,   accent: P.accent.pink },
-    { value: 'fix',     label: `FIX (${skus.filter(s => s.quadrant === 'fix').length})`,       accent: P.accent.cyan },
+    { value: ALL, label: `ALL (${skus.length})`, accent: P?.bg?.border || '#000000' },
+    { value: 'scale',   label: `SCALE (${skus.filter(s => s?.quadrant === 'scale').length})`,   accent: P?.accent?.lime   || '#82e66f' },
+    { value: 'protect', label: `PROTECT (${skus.filter(s => s?.quadrant === 'protect').length})`, accent: P?.accent?.yellow || '#ffd23f' },
+    { value: 'pause',   label: `PAUSE (${skus.filter(s => s?.quadrant === 'pause').length})`,   accent: P?.accent?.pink   || '#f364cb' },
+    { value: 'fix',     label: `FIX (${skus.filter(s => s?.quadrant === 'fix').length})`,       accent: P?.accent?.cyan   || '#78dbf6' },
   ];
 
   return (
@@ -274,32 +361,33 @@ export default function InventoryMargin() {
       margin: '0 auto',
       fontFamily: FONT,
       background: '#f3f3ed',
+      color: '#000000',
       minHeight: '100vh',
     }}>
       {/* ── Header ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
         <div>
           <h1 style={{
-            fontSize: 28, fontWeight: 900, color: P.text.primary, letterSpacing: '-0.02em',
+            fontSize: 28, fontWeight: 900, color: '#000000', letterSpacing: '-0.02em',
             textTransform: 'uppercase', fontFamily: FONT, margin: 0,
           }}>
-            INVENTORY <span style={{ color: P.accent.lime }}>×</span> MARGIN MATRIX
+            INVENTORY <span style={{ color: P?.accent?.lime || '#82e66f' }}>×</span> MARGIN MATRIX
           </h1>
-          <p style={{ color: P.text.subtle, fontSize: 13, marginTop: 4, fontFamily: FONT, fontWeight: 600 }}>
+          <p style={{ color: '#555555', fontSize: 13, marginTop: 4, fontFamily: FONT, fontWeight: 600 }}>
             SKU-level profitability and stock health overview
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {/* Live Engine Badge */}
           <span style={{
-            background: P.accent.lime, border: '2px solid #000000',
+            background: P?.accent?.lime || '#82e66f', border: '2px solid #000000',
             padding: '5px 14px', fontSize: 11, fontWeight: 900,
             textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: FONT,
             color: '#000000',
           }}>● LIVE ENGINE</span>
           <span style={{
             fontSize: 11, fontFamily: FONT, fontWeight: 600,
-            color: P.text.subtle, padding: '5px 10px',
+            color: '#333333', padding: '5px 10px',
             background: '#ffffff', border: '2px solid #000000',
           }}>Updated {lastUpdated}</span>
           <button
@@ -309,6 +397,7 @@ export default function InventoryMargin() {
               boxShadow: '3px 3px 0 #000000', padding: '5px 12px',
               cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
               fontFamily: FONT, fontWeight: 700, fontSize: 12, textTransform: 'uppercase',
+              color: '#000000',
             }}
           >
             <RefreshCw size={13} /> Refresh
@@ -320,20 +409,20 @@ export default function InventoryMargin() {
       <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
         <KPICard
           label="Total SKUs" value={totalSkus}
-          icon={<Package size={14} />} accent={P.accent.lime}
+          icon={<Package size={14} />} accent={P?.accent?.lime || '#82e66f'}
         />
         <KPICard
           label="Avg Margin" value={`${avgMargin.toFixed(1)}%`}
-          icon={<TrendingUp size={14} />} accent={P.accent.lime}
+          icon={<TrendingUp size={14} />} accent={P?.accent?.lime || '#82e66f'}
         />
         <KPICard
           label="Avg Stock Cover" value={`${avgCover.toFixed(1)} days`}
-          icon={<BarChart3 size={14} />} accent={P.accent.cyan}
+          icon={<BarChart3 size={14} />} accent={P?.accent?.cyan || '#78dbf6'}
           sub="days of inventory"
         />
         <KPICard
           label="At-Risk SKUs" value={atRisk}
-          icon={<AlertTriangle size={14} />} accent={P.accent.pink}
+          icon={<AlertTriangle size={14} />} accent={P?.accent?.pink || '#f364cb'}
           sub="pause or fix quadrant"
         />
       </div>
@@ -356,7 +445,7 @@ export default function InventoryMargin() {
                 fontFamily: FONT,
                 border: '3px solid #000000',
                 background: isActive ? accent : '#ffffff',
-                color: P.text.primary,
+                color: '#000000',
                 boxShadow: isActive ? '5px 5px 0px #000000' : '3px 3px 0px #000000',
                 transform: isActive ? 'translate(-2px,-2px)' : 'none',
                 transition: 'all 0.1s ease',
@@ -375,10 +464,10 @@ export default function InventoryMargin() {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
           <div>
-            <h2 style={{ fontSize: 14, fontWeight: 900, color: P.text.primary, textTransform: 'uppercase', fontFamily: FONT, margin: 0 }}>
+            <h2 style={{ fontSize: 14, fontWeight: 900, color: '#000000', textTransform: 'uppercase', fontFamily: FONT, margin: 0 }}>
               Margin % vs Days of Cover
             </h2>
-            <p style={{ fontSize: 11, color: P.text.subtle, marginTop: 3, fontFamily: FONT, fontWeight: 600 }}>
+            <p style={{ fontSize: 11, color: '#555555', marginTop: 3, fontFamily: FONT, fontWeight: 600 }}>
               Bubble size = 7-day ad spend · Click a bubble to highlight row
             </p>
           </div>
@@ -402,9 +491,9 @@ export default function InventoryMargin() {
       {/* ── Search & Sortable SKU Data Table ── */}
       <div style={cardStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 style={{ fontSize: 14, fontWeight: 900, color: P.text.primary, textTransform: 'uppercase', fontFamily: FONT, margin: 0 }}>
+          <h2 style={{ fontSize: 14, fontWeight: 900, color: '#000000', textTransform: 'uppercase', fontFamily: FONT, margin: 0 }}>
             SKU Data Table
-            <span style={{ marginLeft: 10, fontSize: 12, color: P.text.subtle, fontWeight: 600 }}>
+            <span style={{ marginLeft: 10, fontSize: 12, color: '#555555', fontWeight: 600 }}>
               ({filteredSkus.length} of {totalSkus} SKUs)
             </span>
           </h2>
@@ -414,14 +503,14 @@ export default function InventoryMargin() {
             background: '#ffffff', border: '3px solid #000000',
             boxShadow: '3px 3px 0 #000000', padding: '6px 12px',
           }}>
-            <Search size={13} />
+            <Search size={13} color="#000000" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="SEARCH SKU, NAME, CATEGORY…"
               style={{
                 background: 'transparent', border: 'none', outline: 'none',
-                color: P.text.primary, fontSize: 12, width: 240,
+                color: '#000000', fontSize: 12, width: 240,
                 fontFamily: FONT, fontWeight: 700,
                 textTransform: 'uppercase',
               }}
@@ -430,7 +519,7 @@ export default function InventoryMargin() {
         </div>
 
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', color: '#000000' }}>
             <thead>
               <tr>
                 <Th col="sku"               label="SKU"          sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
@@ -448,16 +537,19 @@ export default function InventoryMargin() {
             <tbody>
               {sortedSkus.length === 0 && (
                 <tr>
-                  <td colSpan={10} style={{ padding: 40, textAlign: 'center', color: P.text.subtle, fontFamily: FONT, fontWeight: 700, textTransform: 'uppercase' }}>
+                  <td colSpan={10} style={{ padding: 40, textAlign: 'center', color: '#555555', fontFamily: FONT, fontWeight: 700, textTransform: 'uppercase' }}>
                     No SKUs match your search filter.
                   </td>
                 </tr>
               )}
               {sortedSkus.map(b => {
-                const roas = b.spend > 0 ? (b.revenue / b.spend).toFixed(2) : '—';
+                const spend = b?.spend ?? 0;
+                const revenue = b?.revenue ?? 0;
+                const roas = spend > 0 ? (revenue / spend).toFixed(2) : '—';
                 const isHighlighted = highlightedSku === b.sku;
-                const qColor = quadrantMeta[b.quadrant]?.color ?? '#ccc';
-                const mPct = normMargin(b.margin_pct);
+                const qColor = quadrantMeta[b?.quadrant || 'scale']?.color ?? '#ccc';
+                const mPct = normMargin(b?.margin_pct ?? 0);
+                const daysCover = b?.days_of_cover ?? 0;
 
                 return (
                   <tr
@@ -465,13 +557,13 @@ export default function InventoryMargin() {
                     onClick={() => setHighlightedSku(s => s === b.sku ? null : b.sku)}
                     style={{
                       cursor: 'pointer',
-                      background: isHighlighted ? P.bg.gridLine : 'transparent',
+                      background: isHighlighted ? '#e1e1d8' : 'transparent',
                       borderLeft: isHighlighted ? `5px solid ${qColor}` : '5px solid transparent',
                       transition: 'background 0.1s ease',
                     }}
                     onMouseEnter={e => {
                       if (!isHighlighted)
-                        (e.currentTarget as HTMLTableRowElement).style.background = P.bg.gridLine;
+                        (e.currentTarget as HTMLTableRowElement).style.background = '#e1e1d8';
                     }}
                     onMouseLeave={e => {
                       if (!isHighlighted)
@@ -479,39 +571,39 @@ export default function InventoryMargin() {
                     }}
                   >
                     <td style={tdStyle}>
-                      <code style={{ fontFamily: FONT, fontWeight: 900, fontSize: 12 }}>{b.sku}</code>
+                      <code style={{ fontFamily: FONT, fontWeight: 900, fontSize: 12, color: '#000000' }}>{b.sku}</code>
                     </td>
                     <td style={{ ...tdStyle, fontWeight: 700 }}>{b.name}</td>
                     <td style={tdStyle}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: P.text.subtle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: '#555555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         {b.category}
                       </span>
                     </td>
                     <td style={tdStyle}>
-                      <span style={{ fontWeight: 900 }}>{mPct.toFixed(1)}%</span>
+                      <span style={{ fontWeight: 900, color: '#000000' }}>{mPct.toFixed(1)}%</span>
                       <ProvenanceBadge provenance={b.provenance || "scenario"} />
                     </td>
                     <td style={tdStyle}>
                       <span style={{
                         fontWeight: 900,
-                        color: b.days_of_cover < 7 ? P.accent.pink : P.text.primary,
+                        color: daysCover < 7 ? (P?.accent?.pink || '#f364cb') : '#000000',
                       }}>
-                        {b.days_of_cover.toFixed(1)}d
+                        {daysCover.toFixed(1)}d
                       </span>
                       <ProvenanceBadge provenance="derived" />
                     </td>
                     <td style={{ ...tdStyle, fontWeight: 700 }}>
-                      ${b.spend.toLocaleString()}
+                      ${spend.toLocaleString()}
                       <ProvenanceBadge provenance="measured" />
                     </td>
                     <td style={{ ...tdStyle, fontWeight: 700 }}>
-                      ${b.revenue.toLocaleString()}
+                      ${revenue.toLocaleString()}
                       <ProvenanceBadge provenance="measured" />
                     </td>
                     <td style={tdStyle}>
                       <span style={{
                         fontWeight: 900,
-                        color: b.spend > 0 && b.revenue / b.spend >= 2 ? P.accent.lime : P.text.primary,
+                        color: spend > 0 && revenue / spend >= 2 ? (P?.accent?.lime || '#82e66f') : '#000000',
                       }}>
                         {roas}×
                       </span>
@@ -533,3 +625,14 @@ export default function InventoryMargin() {
     </div>
   );
 }
+
+// ─── Exported Component wrapped in Error Boundary ──────────────────────────────
+export function InventoryMargin() {
+  return (
+    <InventoryErrorBoundary>
+      <InventoryMarginInner />
+    </InventoryErrorBoundary>
+  );
+}
+
+export default InventoryMargin;
