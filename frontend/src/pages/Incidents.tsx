@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TimelineChart, Incident } from '../components/charts/TimelineChart';
+import { TimelineChart } from '../components/charts/TimelineChart';
+import type { Incident } from '../components/charts/TimelineChart';
 import { palette } from '../theme/tokens';
 
 // Golden path fallback incidents (matching fixtures/incidents.json)

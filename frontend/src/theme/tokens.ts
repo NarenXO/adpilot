@@ -33,6 +33,37 @@ export const palette = {
   }
 };
 
+export const quadrantMeta: Record<string, { label: string; action: string; color: string; bg: string; description: string }> = {
+  scale: {
+    label: 'SCALE',
+    action: 'Increase Ad Spend',
+    color: '#000000',
+    bg: palette.accent.lime,
+    description: 'High Margin, High Stock Cover (> 14 days)'
+  },
+  protect: {
+    label: 'PROTECT',
+    action: 'Throttle / Cap Spend',
+    color: '#000000',
+    bg: palette.accent.yellow,
+    description: 'High Margin, Low Stock Cover (< 14 days)'
+  },
+  pause: {
+    label: 'PAUSE',
+    action: 'Pause / Kill Ad',
+    color: '#000000',
+    bg: palette.accent.pink,
+    description: 'Low Margin (< 20%), Low Stock Cover'
+  },
+  fix: {
+    label: 'FIX',
+    action: 'Clearance / Reprice',
+    color: '#000000',
+    bg: palette.accent.cyan,
+    description: 'Low Margin, High Stock Cover'
+  }
+};
+
 export const shadows = {
   sm: '2px 2px 0px #000000',
   md: '3px 3px 0px #000000',

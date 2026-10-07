@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { BacktestChart } from '../components/charts/BacktestChart';
-import { CalibrationPlot, CalibrationPoint } from '../components/charts/CalibrationPlot';
+import { CalibrationPlot } from '../components/charts/CalibrationPlot';
+import type { CalibrationPoint } from '../components/charts/CalibrationPlot';
 import { palette } from '../theme/tokens';
 
 export interface ScorecardData {

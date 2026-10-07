@@ -747,10 +747,12 @@ function OptimizerStudioContent() {
   );
 }
 
-export default function OptimizerStudio() {
+export function OptimizerStudio() {
   return (
     <ErrorBoundary>
       <OptimizerStudioContent />
     </ErrorBoundary>
   );
 }
+
+export default OptimizerStudio;
