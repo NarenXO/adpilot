@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { KPICard } from '../components/ui/KPICard';
 import { Button } from '../components/ui/Button';
@@ -120,6 +121,7 @@ interface MissionControlProps {
 // ─── MissionControl page ──────────────────────────────────────────────────────
 
 export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiagnosis }) => {
+  const navigate = useNavigate();
   // TODO: wire to global Zustand store in Phase 3 (Naren's store/)
   const [activeIncidents, setActiveIncidents] = useState<Incident[]>(MOCK_INCIDENTS);
   const [liveEvents, setLiveEvents] = useState<SSEEvent[]>(MOCK_SSE_EVENTS);
@@ -848,7 +850,11 @@ export const MissionControl: React.FC<MissionControlProps> = ({ onNavigateToDiag
                     setLiveEvents((prev) => [newEvent, ...prev].slice(0, 8));
                   }
                   setSelectedIncident(null);
-                  onNavigateToDiagnosis?.();
+                  if (onNavigateToDiagnosis) {
+                    onNavigateToDiagnosis();
+                  } else {
+                    navigate('/diagnosis');
+                  }
                 }}
               >
                 View Full Diagnosis →
