@@ -116,14 +116,14 @@ const OpportunityBar: React.FC<{ score: number }> = ({ score }) => (
 );
 
 // ─── Sortable table header ────────────────────────────────────────────────────
-type SortKey = keyof SKUBubble;
+type SortField = 'sku' | 'name' | 'category' | 'margin_pct' | 'days_of_cover' | 'spend' | 'revenue' | 'roas' | 'opportunity_score' | 'quadrant';
 
 const Th: React.FC<{
-  col: SortKey;
+  col: SortField;
   label: string;
-  sortKey: SortKey;
+  sortKey: SortField;
   sortDir: 'asc' | 'desc';
-  onSort: (k: SortKey) => void;
+  onSort: (k: SortField) => void;
 }> = ({ col, label, sortKey, sortDir, onSort }) => (
   <th
     onClick={() => onSort(col)}
@@ -159,7 +159,7 @@ export default function InventoryMargin() {
   const [activeFilter, setActiveFilter] = useState<FilterValue>(ALL);
   const [highlightedSku, setHighlightedSku] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [sortKey, setSortKey] = useState<SortKey>('opportunity_score');
+  const [sortKey, setSortKey] = useState<SortField>('opportunity_score');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const skus: SKUBubble[] = data ?? [];
@@ -178,24 +178,30 @@ export default function InventoryMargin() {
         .filter(b => {
           if (!search) return true;
           const q = search.toLowerCase();
-          return b.sku.toLowerCase().includes(q) || b.name.toLowerCase().includes(q);
+          return (
+            b.sku.toLowerCase().includes(q) ||
+            b.name.toLowerCase().includes(q) ||
+            b.category.toLowerCase().includes(q)
+          );
         }),
     [skus, activeFilter, search],
   );
+
+  const getRoas = (item: SKUBubble) => item.spend > 0 ? item.revenue / item.spend : 0;
 
   // Sorted for table
   const sortedSkus = useMemo(() => {
     const copy = [...filteredSkus];
     copy.sort((a, b) => {
-      const va = a[sortKey] as number | string;
-      const vb = b[sortKey] as number | string;
+      const va: number | string = sortKey === 'roas' ? getRoas(a) : (a[sortKey as keyof SKUBubble] as number | string);
+      const vb: number | string = sortKey === 'roas' ? getRoas(b) : (b[sortKey as keyof SKUBubble] as number | string);
       const cmp = va < vb ? -1 : va > vb ? 1 : 0;
       return sortDir === 'asc' ? cmp : -cmp;
     });
     return copy;
   }, [filteredSkus, sortKey, sortDir]);
 
-  function handleSort(k: SortKey) {
+  function handleSort(k: SortField) {
     if (k === sortKey) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
     else { setSortKey(k); setSortDir('desc'); }
   }
@@ -396,6 +402,7 @@ export default function InventoryMargin() {
                 <Th col="days_of_cover"    label="Cover (d)"  sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                 <Th col="spend"            label="Spend (7d)" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                 <Th col="revenue"          label="Rev (7d)"   sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                <Th col="roas"             label="ROAS"       sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                 <Th col="opportunity_score" label="Opp."      sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                 <Th col="quadrant"         label="Quadrant"   sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
               </tr>
@@ -403,14 +410,13 @@ export default function InventoryMargin() {
             <tbody>
               {sortedSkus.length === 0 && (
                 <tr>
-                  <td colSpan={9} style={{ padding: 32, textAlign: 'center', color: colors.muted }}>
+                  <td colSpan={10} style={{ padding: 32, textAlign: 'center', color: colors.muted }}>
                     No SKUs match your search.
                   </td>
                 </tr>
               )}
               {sortedSkus.map(b => {
-                const roasVal = b.spend > 0 ? (b.revenue / b.spend).toFixed(2) : '—';
-                void roasVal; // available for future ROAS column
+                const roas = b.spend > 0 ? (b.revenue / b.spend).toFixed(2) : '—';
                 const isHighlighted = highlightedSku === b.sku;
                 return (
                   <tr
@@ -454,6 +460,12 @@ export default function InventoryMargin() {
                     <td style={td()}>
                       ${b.revenue.toLocaleString()}
                       <ProvenanceBadge provenance="measured" />
+                    </td>
+                    <td style={td()}>
+                      <span style={{ color: b.spend > 0 ? colors.scale : colors.muted }}>
+                        {roas}
+                      </span>
+                      <ProvenanceBadge provenance="derived" />
                     </td>
                     <td style={{ ...td(), minWidth: 120 }}>
                       <OpportunityBar score={b.opportunity_score} />
