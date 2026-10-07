@@ -2,8 +2,6 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-import { StatusBadge } from '../components/ui/StatusBadge';
-import { EmptyState } from '../components/ui/EmptyState';
 import { WaterfallChart } from '../components/charts/WaterfallChart';
 import { TreemapChart } from '../components/charts/TreemapChart';
 import { HeatmapChart } from '../components/charts/HeatmapChart';
@@ -287,42 +285,75 @@ export const Diagnosis: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-12 animate-fade-in">
+    <div className="space-y-6 pb-12 animate-fade-in font-sans">
       {/* ── 1. HEADER & META SECTION ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-xl border border-border/80 bg-surface/50 backdrop-blur-md shadow-lg">
+      <div
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6"
+        style={{
+          backgroundColor: '#ffffff',
+          border: '3px solid #000000',
+          boxShadow: '5px 5px 0px #000000',
+        }}
+      >
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400">
+            <span
+              className="font-mono text-xs font-bold uppercase px-3 py-1"
+              style={{
+                backgroundColor: '#f364cb',
+                color: '#000000',
+                border: '2px solid #000000',
+              }}
+            >
               INCIDENT
             </span>
-            <h1 className="text-xl md:text-2xl font-bold text-text-primary tracking-tight">
+            <h1 className="text-xl md:text-2xl font-bold text-black tracking-tight font-sans">
               INC-001: Creative Fatigue on Meta Ads
             </h1>
           </div>
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            <Badge variant="danger">
+          <div className="flex flex-wrap items-center gap-2 pt-1 font-mono text-xs">
+            <span
+              className="px-2.5 py-1 font-bold"
+              style={{ backgroundColor: '#f364cb', color: '#000000', border: '2px solid #000000' }}
+            >
               Metric: CTR (-32.4%)
-            </Badge>
-            <Badge variant="neutral">
+            </span>
+            <span
+              className="px-2.5 py-1 font-bold"
+              style={{ backgroundColor: '#78dbf6', color: '#000000', border: '2px solid #000000' }}
+            >
               Scope: camp_meta_03
-            </Badge>
-            <Badge variant="warning">
+            </span>
+            <span
+              className="px-2.5 py-1 font-bold"
+              style={{ backgroundColor: '#ffd23f', color: '#000000', border: '2px solid #000000' }}
+            >
               Severity: High
-            </Badge>
-            <Badge variant="info">
+            </span>
+            <span
+              className="px-2.5 py-1 font-bold"
+              style={{ backgroundColor: '#78dbf6', color: '#000000', border: '2px solid #000000' }}
+            >
               Confidence: 91%
-            </Badge>
+            </span>
           </div>
         </div>
 
         {/* Top-Right Guardian Verdict Badge */}
-        <div className="flex items-center self-start md:self-auto gap-3 px-4 py-2.5 rounded-lg border border-emerald-500/40 bg-emerald-950/20 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+        <div
+          className="flex items-center self-start md:self-auto gap-3 px-4 py-2.5"
+          style={{
+            backgroundColor: '#82e66f',
+            border: '2px solid #000000',
+            boxShadow: '3px 3px 0px #000000',
+          }}
+        >
           <div className="flex flex-col text-right">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-emerald-400 font-semibold">
+            <span className="text-[10px] uppercase font-mono tracking-wider text-black font-bold">
               Guardian Verdict
             </span>
-            <span className="text-sm font-bold text-emerald-300 flex items-center gap-1.5 justify-end">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
+            <span className="text-sm font-bold text-black flex items-center gap-1.5 justify-end font-sans">
+              <span className="w-2.5 h-2.5 rounded-full bg-black inline-block animate-pulse" />
               PASS / VERIFIED
             </span>
           </div>
@@ -336,21 +367,19 @@ export const Diagnosis: React.FC = () => {
           <Card
             title={
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="font-semibold text-text-primary text-sm">Investigator Verified Explanation</span>
+                <span className="w-3 h-3 rounded-full bg-[#82e66f] border border-black" />
+                <span className="font-bold text-black text-sm uppercase tracking-wider font-sans">
+                  VERIFIED EXPLANATION
+                </span>
               </div>
             }
-            action={
-              <Badge variant="success">
-                Deterministic Match
-              </Badge>
-            }
+            action={<Badge variant="success">Deterministic Match</Badge>}
             className="h-full flex flex-col justify-between"
           >
-            <div className="space-y-4 text-sm text-text-secondary leading-relaxed font-sans">
+            <div className="space-y-4 text-sm text-black leading-relaxed font-sans font-medium">
               <p>
                 Root-cause diagnosis identifies significant ad exhaustion in{' '}
-                <span className="font-mono text-cyan-400 font-medium bg-cyan-950/30 px-1.5 py-0.5 rounded border border-cyan-500/20">
+                <span className="font-mono text-black font-bold px-1.5 py-0.5 border border-black" style={{ backgroundColor: '#78dbf6' }}>
                   camp_meta_03
                 </span>
                 . The primary driver is severe creative fatigue in high-volume creative assets where click-through rate
@@ -419,7 +448,7 @@ export const Diagnosis: React.FC = () => {
                   $1,200
                 </span>{' '}
                 daily into accelerating winner{' '}
-                <span className="font-mono text-cyan-400 font-medium bg-cyan-950/30 px-1.5 py-0.5 rounded border border-cyan-500/20">
+                <span className="font-mono text-black font-bold px-1.5 py-0.5 border border-black" style={{ backgroundColor: '#78dbf6' }}>
                   camp_meta_05
                 </span>
                 , yielding an estimated{' '}
@@ -435,12 +464,12 @@ export const Diagnosis: React.FC = () => {
             </div>
 
             {/* Bottom Citation Notice */}
-            <div className="mt-6 pt-4 border-t border-border/60 flex items-center justify-between text-xs text-text-muted">
+            <div className="mt-6 pt-4 border-t-2 border-black flex items-center justify-between text-xs text-black font-semibold font-sans">
               <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="w-2 h-2 rounded-full bg-[#82e66f] border border-black" />
                 Hover on evidence cards to highlight linked findings in text
               </span>
-              <span className="font-mono text-[11px] text-text-muted">Evidence link: 5 checks active</span>
+              <span className="font-mono text-[11px] text-black font-bold">Evidence link: 5 checks active</span>
             </div>
           </Card>
         </div>
@@ -448,49 +477,58 @@ export const Diagnosis: React.FC = () => {
         {/* Right Column (5 cols): Interactive Evidence Cards Stack */}
         <div className="lg:col-span-5 flex flex-col space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-text-primary tracking-wide uppercase font-mono">
-              Evidence Ledger ({EVIDENCE_ITEMS.length})
+            <h2 className="text-sm font-bold text-black tracking-wider uppercase font-sans">
+              EVIDENCE LEDGER ({EVIDENCE_ITEMS.length})
             </h2>
-            <span className="text-xs text-text-muted font-mono">Hover to inspect</span>
+            <span className="text-xs text-black font-mono font-bold">Hover to inspect</span>
           </div>
 
-          <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
             {EVIDENCE_ITEMS.map((item) => {
               const isHovered = highlightedEvidence === item.id;
-              const badgeVariant =
+              const provBg =
                 item.provenance === 'Measured'
-                  ? 'measured'
+                  ? '#78dbf6'
                   : item.provenance === 'Derived'
-                  ? 'derived'
-                  : 'scenario';
+                  ? '#f364cb'
+                  : '#ffd23f';
 
               return (
                 <div
                   key={item.id}
                   onMouseEnter={() => setHighlightedEvidence(item.id)}
                   onMouseLeave={() => setHighlightedEvidence(null)}
-                  className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer ${
-                    isHovered
-                      ? 'border-emerald-500 bg-emerald-950/20 shadow-[0_0_12px_rgba(16,185,129,0.25)] scale-[1.01]'
-                      : 'border-border/70 bg-surface/40 hover:border-border hover:bg-surface/60'
-                  }`}
+                  className="p-3.5 transition-all duration-150 cursor-pointer"
+                  style={{
+                    backgroundColor: isHovered ? '#82e66f' : '#ffffff',
+                    border: '2px solid #000000',
+                    boxShadow: isHovered ? '5px 5px 0px #000000' : '3px 3px 0px #000000',
+                    transform: isHovered ? 'translate(-2px, -2px)' : 'none',
+                  }}
                 >
                   <div className="flex items-start justify-between gap-2 mb-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold px-1.5 py-0.5 rounded bg-surface border border-border text-text-primary">
+                      <span className="font-mono text-xs font-bold px-1.5 py-0.5 bg-black text-white border border-black">
                         {item.id}
                       </span>
-                      <span className="text-xs font-medium text-text-primary">{item.title}</span>
+                      <span className="text-xs font-bold text-black font-sans">{item.title}</span>
                     </div>
-                    <Badge variant={badgeVariant}>
+                    <span
+                      className="text-[10px] font-mono font-bold uppercase px-2 py-0.5"
+                      style={{
+                        backgroundColor: provBg,
+                        color: '#000000',
+                        border: '1.5px solid #000000',
+                      }}
+                    >
                       {item.provenance}
-                    </Badge>
+                    </span>
                   </div>
 
-                  <p className="font-mono text-xs font-semibold text-emerald-400 mb-1">{item.metricSnippet}</p>
-                  <p className="text-[11px] text-text-muted line-clamp-2 leading-relaxed">{item.description}</p>
+                  <p className="font-mono text-xs font-bold text-black mb-1">{item.metricSnippet}</p>
+                  <p className="text-[11px] text-black font-medium leading-relaxed font-sans">{item.description}</p>
 
-                  <div className="mt-2 pt-1.5 border-t border-border/40 flex items-center justify-between text-[10px] text-text-muted font-mono">
+                  <div className="mt-2 pt-1.5 border-t border-black/30 flex items-center justify-between text-[10px] text-black font-mono font-bold">
                     <span>table: {item.sourceTable}</span>
                     <span>{item.timestamp.split(' ')[1]}</span>
                   </div>
@@ -500,14 +538,21 @@ export const Diagnosis: React.FC = () => {
           </div>
 
           {/* Guardian Verification Notes Box */}
-          <div className="p-3.5 rounded-lg border border-emerald-500/30 bg-emerald-950/10 text-xs">
-            <div className="flex items-center gap-2 font-mono font-semibold text-emerald-400 mb-1">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          <div
+            className="p-4"
+            style={{
+              backgroundColor: '#ffd23f',
+              border: '2px solid #000000',
+              boxShadow: '3px 3px 0px #000000',
+            }}
+          >
+            <div className="flex items-center gap-2 font-bold text-black mb-1 font-sans text-xs uppercase tracking-wide">
+              <svg className="w-4 h-4 text-black stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
               Guardian Verification Notes
             </div>
-            <p className="text-[11px] text-text-secondary leading-normal">
+            <p className="text-[11px] text-black font-medium leading-normal font-sans">
               100% of statistical citations reconciled against cold storage warehouse records. Zero synthetic hall-checks
               detected. Ground truth variance &lt; 0.02%.
             </p>
@@ -520,8 +565,8 @@ export const Diagnosis: React.FC = () => {
         {/* Waterfall Chart (6 cols) */}
         <div className="lg:col-span-6">
           <Card
-            title="Profit Waterfall Bridge"
-            action={<span className="text-xs text-text-muted">Net profit impact decomposed by drivers</span>}
+            title="Profit Impact Bridge"
+            action={<span className="text-xs text-black font-mono font-bold">Net profit impact decomposed by drivers</span>}
           >
             <WaterfallChart height={360} />
           </Card>
@@ -531,7 +576,7 @@ export const Diagnosis: React.FC = () => {
         <div className="lg:col-span-6">
           <Card
             title="Multi-Channel Driver Treemap"
-            action={<span className="text-xs text-text-muted">Spend volume leaf sized, ROAS colored</span>}
+            action={<span className="text-xs text-black font-mono font-bold">Spend volume leaf sized, ROAS colored</span>}
           >
             <TreemapChart height={360} />
           </Card>
@@ -541,15 +586,16 @@ export const Diagnosis: React.FC = () => {
       {/* ── 4. 14-DAY CAMPAIGN INTENSITY HEATMAP ── */}
       <div>
         <Card
-          title="14-Day Campaign Intensity Heatmap"
+          title="14-Day Performance Intensity Matrix"
           action={
-            <div className="flex items-center gap-2 text-xs font-mono">
-              <span className="w-2.5 h-2.5 rounded bg-[#0f172a] border border-blue-900 inline-block" /> Low ROAS
-              <span className="w-2.5 h-2.5 rounded bg-[#10b981] inline-block ml-2" /> High ROAS
+            <div className="flex items-center gap-2 text-xs font-mono font-bold text-black">
+              <span className="w-3 h-3 border border-black inline-block" style={{ backgroundColor: '#f364cb' }} /> Low ROAS
+              <span className="w-3 h-3 border border-black inline-block ml-2" style={{ backgroundColor: '#ffd23f' }} /> Mid
+              <span className="w-3 h-3 border border-black inline-block ml-2" style={{ backgroundColor: '#82e66f' }} /> High ROAS
             </div>
           }
         >
-          <div className="mb-2 text-xs text-text-muted">
+          <div className="mb-3 text-xs text-black font-semibold font-sans">
             Daily ROAS progression across portfolio (highlighting creative fatigue in camp_meta_03)
           </div>
           <HeatmapChart height={320} />
@@ -567,13 +613,21 @@ export const Diagnosis: React.FC = () => {
                 variant="secondary"
                 onClick={handleReplayTrace}
                 disabled={isReplaying}
-                style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}
+                className="brutal-btn"
+                style={{
+                  backgroundColor: '#78dbf6',
+                  color: '#000000',
+                  padding: '0.3rem 0.8rem',
+                  fontSize: '0.75rem',
+                  border: '2px solid #000000',
+                  boxShadow: '2px 2px 0px #000000',
+                }}
               >
                 {isReplaying ? 'Replaying...' : 'Replay Trace'}
               </Button>
             }
           >
-            <div className="mb-3 text-xs text-text-muted">
+            <div className="mb-3 text-xs text-black font-semibold font-sans">
               Step-by-step audit logs of autonomous investigative tools
             </div>
             <div className="space-y-3">
@@ -582,53 +636,75 @@ export const Diagnosis: React.FC = () => {
                 return (
                   <div
                     key={trace.step}
-                    className="border border-border/80 rounded-lg overflow-hidden bg-surface/30 transition-colors"
+                    style={{
+                      backgroundColor: '#ffffff',
+                      border: '2px solid #000000',
+                      boxShadow: '3px 3px 0px #000000',
+                    }}
                   >
                     <div
                       onClick={() => toggleTraceStep(trace.step)}
-                      className="p-3 flex items-center justify-between cursor-pointer hover:bg-surface/50 transition-colors"
+                      className="p-3 flex items-center justify-between cursor-pointer transition-colors hover:bg-[#f3f3ed]"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="font-mono text-xs w-6 h-6 rounded-full bg-surface border border-border flex items-center justify-center font-bold text-text-secondary">
+                        <span
+                          className="font-mono text-xs w-6 h-6 flex items-center justify-center font-bold text-black"
+                          style={{
+                            backgroundColor: '#ffd23f',
+                            border: '2px solid #000000',
+                          }}
+                        >
                           {trace.step}
                         </span>
                         <div>
-                          <span className="font-mono text-xs font-semibold text-cyan-400">
-                            {trace.toolName}()
-                          </span>
-                          <p className="text-xs text-text-muted">{trace.description}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-bold text-black">{trace.toolName}()</span>
+                            <span
+                              className="text-[10px] font-mono px-1.5 py-0.2 font-bold"
+                              style={{ backgroundColor: '#78dbf6', border: '1px solid #000' }}
+                            >
+                              TOOL
+                            </span>
+                          </div>
+                          <p className="text-xs text-black font-medium font-sans">{trace.description}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-[11px] font-mono text-text-muted">{trace.durationMs}ms</span>
+                        <span className="text-[11px] font-mono font-bold text-black">{trace.durationMs}ms</span>
                         <svg
-                          className={`w-4 h-4 text-text-muted transition-transform duration-200 ${
+                          className={`w-4 h-4 text-black stroke-[3] transition-transform duration-200 ${
                             isExpanded ? 'rotate-180' : ''
                           }`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
                       </div>
                     </div>
 
                     {isExpanded && (
-                      <div className="p-3 bg-surface/60 border-t border-border/60 text-xs font-mono space-y-2">
+                      <div className="p-3 border-t-2 border-black bg-[#f3f3ed] text-xs font-mono space-y-2">
                         <div>
-                          <span className="text-text-muted uppercase text-[10px] tracking-wider block mb-1">
+                          <span className="text-black uppercase text-[10px] font-bold tracking-wider block mb-1">
                             Arguments
                           </span>
-                          <pre className="p-2 rounded bg-black/40 text-text-secondary overflow-x-auto text-[11px]">
+                          <pre
+                            className="p-2 text-black overflow-x-auto text-[11px] font-bold"
+                            style={{ backgroundColor: '#ffffff', border: '2px solid #000000' }}
+                          >
                             {JSON.stringify(trace.args, null, 2)}
                           </pre>
                         </div>
                         <div>
-                          <span className="text-text-muted uppercase text-[10px] tracking-wider block mb-1">
+                          <span className="text-black uppercase text-[10px] font-bold tracking-wider block mb-1">
                             Returned Payload
                           </span>
-                          <pre className="p-2 rounded bg-black/40 text-emerald-400/90 overflow-x-auto text-[11px]">
+                          <pre
+                            className="p-2 text-black overflow-x-auto text-[11px] font-bold"
+                            style={{ backgroundColor: '#ffffff', border: '2px solid #000000' }}
+                          >
                             {JSON.stringify(trace.output, null, 2)}
                           </pre>
                         </div>
@@ -645,70 +721,100 @@ export const Diagnosis: React.FC = () => {
         <div className="lg:col-span-5">
           <Card
             title="Creative Fatigue Breakdown"
-            action={<span className="text-xs text-text-muted">Asset health metrics</span>}
+            action={<span className="text-xs text-black font-mono font-bold">Asset health metrics</span>}
           >
-            <div className="mb-3 text-xs text-text-muted">
+            <div className="mb-3 text-xs text-black font-semibold font-sans">
               Active creative variants in camp_meta_03
             </div>
             <div className="space-y-3.5">
               {CREATIVES_DATA.map((cr) => {
-                const statusVariant =
-                  cr.status === 'Fatigued' ? 'danger' : cr.status === 'Healthy' ? 'success' : 'info';
+                const statusBg =
+                  cr.status === 'Fatigued'
+                    ? '#f364cb'
+                    : cr.status === 'Healthy'
+                    ? '#82e66f'
+                    : '#78dbf6';
 
                 return (
                   <div
                     key={cr.id}
-                    className={`p-3.5 rounded-lg border transition-all ${
-                      cr.status === 'Fatigued'
-                        ? 'border-red-500/30 bg-red-950/10'
-                        : 'border-border/70 bg-surface/30'
-                    }`}
+                    className="p-3.5 font-sans"
+                    style={{
+                      backgroundColor: cr.status === 'Fatigued' ? '#ffffff' : '#ffffff',
+                      border: '2px solid #000000',
+                      boxShadow: '3px 3px 0px #000000',
+                    }}
                   >
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-text-primary">{cr.id}</span>
-                          <Badge variant={statusVariant}>
+                          <span className="font-mono text-xs font-bold text-black">{cr.id}</span>
+                          <span
+                            className="text-[10px] font-mono font-bold uppercase px-2 py-0.5"
+                            style={{
+                              backgroundColor: statusBg,
+                              color: '#000000',
+                              border: '1.5px solid #000000',
+                            }}
+                          >
                             {cr.status}
-                          </Badge>
+                          </span>
                         </div>
-                        <h4 className="text-xs font-medium text-text-secondary mt-0.5">{cr.name}</h4>
+                        <h4 className="text-xs font-bold text-black mt-0.5">{cr.name}</h4>
                       </div>
-                      <span className="text-[11px] font-mono text-text-muted">{cr.ageDays}d active</span>
+                      <span className="text-[11px] font-mono font-bold text-black">{cr.ageDays}d active</span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-xs font-mono my-2 py-2 border-y border-border/40">
+                    <div className="grid grid-cols-2 gap-2 text-xs font-mono my-2 py-2 border-y-2 border-black">
                       <div>
-                        <span className="text-text-muted text-[10px] block">CTR DECAY</span>
-                        <span className={cr.ctrDecayPct < 0 ? 'text-red-400 font-bold' : 'text-emerald-400 font-bold'}>
-                          {cr.ctrDecayPct > 0 ? `+${cr.ctrDecayPct}%` : `${cr.ctrDecayPct}%`}
+                        <span className="text-black text-[10px] font-bold block">CTR DECAY</span>
+                        <span className={cr.ctrDecayPct < 0 ? 'text-[#000000] font-black' : 'text-[#000000] font-black'}>
+                          <span
+                            className="px-1 py-0.2"
+                            style={{
+                              backgroundColor: cr.ctrDecayPct < -20 ? '#f364cb' : '#82e66f',
+                              border: '1px solid #000',
+                            }}
+                          >
+                            {cr.ctrDecayPct > 0 ? `+${cr.ctrDecayPct}%` : `${cr.ctrDecayPct}%`}
+                          </span>
                         </span>
                       </div>
                       <div>
-                        <span className="text-text-muted text-[10px] block">FREQUENCY</span>
-                        <span
-                          className={`font-bold flex items-center gap-1 ${
-                            cr.frequency > 6.0 ? 'text-amber-400' : 'text-text-primary'
-                          }`}
-                        >
-                          {cr.frequency > 6.0 && <span aria-label="warning">⚠</span>}
-                          {cr.frequency.toFixed(1)}x
+                        <span className="text-black text-[10px] font-bold block">FREQUENCY</span>
+                        <span className="font-black flex items-center gap-1">
                           {cr.frequency > 6.0 && (
-                            <span className="text-[10px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-sans">
-                              High
+                            <span
+                              className="text-[10px] px-1.5 py-0.2 font-bold"
+                              style={{ backgroundColor: '#ffd23f', border: '1px solid #000' }}
+                            >
+                              ⚠ &gt;6.0x
                             </span>
                           )}
+                          {cr.frequency.toFixed(1)}x
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-text-muted">
+                    <div className="flex items-center justify-between text-[11px] text-black font-semibold font-mono">
                       <span>Format: {cr.format}</span>
                       <span>Hook: {cr.hookType}</span>
                     </div>
                   </div>
                 );
               })}
+
+              {/* Rotate Recommended Callout Banner */}
+              <div
+                className="p-3 font-sans font-bold text-xs text-black text-center uppercase tracking-wider"
+                style={{
+                  backgroundColor: '#f364cb',
+                  border: '2px solid #000000',
+                  boxShadow: '3px 3px 0px #000000',
+                }}
+              >
+                ⚠ Rotate Recommended: Replace cr_meta_03_A with new hook variation
+              </div>
             </div>
           </Card>
         </div>
