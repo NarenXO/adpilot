@@ -18,3 +18,9 @@ export { default as StatusBadge } from './StatusBadge';
 
 export * from './EmptyState';
 export { default as EmptyState } from './EmptyState';
+
+export * from './RiskGauge';
+export { default as RiskGauge } from './RiskGauge';
+
+export * from './AgentFeed';
+export { default as AgentFeed } from './AgentFeed';
