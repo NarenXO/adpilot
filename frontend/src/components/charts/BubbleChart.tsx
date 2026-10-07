@@ -1,185 +1,208 @@
-import React, { useMemo } from 'react';
+// frontend/src/components/charts/BubbleChart.tsx
+// Invente '26 Neo-Brutalist ECharts Bubble Chart
 import ReactECharts from 'echarts-for-react';
-import type { EChartsOption } from 'echarts';
-import type { SKUBubble, Quadrant } from '../../types/api';
-import { colors, quadrantMeta } from '../../theme/tokens';
+import type { SKUBubble } from '../../types/api';
+import { palette } from '../../theme/tokens';
 
-interface BubbleChartProps {
+interface Props {
   data: SKUBubble[];
   onSkuClick?: (sku: string) => void;
   highlightedSku?: string | null;
-  className?: string;
 }
 
-const QUADRANT_KEYS: Quadrant[] = ['scale', 'protect', 'pause', 'fix'];
+const QUADRANT_COLORS: Record<string, string> = {
+  scale:   palette.accent.lime,
+  protect: palette.accent.yellow,
+  pause:   palette.accent.pink,
+  fix:     palette.accent.cyan,
+};
 
 function bubbleSize(spend: number): number {
-  const raw = Math.sqrt(Math.max(spend, 0)) * 2;
-  return Math.max(10, Math.min(60, raw));
+  return Math.min(60, Math.max(12, Math.sqrt(spend) * 2.5));
 }
 
 function tooltipHtml(b: SKUBubble): string {
   const roas = b.spend > 0 ? (b.revenue / b.spend).toFixed(2) : '—';
-  const qMeta = quadrantMeta[b.quadrant];
+  const qColor = QUADRANT_COLORS[b.quadrant] ?? '#ccc';
   return `
-    <div style="font-family:Inter,sans-serif;min-width:200px;">
-      <div style="font-weight:700;font-size:13px;color:#e2e8f0;margin-bottom:6px;">
-        ${b.sku} — ${b.name}
+    <div style="
+      font-family:'Space Grotesk',monospace,sans-serif;
+      background:#fff;border:3px solid #000;
+      box-shadow:4px 4px 0 #000;padding:14px 16px;
+      min-width:220px;color:#000;
+    ">
+      <div style="font-size:13px;font-weight:900;text-transform:uppercase;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:8px;">
+        ${b.name}
       </div>
-      <div style="color:#94a3b8;font-size:11px;margin-bottom:8px;">${b.category}</div>
-      <table style="width:100%;font-size:12px;border-collapse:collapse;">
-        ${row('Margin', `${b.margin_pct.toFixed(1)}%`)}
-        ${row('Cover', `${b.days_of_cover.toFixed(1)} days`)}
-        ${row('Spend (7d)', `$${b.spend.toLocaleString()}`)}
-        ${row('Revenue (7d)', `$${b.revenue.toLocaleString()}`)}
-        ${row('ROAS', `${roas}x`)}
-        ${row('Opportunity', `${b.opportunity_score.toFixed(0)}/100`)}
+      <div style="font-size:11px;color:#666;margin-bottom:8px;font-weight:600;">${b.sku} · ${b.category}</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <tr><td style="padding:2px 0;color:#333;font-weight:600;">Margin</td>
+            <td style="padding:2px 0;text-align:right;font-weight:900;">${b.margin_pct.toFixed(1)}%</td></tr>
+        <tr><td style="padding:2px 0;color:#333;font-weight:600;">Cover</td>
+            <td style="padding:2px 0;text-align:right;font-weight:900;">${b.days_of_cover.toFixed(1)}d</td></tr>
+        <tr><td style="padding:2px 0;color:#333;font-weight:600;">Spend (7d)</td>
+            <td style="padding:2px 0;text-align:right;font-weight:900;">$${b.spend.toLocaleString()}</td></tr>
+        <tr><td style="padding:2px 0;color:#333;font-weight:600;">Revenue</td>
+            <td style="padding:2px 0;text-align:right;font-weight:900;">$${b.revenue.toLocaleString()}</td></tr>
+        <tr><td style="padding:2px 0;color:#333;font-weight:600;">ROAS</td>
+            <td style="padding:2px 0;text-align:right;font-weight:900;">${roas}×</td></tr>
       </table>
-      <div style="margin-top:8px;padding:4px 8px;border-radius:4px;
-                  background:${qMeta.bg};color:${qMeta.color};
-                  font-size:11px;font-weight:600;text-transform:uppercase;text-align:center;">
-        ${qMeta.label}
+      <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="
+          background:${qColor};color:#000;border:2px solid #000;
+          font-size:10px;font-weight:900;text-transform:uppercase;
+          padding:2px 10px;letter-spacing:0.05em;
+        ">${b.quadrant.toUpperCase()}</div>
+        <div style="font-size:11px;font-weight:900;">OPP: ${b.opportunity_score}</div>
       </div>
-    </div>`;
+    </div>
+  `;
 }
 
-function row(label: string, value: string): string {
-  return `<tr>
-    <td style="color:#64748b;padding:2px 0;">${label}</td>
-    <td style="color:#e2e8f0;text-align:right;padding:2px 0;">${value}</td>
-  </tr>`;
-}
+export function BubbleChart({ data, onSkuClick, highlightedSku }: Props) {
+  // Build one scatter series per quadrant so they get individual colors + legend
+  const quadrants = ['scale', 'protect', 'pause', 'fix'] as const;
+  const quadrantLabels: Record<string, string> = {
+    scale: 'Scale', protect: 'Protect', pause: 'Pause', fix: 'Fix',
+  };
 
-export const BubbleChart: React.FC<BubbleChartProps> = ({
-  data,
-  onSkuClick,
-  highlightedSku,
-  className,
-}) => {
-  // Split data into per-quadrant series
-  const seriesData = useMemo(() => {
-    const byQuadrant: Record<Quadrant, SKUBubble[]> = {
-      scale: [], protect: [], pause: [], fix: [],
-    };
-    for (const b of data) byQuadrant[b.quadrant].push(b);
-    return byQuadrant;
-  }, [data]);
-
-  const maxDays = useMemo(() => Math.max(...data.map(d => d.days_of_cover), 30), [data]);
-
-  const option = useMemo<EChartsOption>(() => {
-    const series = QUADRANT_KEYS.map(q => ({
-      name: quadrantMeta[q].label,
-      type: 'scatter' as const,
-      data: seriesData[q].map(b => ({
-        value: [b.days_of_cover, b.margin_pct, b.spend],
-        name: b.sku,
-        itemStyle: {
-          color: quadrantMeta[q].color,
-          opacity: highlightedSku && highlightedSku !== b.sku ? 0.3 : 0.85,
-          shadowBlur: highlightedSku === b.sku ? 20 : 0,
-          shadowColor: quadrantMeta[q].color,
-          borderColor: highlightedSku === b.sku ? '#fff' : 'transparent',
-          borderWidth: highlightedSku === b.sku ? 2 : 0,
-        },
-        // Store full bubble for tooltip
-        _bubble: b,
-      })),
-      symbolSize: (val: number[]) => bubbleSize(val[2]),
-      emphasis: {
-        scale: true,
-        itemStyle: { shadowBlur: 24, shadowColor: quadrantMeta[q].color },
-      },
-    }));
-
+  const series = quadrants.map(q => {
+    const items = data.filter(b => b.quadrant === q);
     return {
-      backgroundColor: 'transparent',
-      animation: true,
-      animationDuration: 800,
-      animationEasing: 'cubicOut',
-
-      grid: { left: 60, right: 20, top: 20, bottom: 50 },
-
-      xAxis: {
-        name: 'Days of Cover',
-        nameLocation: 'middle',
-        nameGap: 32,
-        nameTextStyle: { color: colors.muted, fontSize: 12 },
-        type: 'value',
-        min: 0,
-        max: maxDays + 5,
-        axisLine: { lineStyle: { color: colors.border } },
-        axisLabel: { color: colors.muted, fontSize: 11 },
-        splitLine: { lineStyle: { color: colors.border, type: 'dashed', opacity: 0.5 } },
-      },
-
-      yAxis: {
-        name: 'Margin %',
-        nameLocation: 'middle',
-        nameGap: 45,
-        nameTextStyle: { color: colors.muted, fontSize: 12 },
-        type: 'value',
-        min: 0,
-        max: 100,
-        axisLine: { lineStyle: { color: colors.border } },
-        axisLabel: {
-          color: colors.muted,
-          fontSize: 11,
-          formatter: (v: number) => `${v}%`,
+      name: quadrantLabels[q],
+      type: 'scatter',
+      data: items.map(b => ({
+        value: [b.days_of_cover, b.margin_pct * 100, bubbleSize(b.spend)],
+        _bubble: b,
+        // Highlighted bubble gets a bold ring
+        itemStyle: {
+          color: QUADRANT_COLORS[q],
+          borderColor: '#000',
+          borderWidth: highlightedSku === b.sku ? 4 : 2,
+          shadowColor: highlightedSku === b.sku ? '#000' : 'transparent',
+          shadowBlur: highlightedSku === b.sku ? 10 : 0,
+          opacity: highlightedSku && highlightedSku !== b.sku ? 0.35 : 1,
         },
-        splitLine: { lineStyle: { color: colors.border, type: 'dashed', opacity: 0.5 } },
-      },
-
-      tooltip: {
-        trigger: 'item',
-        backgroundColor: '#111827',
-        borderColor: '#1f2d45',
-        borderWidth: 1,
-        padding: 12,
-        extraCssText: 'box-shadow:0 8px 32px rgba(0,0,0,0.6);border-radius:8px;',
-        formatter: (params: unknown) => {
-          const raw = params as { data?: { _bubble?: SKUBubble } };
-          const b = raw.data?._bubble;
-          return b ? tooltipHtml(b) : '';
+      })),
+      symbolSize: (val: number[]) => val[2],
+      // Quadrant background tint via markArea
+      markArea: {
+        silent: true,
+        data: [[
+          { x: q === 'scale' || q === 'protect' ? '50%' : '0%',
+            y: q === 'scale' || q === 'fix' ? '0%' : '50%' },
+          { x: q === 'scale' || q === 'protect' ? '100%' : '50%',
+            y: q === 'scale' || q === 'fix' ? '50%' : '100%' },
+        ]],
+        itemStyle: {
+          color: QUADRANT_COLORS[q],
+          opacity: 0.07,
         },
       },
-
-      legend: {
-        top: 8,
-        right: 8,
-        orient: 'horizontal',
-        itemWidth: 10,
-        itemHeight: 10,
-        itemGap: 16,
-        textStyle: { color: colors.muted, fontSize: 11 },
-        data: QUADRANT_KEYS.map(q => ({
-          name: quadrantMeta[q].label,
-          icon: 'circle',
-          itemStyle: { color: quadrantMeta[q].color },
-        })),
-      },
-
-      series,
     };
-  }, [seriesData, maxDays, highlightedSku]);
+  });
 
-  const onEvents: Record<string, (params: unknown) => void> = {
-    click: (params: unknown) => {
-      const p = params as { data?: { name?: string } };
-      const sku = p.data?.name;
-      if (sku && onSkuClick) onSkuClick(sku);
+  const option = {
+    backgroundColor: 'transparent',
+    grid: { top: 40, right: 20, bottom: 60, left: 60, containLabel: true },
+
+    legend: {
+      top: 4,
+      right: 8,
+      orient: 'horizontal',
+      itemWidth: 14,
+      itemHeight: 14,
+      textStyle: {
+        fontFamily: "'Space Grotesk', monospace",
+        fontSize: 11,
+        fontWeight: 700,
+        color: '#000',
+        textTransform: 'uppercase',
+      },
     },
+
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: 'transparent',
+      borderWidth: 0,
+      padding: 0,
+      formatter: (params: unknown) => {
+        const raw = params as { data?: { _bubble?: SKUBubble } };
+        const b = raw.data?._bubble;
+        return b ? tooltipHtml(b) : '';
+      },
+    },
+
+    xAxis: {
+      name: 'Days of Cover',
+      nameLocation: 'middle',
+      nameGap: 36,
+      nameTextStyle: {
+        fontFamily: "'Space Grotesk', monospace",
+        fontSize: 11,
+        fontWeight: 700,
+        color: '#000',
+        textTransform: 'uppercase',
+      },
+      type: 'value',
+      min: 0,
+      axisLine: { show: true, lineStyle: { color: '#000', width: 2 } },
+      axisTick: { show: true, lineStyle: { color: '#000', width: 1 } },
+      axisLabel: {
+        fontFamily: "'Space Grotesk', monospace",
+        fontSize: 11,
+        fontWeight: 700,
+        color: '#000',
+      },
+      splitLine: {
+        show: true,
+        lineStyle: { color: '#e1e1d8', type: 'dotted', width: 1 },
+      },
+    },
+
+    yAxis: {
+      name: 'Margin %',
+      nameLocation: 'middle',
+      nameGap: 44,
+      nameTextStyle: {
+        fontFamily: "'Space Grotesk', monospace",
+        fontSize: 11,
+        fontWeight: 700,
+        color: '#000',
+        textTransform: 'uppercase',
+      },
+      type: 'value',
+      min: 0,
+      max: 100,
+      axisLine: { show: true, lineStyle: { color: '#000', width: 2 } },
+      axisTick: { show: true, lineStyle: { color: '#000', width: 1 } },
+      axisLabel: {
+        fontFamily: "'Space Grotesk', monospace",
+        fontSize: 11,
+        fontWeight: 700,
+        color: '#000',
+        formatter: '{value}%',
+      },
+      splitLine: {
+        show: true,
+        lineStyle: { color: '#e1e1d8', type: 'dotted', width: 1 },
+      },
+    },
+
+    series,
   };
 
   return (
     <ReactECharts
       option={option}
-      onEvents={onEvents}
-      className={className}
-      style={{ width: '100%', minHeight: 400 }}
-      opts={{ renderer: 'canvas' }}
+      style={{ height: 420, width: '100%' }}
+      onEvents={{
+        click: (params: unknown) => {
+          const raw = params as { data?: { _bubble?: SKUBubble } };
+          const b = raw.data?._bubble;
+          if (b && onSkuClick) onSkuClick(b.sku);
+        },
+      }}
     />
   );
-};
-
-export default BubbleChart;
+}
