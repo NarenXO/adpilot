@@ -116,13 +116,13 @@ const STATUS_CONFIG: Record<Incident['status'], { statusType: 'safe' | 'warning'
 
 export const MissionControl: React.FC = () => {
   // TODO: wire to global Zustand store in Phase 3 (Naren's store/)
-  const [incidents, setIncidents] = useState<Incident[]>([...MOCK_INCIDENTS]);
-  const [events, setEvents] = useState<SSEEvent[]>([...MOCK_SSE_EVENTS]);
+  const [activeIncidents, setActiveIncidents] = useState<Incident[]>(MOCK_INCIDENTS);
+  const [liveEvents, setLiveEvents] = useState<SSEEvent[]>(MOCK_SSE_EVENTS);
   const [sseIndex, setSseIndex] = useState<number>(0);
 
   // Inject modal state
   const [showInjectModal, setShowInjectModal] = useState<boolean>(false);
-  const [selectedInjectType, setSelectedInjectType] = useState<string>('creative_fatigue');
+  const [selectedIncidentType, setSelectedIncidentType] = useState<string>('creative_fatigue');
 
   // TODO: replace with real EventSource in Checkpoint 2
   useEffect(() => {
@@ -134,7 +134,7 @@ export const MissionControl: React.FC = () => {
           ...baseEvent,
           ts: new Date().toISOString(),
         };
-        setEvents((prevEvents) => [freshEvent, ...prevEvents].slice(0, 8));
+        setLiveEvents((prevEvents) => [freshEvent, ...prevEvents].slice(0, 8));
         return nextIdx;
       });
     }, 2500);
@@ -151,111 +151,84 @@ export const MissionControl: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKey);
   }, [showInjectModal]);
 
-  const handleConfirmInject = useCallback(() => {
-    const randomId = 'INC-' + Math.floor(100 + Math.random() * 900);
+  const handleInjectIncident = useCallback(() => {
     const nowIso = new Date().toISOString();
 
     let newIncident: Incident;
     let newEvent: SSEEvent;
 
-    switch (selectedInjectType) {
+    switch (selectedIncidentType) {
       case 'stockout':
         newIncident = {
-          id: randomId,
+          id: 'INC-SYN',
           metric: 'CVR',
           scope: 'sku_SKU-042',
           direction: 'down',
           magnitude_pct: -100.0,
-          confidence: 0.98,
+          confidence: 0.99,
           severity: 'critical',
-          status: 'investigating',
-        };
-        newEvent = {
-          ts: nowIso,
-          type: 'detection',
-          module: 'sentinel',
-          message: 'Synthetic trigger: Stockout injected on SKU-042 (0 units remaining)',
-          severity: 'danger',
+          status: 'open',
         };
         break;
-
       case 'tracking_break':
         newIncident = {
-          id: randomId,
+          id: 'INC-SYN',
           metric: 'CVR',
           scope: 'camp_google_07',
           direction: 'down',
           magnitude_pct: -40.0,
-          confidence: 0.89,
+          confidence: 0.99,
           severity: 'high',
-          status: 'investigating',
-        };
-        newEvent = {
-          ts: nowIso,
-          type: 'detection',
-          module: 'sentinel',
-          message: 'Synthetic trigger: Tracking break injected on camp_google_07 (-40% gap)',
-          severity: 'warning',
+          status: 'open',
         };
         break;
-
       case 'margin_squeeze':
         newIncident = {
-          id: randomId,
+          id: 'INC-SYN',
           metric: 'Margin',
           scope: 'sku_SKU-018',
           direction: 'down',
           magnitude_pct: -12.0,
-          confidence: 0.85,
+          confidence: 0.99,
           severity: 'medium',
-          status: 'investigating',
-        };
-        newEvent = {
-          ts: nowIso,
-          type: 'detection',
-          module: 'sentinel',
-          message: 'Synthetic trigger: Margin squeeze injected on SKU-018 (+12% COGS)',
-          severity: 'warning',
+          status: 'open',
         };
         break;
-
       case 'creative_fatigue':
       default:
         newIncident = {
-          id: randomId,
+          id: 'INC-SYN',
           metric: 'CTR',
           scope: 'camp_meta_03',
           direction: 'down',
           magnitude_pct: -32.4,
-          confidence: 0.91,
+          confidence: 0.99,
           severity: 'high',
-          status: 'investigating',
-        };
-        newEvent = {
-          ts: nowIso,
-          type: 'detection',
-          module: 'sentinel',
-          message: 'Synthetic trigger: CTR anomaly injected on camp_meta_03 (-32.4%)',
-          severity: 'warning',
+          status: 'open',
         };
         break;
     }
 
-    // Prepend new incident to state
-    setIncidents((prev) => [newIncident, ...prev]);
+    newEvent = {
+      ts: nowIso,
+      type: 'detection',
+      module: 'sentinel',
+      message: `Synthetic Injection: ${selectedIncidentType.replace('_', ' ')} detected.`,
+      severity: 'danger',
+    };
 
-    // Push new event to top of agent feed
-    setEvents((prev) => [newEvent, ...prev].slice(0, 8));
+    setActiveIncidents((prev) => [newIncident, ...prev]);
+    setLiveEvents((prev) => [newEvent, ...prev].slice(0, 8));
 
-    // Try real API, fallback to local mock state
+    // Optional API call fallback
     fetch('/api/sim/inject', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: selectedInjectType }),
+      body: JSON.stringify({ type: selectedIncidentType }),
     }).catch(() => {});
 
     setShowInjectModal(false);
-  }, [selectedInjectType]);
+  }, [selectedIncidentType]);
 
   const handlePlay14Day = useCallback(() => {
     // TODO: wire to simulation play in Checkpoint 2
@@ -372,12 +345,12 @@ export const MissionControl: React.FC = () => {
           title="Active Incidents"
           action={
             <Badge variant="warning" style={{ fontSize: '0.625rem' }}>
-              {incidents.filter((i) => i.status !== 'resolved').length} open
+              {activeIncidents.filter((i) => i.status !== 'resolved').length} open
             </Badge>
           }
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {incidents.map((inc) => {
+            {activeIncidents.map((inc) => {
               const sev = SEVERITY_CONFIG[inc.severity];
               const statusCfg = STATUS_CONFIG[inc.status];
               const dirSign = inc.direction === 'up' ? '+' : '';
@@ -502,7 +475,7 @@ export const MissionControl: React.FC = () => {
             </div>
           }
         >
-          <AgentFeed events={events} maxVisible={8} />
+          <AgentFeed events={liveEvents} maxVisible={8} />
         </Card>
 
         {/* Quick Demo Controls */}
@@ -619,8 +592,8 @@ export const MissionControl: React.FC = () => {
                     padding: '0.625rem 0.75rem',
                     borderRadius: '0.5rem',
                     cursor: 'pointer',
-                    backgroundColor: selectedInjectType === t.id ? 'rgba(56,189,248,0.1)' : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${selectedInjectType === t.id ? 'rgba(56,189,248,0.35)' : 'var(--card-border, #1e293b)'}`,
+                    backgroundColor: selectedIncidentType === t.id ? 'rgba(56,189,248,0.1)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${selectedIncidentType === t.id ? 'rgba(56,189,248,0.35)' : 'var(--card-border, #1e293b)'}`,
                     transition: 'all var(--transition-fast, 150ms ease)',
                   }}
                 >
@@ -628,8 +601,8 @@ export const MissionControl: React.FC = () => {
                     type="radio"
                     name="injectType"
                     value={t.id}
-                    checked={selectedInjectType === t.id}
-                    onChange={() => setSelectedInjectType(t.id)}
+                    checked={selectedIncidentType === t.id}
+                    onChange={() => setSelectedIncidentType(t.id)}
                     style={{ marginTop: '2px', accentColor: 'var(--accent-cyan, #38bdf8)' }}
                   />
                   <div>
@@ -648,7 +621,7 @@ export const MissionControl: React.FC = () => {
               <Button variant="ghost" size="sm" onClick={() => setShowInjectModal(false)}>
                 Cancel
               </Button>
-              <Button variant="primary" size="sm" onClick={handleConfirmInject} autoFocus>
+              <Button variant="primary" size="sm" onClick={handleInjectIncident} autoFocus>
                 Confirm — Inject
               </Button>
             </div>
