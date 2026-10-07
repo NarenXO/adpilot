@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ReactECharts from 'echarts-for-react';
-import { 
-  Activity, AlertTriangle, ShieldCheck, PieChart, Sliders, Award, 
-  Play, Pause, Zap, Power, Smile, Cpu, CheckCircle, ArrowUpRight, 
+import {
+  Activity, AlertTriangle, ShieldCheck, PieChart, Sliders, Award,
+  Play, Pause, Zap, Power, Smile, Cpu, CheckCircle, ArrowUpRight,
   Radio, Sparkles, Send, Layers
 } from 'lucide-react';
 import { palette } from './theme/tokens';
 import InventoryMargin from './pages/InventoryMargin';
+import { Incidents } from './pages/Incidents';
+import { Proof } from './pages/Proof';
 
 const queryClient = new QueryClient();
 
@@ -52,7 +54,7 @@ const Shell = ({ children, state, onTick, onInject, isTicking }: any) => {
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#333' }}>AUTONOMOUS D2C DECISION ENGINE</span>
           </div>
         </div>
-        
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <button onClick={() => setShowInjectModal(true)} style={{ background: palette.accent.pink, border: '3px solid #000', fontWeight: 900, padding: '0.4rem 0.8rem', cursor: 'pointer', boxShadow: '3px 3px 0px #000', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem' }}>
             <Send size={14} /> INJECT ANOMALY LIVE
@@ -133,12 +135,12 @@ const MissionControl = ({ state, sseEvents, activeStage }: any) => {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '0.5rem' }}>
           {stages.map((st, i) => (
-            <div key={i} style={{ 
-              background: st.active ? st.color : '#f3f3ed', 
-              border: '2px solid #000', 
-              padding: '0.5rem 0.2rem', 
-              textAlign: 'center', 
-              fontWeight: 900, 
+            <div key={i} style={{
+              background: st.active ? st.color : '#f3f3ed',
+              border: '2px solid #000',
+              padding: '0.5rem 0.2rem',
+              textAlign: 'center',
+              fontWeight: 900,
               fontSize: '0.7rem',
               boxShadow: st.active ? '3px 3px 0px #000' : 'none',
               transform: st.active ? 'translateY(-2px)' : 'none',
@@ -178,10 +180,10 @@ const MissionControl = ({ state, sseEvents, activeStage }: any) => {
         <div style={cardStyle}>
           <div style={{ fontWeight: 900, fontSize: '1rem', textTransform: 'uppercase', borderBottom: '3px solid #000', paddingBottom: '0.75rem', marginBottom: '1rem' }}>LIVE ENGINE TRACE</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '280px', overflowY: 'auto' }}>
-            {sseEvents.length === 0 ? <div style={{fontWeight: 700, fontSize: '0.85rem'}}>Awaiting simulation tick...</div> : sseEvents.map((ev: any, idx: number) => (
+            {sseEvents.length === 0 ? <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>Awaiting simulation tick...</div> : sseEvents.map((ev: any, idx: number) => (
               <div key={idx} style={{ background: '#fff', border: '2px solid #000', boxShadow: '2px 2px 0px #000', padding: '0.6rem', fontWeight: 700, fontSize: '0.8rem' }}>
                 <span style={{ background: palette.accent.cyan, border: '1px solid #000', padding: '0 0.3rem', marginRight: '0.5rem' }}>{ev.type}</span>
-                {JSON.stringify(ev.payload).slice(0,60)}
+                {JSON.stringify(ev.payload).slice(0, 60)}
               </div>
             ))}
           </div>
@@ -262,7 +264,7 @@ const Diagnosis = () => {
   );
 };
 
-const Placeholder = ({ title }: any) => <div style={cardStyle}><h2 style={{fontWeight:900, margin:0}}>{title}</h2><p style={{fontWeight:600}}>UI Module rendered. Awaiting feature integration.</p></div>;
+const Placeholder = ({ title }: any) => <div style={cardStyle}><h2 style={{ fontWeight: 900, margin: 0 }}>{title}</h2><p style={{ fontWeight: 600 }}>UI Module rendered. Awaiting feature integration.</p></div>;
 
 export default function App() {
   const [state, setState] = useState<any>(null);
@@ -279,11 +281,11 @@ export default function App() {
       console.error(e);
     }
   };
-  
-  const handleTick = async () => { 
+
+  const handleTick = async () => {
     setIsTicking(true);
     try {
-      await fetch('/api/sim/tick', { method: 'POST' }); 
+      await fetch('/api/sim/tick', { method: 'POST' });
       await fetchState();
     } catch (e) {
       console.error(e);
@@ -309,13 +311,13 @@ export default function App() {
     fetchState();
     const sse = new EventSource('/api/stream');
     sse.onmessage = (e) => {
-      try { 
+      try {
         const parsed = JSON.parse(e.data);
         if (parsed.type) {
           setActiveStage(parsed.type);
           setSseEvents((prev) => [parsed, ...prev.slice(0, 15)]);
         }
-      } catch (e) {}
+      } catch (e) { }
     };
     return () => sse.close();
   }, []);
@@ -326,12 +328,12 @@ export default function App() {
         <Shell state={state} onTick={handleTick} onInject={handleInject} isTicking={isTicking}>
           <Routes>
             <Route path="/" element={<MissionControl state={state} sseEvents={sseEvents} activeStage={activeStage} />} />
-            <Route path="/incidents" element={<Placeholder title="INCIDENTS DATA" />} />
+            <Route path="/incidents" element={<Incidents />} />
             <Route path="/diagnosis" element={<Diagnosis />} />
             <Route path="/inventory" element={<InventoryMargin />} />
             <Route path="/inventory-margin" element={<InventoryMargin />} />
             <Route path="/optimizer" element={<Placeholder title="OPTIMIZER STUDIO" />} />
-            <Route path="/proof" element={<Placeholder title="EVALUATION PROOF" />} />
+            <Route path="/proof" element={<Proof />} />
           </Routes>
         </Shell>
       </BrowserRouter>
