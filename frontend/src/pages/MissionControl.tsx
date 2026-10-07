@@ -129,6 +129,9 @@ export const MissionControl: React.FC = () => {
   const [showInjectModal, setShowInjectModal] = useState<boolean>(false);
   const [selectedIncidentType, setSelectedIncidentType] = useState<string>('creative_fatigue');
 
+  // Simulation duration state
+  const [simDuration, setSimDuration] = useState<number>(14);
+
   // TODO: replace with real EventSource in Checkpoint 2
   useEffect(() => {
     const interval = setInterval(() => {
@@ -235,10 +238,10 @@ export const MissionControl: React.FC = () => {
     setShowInjectModal(false);
   }, [selectedIncidentType]);
 
-  const handlePlay14Day = useCallback(() => {
+  const handlePlaySimulation = useCallback(() => {
     // TODO: wire to simulation play in Checkpoint 2
-    console.log('[MissionControl] Play 14-day simulation');
-  }, []);
+    console.log(`[MissionControl] Play ${simDuration}-day simulation`);
+  }, [simDuration]);
 
   return (
     <div
@@ -520,15 +523,32 @@ export const MissionControl: React.FC = () => {
 
             <div>
               <p style={{ margin: '0 0 0.75rem', fontSize: '0.8125rem', color: 'var(--text-secondary, #94a3b8)', lineHeight: 1.5 }}>
-                Fast-forward through 14 simulation days and observe KPI trajectories and agent decisions.
+                Fast-forward through {simDuration} simulation days and observe KPI trajectories and agent decisions.
               </p>
+
+              <div className="flex items-center gap-2 mb-4 bg-slate-900/50 p-1 rounded-lg border border-slate-800">
+                {[7, 14, 30].map((days) => (
+                  <button
+                    key={days}
+                    onClick={() => setSimDuration(days)}
+                    className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-colors ${
+                      simDuration === days 
+                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' 
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                    }`}
+                  >
+                    {days} Days
+                  </button>
+                ))}
+              </div>
+
               <Button
                 variant="secondary"
                 size="sm"
                 style={{ width: '100%' }}
-                onClick={handlePlay14Day}
+                onClick={handlePlaySimulation}
               >
-                Play 14-Day Simulation
+                Play {simDuration}-Day Simulation
               </Button>
             </div>
 
