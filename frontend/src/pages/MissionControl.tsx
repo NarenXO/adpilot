@@ -114,7 +114,7 @@ const STATUS_CONFIG: Record<Incident['status'], { statusType: 'safe' | 'warning'
 
 // ─── MissionControl page ──────────────────────────────────────────────────────
 
-const MissionControl: React.FC = () => {
+export const MissionControl: React.FC = () => {
   // TODO: wire to global Zustand store in Phase 3 (Naren's store/)
   const [events, setEvents] = useState<SSEEvent[]>([...MOCK_SSE_EVENTS]);
   const [sseIndex, setSseIndex] = useState<number>(0);

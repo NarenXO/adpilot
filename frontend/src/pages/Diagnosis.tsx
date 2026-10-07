@@ -59,7 +59,7 @@ const EVIDENCE_ITEMS: EvidenceItem[] = [
   {
     id: 'E13',
     title: 'High Audience Overlap & Frequency',
-    provenance: 'Measured',
+    provenance: 'Derived',
     sourceTable: 'meta_audience_overlap_log',
     metricSnippet: 'Frequency 7.2x (warning alert > 6.0x)',
     description: 'Target segment reach exhausted. Audience repetition exceeded standard threshold of 6.0x across top ad sets.',
@@ -79,7 +79,7 @@ const EVIDENCE_ITEMS: EvidenceItem[] = [
   {
     id: 'E15',
     title: 'Budget Shift & Daily Opportunity Cost',
-    provenance: 'Scenario',
+    provenance: 'Measured',
     sourceTable: 'simulation_rebalance_v4',
     metricSnippet: 'Shift $1,200/day to camp_meta_05',
     description: 'Projected net profit recovery by migrating allocated budget away from saturated ad sets.',
@@ -89,7 +89,7 @@ const EVIDENCE_ITEMS: EvidenceItem[] = [
   {
     id: 'E16',
     title: 'ROAS Uplift from Winner Rotation',
-    provenance: 'Derived',
+    provenance: 'Scenario',
     sourceTable: 'synthetic_counterfactual_engine',
     metricSnippet: 'Estimated +0.8x blended ROAS delta',
     description: 'Marginal ROAS improvement calculated via synthetic control reweighting on winning SKUs.',
@@ -105,7 +105,7 @@ const CREATIVES_DATA: CreativeItem[] = [
     format: 'Video 9:16',
     hookType: 'Problem-Agitation (0-3s)',
     ageDays: 21,
-    ctrDecayPct: -38.4,
+    ctrDecayPct: -38,
     frequency: 7.2,
     status: 'Fatigued',
   },
@@ -115,8 +115,8 @@ const CREATIVES_DATA: CreativeItem[] = [
     format: 'Carousel',
     hookType: 'Competitor Benchmark',
     ageDays: 14,
-    ctrDecayPct: -18.2,
-    frequency: 5.4,
+    ctrDecayPct: -12,
+    frequency: 4.1,
     status: 'Healthy',
   },
   {
@@ -125,8 +125,8 @@ const CREATIVES_DATA: CreativeItem[] = [
     format: 'Static Image',
     hookType: 'Social Proof & Press',
     ageDays: 4,
-    ctrDecayPct: +4.6,
-    frequency: 2.1,
+    ctrDecayPct: -2,
+    frequency: 1.8,
     status: 'Testing',
   },
 ];
@@ -691,6 +691,7 @@ export const Diagnosis: React.FC = () => {
                             cr.frequency > 6.0 ? 'text-amber-400' : 'text-text-primary'
                           }`}
                         >
+                          {cr.frequency > 6.0 && <span aria-label="warning">⚠</span>}
                           {cr.frequency.toFixed(1)}x
                           {cr.frequency > 6.0 && (
                             <span className="text-[10px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-sans">
