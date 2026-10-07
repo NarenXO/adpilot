@@ -189,7 +189,7 @@ class TestScorecard:
         assert scorecard.median_time_to_diagnosis_s > 0.0
 
     def test_all_required_fields_present(self, scorecard):
-        fields = scorecard.model_fields.keys()
+        fields = Scorecard.model_fields.keys()
         required = {
             "detection", "forecast", "backtest", "regime_shift",
             "placebo", "agent_vs_playbook", "guardian",
@@ -249,3 +249,33 @@ class TestHarness:
         parsed = json.loads(content)
         assert "detection" in parsed
         assert "honest_limits" in parsed
+        assert len(parsed["honest_limits"]) == 4
+
+    def test_run_eval_twenty_seeds(self):
+        result = run_eval(db_path=None, output_path=None)
+        assert result["backtest"]["n_seeds"] == 20
+        assert len(result["backtest"]["curve"]) == 20
+
+    def test_run_eval_four_canonical_honest_limits(self):
+        result = run_eval(db_path=None, output_path=None)
+        expected = [
+            "Data is synthetic and outcomes are simulated by a separate twin.",
+            "Margin and inventory are scenario inputs.",
+            "The counterfactual is quasi-experimental, not proven causal.",
+            "Execution runs through a mock adapter.",
+        ]
+        assert result["honest_limits"] == expected
+
+
+class TestSentinelIntegration:
+    def test_detect_robustness_with_none_and_empty_conn(self):
+        import duckdb
+        from datetime import date
+        from backend.sentinel.detector import detect
+
+        res_none = detect(date(2024, 6, 15), conn=None)
+        assert isinstance(res_none, list)
+
+        res_empty = detect(date(2024, 6, 15), conn=duckdb.connect(":memory:"))
+        assert isinstance(res_empty, list)
+

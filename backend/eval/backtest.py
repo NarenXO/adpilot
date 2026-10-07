@@ -45,8 +45,8 @@ def run_backtest(
         except Exception:
             pass
 
-    # Determine how many seeds to actually use based on data availability
-    actual_n_seeds = n_seeds if campaign_roas is not None and len(campaign_roas) >= 2 else min(n_seeds, 5)
+    # Determine how many seeds to actually use based on requested n_seeds
+    actual_n_seeds = n_seeds
 
     rng = np.random.default_rng(0)
     profit_deltas: List[float] = []

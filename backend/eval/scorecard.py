@@ -169,7 +169,7 @@ def build_scorecard(
     """
     detection = evaluate_detection(conn=conn, detected_incidents=detected_incidents)
     forecast = evaluate_forecast(conn=conn)
-    backtest = run_backtest(conn=conn)
+    backtest = run_backtest(conn=conn, n_seeds=20)
     placebo = run_placebo_test()
     regime_shift = _build_regime_shift(conn)
     agent_vs_playbook = _build_agent_vs_playbook(conn)
@@ -178,11 +178,10 @@ def build_scorecard(
     median_time_to_diagnosis_s = _compute_median_time_to_diagnosis(conn)
 
     honest_limits = [
-        "Sentinel is trained on simulated data; real-world precision may differ.",
-        "EWMA seasonality removal assumes stable 7-day cycles; holiday periods invalidate this.",
-        "Forecast MAPE is computed over a 30-day holdout only; long-term drift is not captured.",
-        "Backtest profit deltas assume independent campaigns; cross-campaign budget cannibalisation is ignored.",
-        "Placebo tests use synthetic stubs; edge-case detector bypasses may exist in production data.",
+        "Data is synthetic and outcomes are simulated by a separate twin.",
+        "Margin and inventory are scenario inputs.",
+        "The counterfactual is quasi-experimental, not proven causal.",
+        "Execution runs through a mock adapter.",
     ]
 
     return Scorecard(
