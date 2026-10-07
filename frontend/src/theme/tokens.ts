@@ -1,3 +1,16 @@
+export type ThemeMode = 'invente' | 'dark' | 'light';
+
+export type ProvenanceType = 'measured' | 'derived' | 'scenario' | 'Measured' | 'Derived' | 'Scenario';
+
+export const provenanceColor: Record<string, string> = {
+  measured: '#78dbf6',
+  derived: '#f364cb',
+  scenario: '#ffd23f',
+  Measured: '#78dbf6',
+  Derived: '#f364cb',
+  Scenario: '#ffd23f',
+};
+
 export const palette = {
   bg: {
     base: '#f3f3ed',
