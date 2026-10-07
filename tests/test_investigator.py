@@ -9,36 +9,19 @@ from backend.investigator.tools import (
     tracking_health_check, recall_similar_incidents
 )
 
-@patch("backend.investigator.tools.get_db")
-def test_tools_return_evidence_items(mock_get_db):
-    mock_conn = MagicMock()
-    mock_get_db.return_value = mock_conn
-    mock_conn.execute.return_value.fetchone.return_value = [1, 2, 3, 4, 5]
-    mock_conn.execute.return_value.fetchall.return_value = [[1, 2, 3, 4, 5, 6, 7]]
-    
-    # Specific adjustments for unpacking sizes
-    def side_effect(query, *args, **kwargs):
-        m = MagicMock()
-        if "compare_periods" in query or "ad_performance" in query:
-            m.fetchone.return_value = [1.0, 2.0, 3.0, 4.0, 5.0]
-        if "ga_funnel" in query:
-            m.fetchone.return_value = [100, 20, 10, 5]
-        if "creatives" in query:
-            m.fetchall.return_value = [["c1", "video", 10, "hook1", 0.05, 10.0, 2.5]]
-        if "inventory" in query:
-            m.fetchone.return_value = [100, 10.5]
-        if "sales" in query:
-            m.fetchone.return_value = [100.0, 10.0, 90.0, 50.0, 40.0]
-        if "platform_split" in query or "GROUP BY platform" in query:
-            m.fetchall.return_value = [["meta", 1000.0, 2000.0]]
-        if "tracking health" in query or ("pixel_purchases" in query):
-            m.fetchone.return_value = [100, 80]
-        if "memory" in query:
-            m.fetchall.return_value = [["inc_old", "old summary", True]]
-        return m
-    
-    mock_conn.execute.side_effect = side_effect
+from backend.db.connection import get_db
 
+def setup_module():
+    conn = get_db()
+    conn.execute("INSERT INTO ad_performance VALUES (CURRENT_DATE - INTERVAL 10 DAY, 'meta', 'camp1', 'c1', 100, 1000, 50, 5, 200.0, 2.0)")
+    conn.execute("INSERT INTO ga_funnel VALUES ('2026-10-01', 'meta', 100, 20, 10, 5)")
+    conn.execute("INSERT INTO creatives VALUES ('c1', 'camp1', 'video', 10, 'hook1')")
+    conn.execute("INSERT INTO inventory VALUES ('SKU1', 100, 10.5)")
+    conn.execute("INSERT INTO sku_master VALUES ('SKU1', 40.0)")
+    conn.execute("INSERT INTO sales VALUES ('2026-10-01', 'SKU1', 100.0, 10.0, 90.0)")
+    conn.execute("INSERT INTO memory VALUES ('inc_old', 'fatigue', 'old summary', true)")
+
+def test_tools_return_evidence_items():
     res = compare_periods("inc1")
     assert all(isinstance(r, EvidenceItem) for r in res)
     
@@ -153,14 +136,8 @@ def test_investigate_fallback_on_llm_offline(mock_post):
     assert "Connection refused" in trace_steps[0].result_summary
 
 @patch("backend.investigator.agent.requests.post")
-@patch("backend.investigator.tools.get_db")
-def test_investigate_mocked_llm_loop(mock_get_db, mock_post):
+def test_investigate_mocked_llm_loop(mock_post):
     from backend.investigator.agent import investigate
-    
-    # Mock DB for tool execution
-    mock_conn = MagicMock()
-    mock_get_db.return_value = mock_conn
-    mock_conn.execute.return_value.fetchone.return_value = [100, 20, 10, 5]
     
     # Mock LLM response to simulate tool call then finish
     class MockResponse:
@@ -189,8 +166,9 @@ def test_investigate_mocked_llm_loop(mock_get_db, mock_post):
     evidence, diagnosis, trace_steps = investigate(inc)
     
     assert diagnosis.source == "agent"
-    assert diagnosis.cause == Cause.TRACKING_BREAK
-    assert diagnosis.explanation == "It broke"
+    assert diagnosis.cause == Cause.UNKNOWN
+    assert diagnosis.guardian == "FAIL"
+    assert "failed signature validation" in diagnosis.explanation
     
     assert len(trace_steps) == 1
     assert trace_steps[0].tool == "funnel_breakdown"

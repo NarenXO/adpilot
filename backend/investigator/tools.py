@@ -18,7 +18,7 @@ def compare_periods(incident_id: str, days: int = 14) -> List[EvidenceItem]:
             SUM(purchases) as total_purchases,
             SUM(revenue) / NULLIF(SUM(spend), 0) as roas
         FROM ad_performance
-        WHERE date >= CURRENT_DATE - INTERVAL ? DAY
+        WHERE date >= CURRENT_DATE - CAST(? AS INTEGER) * INTERVAL 1 DAY
     """
     
     current_metrics = conn.execute(query, [days]).fetchone()

@@ -68,6 +68,7 @@
         "description": "Tracking break evidence",
         "values": {
           "conversion_drop": 85.0,
+          "pixel_purchases": 18,
           "actual_transactions": 120,
           "sessions": 2500
         },

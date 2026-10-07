@@ -113,9 +113,8 @@ def investigate(incident: Incident, max_steps: int = 4, ollama_url: str = "http:
                     evidence_ids=evidence_ids,
                     explanation=explanation
                 )
-                # Guardian logic isn't defined in our mock Diagnosis, wait, let's see, no guardian field.
-                # If guardian is needed we can add it, but our mock Diagnosis doesn't have it.
-                return evidence_list, diagnosis, trace.to_list()
+                verified_diagnosis = verify(diagnosis, evidence_list)
+                return evidence_list, verified_diagnosis, trace.to_list()
             else:
                 raise ValueError(f"Unknown action: {action}")
                 
@@ -127,10 +126,12 @@ def investigate(incident: Incident, max_steps: int = 4, ollama_url: str = "http:
             evidence_ids=[e.id for e in evidence_list],
             explanation="Max steps reached without conclusive diagnosis."
         )
-        return evidence_list, diagnosis, trace.to_list()
+        verified_diagnosis = verify(diagnosis, evidence_list)
+        return evidence_list, verified_diagnosis, trace.to_list()
         
     except Exception as e:
         # Fallback to playbook
         trace.add_step(0, "playbook_fallback", {}, f"Delegated to deterministic playbook fallback due to LLM error/timeout: {e}")
         playbook_evidence, playbook_diagnosis = diagnose_from_playbook(incident)
-        return playbook_evidence, playbook_diagnosis, trace.to_list()
+        verified_diagnosis = verify(playbook_diagnosis, playbook_evidence)
+        return playbook_evidence, verified_diagnosis, trace.to_list()
