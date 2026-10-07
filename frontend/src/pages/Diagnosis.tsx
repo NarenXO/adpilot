@@ -2,6 +2,8 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
+import { StatusBadge } from '../components/ui/StatusBadge';
+import { EmptyState } from '../components/ui/EmptyState';
 import { WaterfallChart } from '../components/charts/WaterfallChart';
 import { TreemapChart } from '../components/charts/TreemapChart';
 import { HeatmapChart } from '../components/charts/HeatmapChart';
@@ -196,6 +198,44 @@ const TOOL_TRACE_STEPS: ToolTraceStep[] = [
     durationMs: 110,
   },
 ];
+
+// ─── Frozen Contract Compliance Types & Constants ────────────────────────────
+
+export interface DiagnosisModel {
+  incident_id: string;
+  cause: string;
+  evidence_ids: string[];
+  explanation: string;
+  source: 'llm' | 'playbook';
+  guardian: 'PASS' | 'DOWNGRADED' | 'FAIL';
+}
+
+export interface AgentStep {
+  step: number;
+  tool: string;
+  args: Record<string, unknown>;
+  result_summary: string;
+}
+
+export const MOCK_DIAGNOSIS: DiagnosisModel = {
+  incident_id: 'INC-001',
+  cause: 'creative_fatigue',
+  evidence_ids: ['E12', 'E13', 'E14', 'E15', 'E16'],
+  explanation:
+    'Creative fatigue on Meta ads leading to a 32.4% drop in CTR. Audience repetition frequency reached 7.2x, causing high wearout on 21-day video creative.',
+  source: 'llm',
+  guardian: 'PASS',
+};
+
+export const MOCK_AGENT_STEPS: AgentStep[] = TOOL_TRACE_STEPS.map((t) => ({
+  step: t.step,
+  tool: t.toolName,
+  args: t.args,
+  result_summary: t.description,
+}));
+
+export const MOCK_EVIDENCE = EVIDENCE_ITEMS;
+export const MOCK_CREATIVE_FATIGUE = CREATIVES_DATA;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
