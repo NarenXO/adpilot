@@ -243,3 +243,170 @@ def test_opportunity_score_component_bounds(db_conn):
         assert 0.0 <= score.margin_component <= 25.0
         assert 0.0 <= score.stock_component <= 25.0
         assert 0.0 <= score.total_score <= 100.0
+
+# ────────────────────────────────────────────────────────────────────────────
+# PHASE 3 TESTS: SLSQP Optimizer & Recommendation Pipeline
+# ────────────────────────────────────────────────────────────────────────────
+
+from backend.contracts import Recommendation, BudgetChange, Interval, Incident, Scope
+from backend.strategist.optimizer import optimize_budget
+from backend.strategist.recommend import recommend
+
+def test_optimizer_returns_valid_shape():
+    campaigns = [
+        {
+            "campaign_id": "camp_01",
+            "sku": "SKU-01",
+            "current_spend": 300.0,
+            "margin_pct": 0.55,
+            "days_of_cover": 14.0,
+            "curve_params": {"E_max": 2500.0, "K": 350.0, "eta": 1.2},
+            "opportunity_score": 75.0,
+        },
+        {
+            "campaign_id": "camp_02",
+            "sku": "SKU-02",
+            "current_spend": 400.0,
+            "margin_pct": 0.40,
+            "days_of_cover": 10.0,
+            "curve_params": {"E_max": 2200.0, "K": 400.0, "eta": 1.0},
+            "opportunity_score": 45.0,
+        },
+        {
+            "campaign_id": "camp_03",
+            "sku": "SKU-03",
+            "current_spend": 200.0,
+            "margin_pct": 0.65,
+            "days_of_cover": 20.0,
+            "curve_params": {"E_max": 1800.0, "K": 250.0, "eta": 1.3},
+            "opportunity_score": 80.0,
+        },
+    ]
+    res = optimize_budget(campaigns, mode="profit")
+    assert "changes" in res
+    assert "expected_profit_delta" in res
+    assert "constraints_binding" in res
+    assert "confidence" in res
+    assert "method" in res
+    assert len(res["changes"]) == 3
+    for ch in res["changes"]:
+        assert "campaign_id" in ch
+        assert "from_spend" in ch
+        assert "to_spend" in ch
+        assert ch["to_spend"] >= 50.0
+
+def test_optimizer_respects_30pct_cap():
+    campaigns = [
+        {
+            "campaign_id": "camp_01",
+            "current_spend": 300.0,
+            "margin_pct": 0.60,
+            "days_of_cover": 14.0,
+            "curve_params": {"E_max": 3000.0, "K": 300.0, "eta": 1.2},
+            "opportunity_score": 85.0,
+        },
+        {
+            "campaign_id": "camp_02",
+            "current_spend": 500.0,
+            "margin_pct": 0.35,
+            "days_of_cover": 12.0,
+            "curve_params": {"E_max": 1500.0, "K": 500.0, "eta": 0.9},
+            "opportunity_score": 30.0,
+        },
+    ]
+    res = optimize_budget(campaigns, mode="profit")
+    for ch in res["changes"]:
+        rel_change = abs(ch["to_spend"] - ch["from_spend"]) / ch["from_spend"]
+        assert rel_change <= 0.30 + 1e-5
+
+def test_optimizer_stockout_no_scale_up():
+    campaigns = [
+        {
+            "campaign_id": "camp_stockout",
+            "current_spend": 300.0,
+            "margin_pct": 0.70,
+            "days_of_cover": 2.0,  # Stockout risk (< 7 days)
+            "curve_params": {"E_max": 4000.0, "K": 200.0, "eta": 1.4},
+            "opportunity_score": 90.0,
+        },
+        {
+            "campaign_id": "camp_normal",
+            "current_spend": 300.0,
+            "margin_pct": 0.50,
+            "days_of_cover": 14.0,
+            "curve_params": {"E_max": 2000.0, "K": 300.0, "eta": 1.0},
+            "opportunity_score": 50.0,
+        },
+    ]
+    res = optimize_budget(campaigns, mode="profit")
+    stockout_ch = next(c for c in res["changes"] if c["campaign_id"] == "camp_stockout")
+    assert stockout_ch["to_spend"] <= stockout_ch["from_spend"] + 1e-5
+
+def test_optimizer_modes():
+    campaigns = [
+        {
+            "campaign_id": "camp_01",
+            "current_spend": 250.0,
+            "margin_pct": 0.50,
+            "days_of_cover": 10.0,
+            "curve_params": {"E_max": 2000.0, "K": 300.0, "eta": 1.1},
+            "opportunity_score": 60.0,
+        },
+        {
+            "campaign_id": "camp_02",
+            "current_spend": 350.0,
+            "margin_pct": 0.50,
+            "days_of_cover": 12.0,
+            "curve_params": {"E_max": 2500.0, "K": 350.0, "eta": 1.1},
+            "opportunity_score": 65.0,
+        },
+    ]
+    for mode in ["profit", "growth", "efficiency"]:
+        res = optimize_budget(campaigns, mode=mode)
+        assert len(res["changes"]) == 2
+        assert "expected_profit_delta" in res
+
+def test_optimizer_heuristic_fallback():
+    campaigns = [
+        {
+            "campaign_id": "camp_bad_01",
+            "current_spend": 200.0,
+            "margin_pct": 0.50,
+            "curve_params": {"E_max": 0.0, "K": 0.0, "eta": 0.0},
+            "opportunity_score": 20.0,
+        },
+        {
+            "campaign_id": "camp_bad_02",
+            "current_spend": 200.0,
+            "margin_pct": 0.50,
+            "curve_params": {"E_max": 0.0, "K": 0.0, "eta": 0.0},
+            "opportunity_score": 80.0,
+        },
+    ]
+    res = optimize_budget(campaigns, mode="profit")
+    assert res["method"] == "heuristic_fallback"
+    assert res["confidence"] == 0.5
+
+def test_recommend_returns_valid_contract():
+    incident = Incident(
+        id="INC-OPT-TEST",
+        sim_date=date(2024, 6, 16),
+        metric="cpc",
+        scope=Scope(platform="meta", campaign_id="camp_meta_03", sku="SKU-007"),
+        direction="up",
+        magnitude_pct=25.0,
+        detector="ewma",
+        confidence=0.88,
+        money_at_risk=250.0,
+        severity=200.0,
+        status="open",
+    )
+    rec = recommend(incident, mode="profit", db_conn=None)
+    assert isinstance(rec, Recommendation)
+    assert rec.id == "REC-INC-OPT-TEST"
+    assert rec.incident_id == "INC-OPT-TEST"
+    assert rec.mode == "profit"
+    assert isinstance(rec.expected_profit_delta, Interval)
+    assert isinstance(rec.changes, list)
+    assert isinstance(rec.opportunity_scores, list)
+

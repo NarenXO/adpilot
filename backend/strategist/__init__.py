@@ -15,6 +15,8 @@ from backend.strategist.opportunity import (
     compute_opportunity_score,
     compute_scores_for_campaigns,
 )
+from backend.strategist.optimizer import optimize_budget
+from backend.strategist.recommend import recommend
 
 __all__ = [
     "holt_winters_forecast",
@@ -28,4 +30,6 @@ __all__ = [
     "generate_response_curve",
     "compute_opportunity_score",
     "compute_scores_for_campaigns",
+    "optimize_budget",
+    "recommend",
 ]
