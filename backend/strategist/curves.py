@@ -309,3 +309,31 @@ def generate_response_curve(
         recommended_spend=round(float(recommended_spend), 2),
         opportunity_score=round(float(opportunity_score), 2),
     )
+
+
+def fit_response_curve(campaign_id: str, conn=None) -> dict:
+    """
+    Fits and generates response curve data points for a campaign, returning a dict with data_points.
+    """
+    sku = "SKU-001"
+    current_spend = 500.0
+    if conn is not None:
+        try:
+            row = conn.execute(
+                "SELECT sku, spend FROM ad_performance WHERE campaign_id = ? ORDER BY date DESC LIMIT 1",
+                [campaign_id]
+            ).fetchone()
+            if row:
+                if row[0]:
+                    sku = str(row[0])
+                if row[1] is not None:
+                    current_spend = float(row[1])
+        except Exception:
+            pass
+    rc = generate_response_curve(
+        campaign_id=campaign_id,
+        sku=sku,
+        current_spend=current_spend,
+        conn=conn,
+    )
+    return rc.model_dump()
