@@ -6,24 +6,24 @@ from backend.guardian.verifier import verify
 
 def test_signatures_all_golden_causes():
     # CREATIVE_FATIGUE
-    e_fatigue = [EvidenceItem(id="1", tool="t", description="d", values={"ctr": 0.02}, provenance="m")]
+    e_fatigue = [EvidenceItem(id="1", tool="t", description="d", values={"ctr_drop_pct": 20.0, "avg_frequency": 6.0, "spend": 100}, provenance="m")]
     assert check_cause_signature(Cause.CREATIVE_FATIGUE, e_fatigue)[0] == True
     
-    e_fatigue_fail = [EvidenceItem(id="1", tool="t", description="d", values={"ctr": 0.10, "avg_frequency": 2.0}, provenance="m")]
+    e_fatigue_fail = [EvidenceItem(id="1", tool="t", description="d", values={"ctr_drop_pct": 5.0, "avg_frequency": 2.0, "spend": 100}, provenance="m")]
     assert check_cause_signature(Cause.CREATIVE_FATIGUE, e_fatigue_fail)[0] == False
     
     # STOCKOUT
-    e_stockout = [EvidenceItem(id="1", tool="t", description="d", values={"days_of_cover": 1.0}, provenance="m")]
+    e_stockout = [EvidenceItem(id="1", tool="t", description="d", values={"days_of_cover": 1.0, "spend": 100}, provenance="m")]
     assert check_cause_signature(Cause.STOCKOUT, e_stockout)[0] == True
     
-    e_stockout_fail = [EvidenceItem(id="1", tool="t", description="d", values={"days_of_cover": 10.0}, provenance="m")]
+    e_stockout_fail = [EvidenceItem(id="1", tool="t", description="d", values={"days_of_cover": 10.0, "spend": 100}, provenance="m")]
     assert check_cause_signature(Cause.STOCKOUT, e_stockout_fail)[0] == False
     
     # TRACKING_BREAK
-    e_tracking = [EvidenceItem(id="1", tool="t", description="d", values={"pixel_purchases": 10, "actual_transactions": 100}, provenance="m")]
+    e_tracking = [EvidenceItem(id="1", tool="t", description="d", values={"conversion_drop": 80.0, "actual_transactions": 100}, provenance="m")]
     assert check_cause_signature(Cause.TRACKING_BREAK, e_tracking)[0] == True
     
-    e_tracking_fail = [EvidenceItem(id="1", tool="t", description="d", values={"pixel_purchases": 90, "actual_transactions": 100}, provenance="m")]
+    e_tracking_fail = [EvidenceItem(id="1", tool="t", description="d", values={"conversion_drop": 10.0, "pixel_purchases": 90, "actual_transactions": 100}, provenance="m")]
     assert check_cause_signature(Cause.TRACKING_BREAK, e_tracking_fail)[0] == False
     
     # MARGIN_SQUEEZE
@@ -56,6 +56,7 @@ def test_guardian_downgrades_hallucinated_numbers():
         explanation="Margin dropped to 99.4%", # Hallucination
         guardian="PENDING"
     )
+    # Give margin 15.5 so it passes signature but fails verification
     evidence = [EvidenceItem(id="1", tool="t", description="d", values={"margin": 15.5}, provenance="m")]
     
     new_diag = verify(diagnosis, evidence)
@@ -72,9 +73,24 @@ def test_guardian_fails_invalid_signature():
         explanation="Stockout due to days of cover 45.0",
         guardian="PENDING"
     )
-    evidence = [EvidenceItem(id="1", tool="t", description="d", values={"days_of_cover": 45.0}, provenance="m")]
+    evidence = [EvidenceItem(id="1", tool="t", description="d", values={"days_of_cover": 45.0, "spend": 100}, provenance="m")]
     
     new_diag = verify(diagnosis, evidence)
     assert new_diag.guardian == "FAIL"
     assert new_diag.cause == Cause.UNKNOWN
     assert "Rejected" in new_diag.explanation
+
+def test_guardian_catches_mixed_currency_and_percent_hallucinations():
+    diagnosis = Diagnosis(
+        cause=Cause.MARGIN_SQUEEZE,
+        source="agent",
+        evidence_ids=["1"],
+        explanation="Margin dropped to 88.5% with COGS at $45.00", 
+        guardian="PENDING"
+    )
+    # Give margin 15.0 so it passes signature but fails verification of 88.5 and 45.00
+    evidence = [EvidenceItem(id="1", tool="t", description="d", values={"margin": 15.0}, provenance="m")]
+    
+    new_diag = verify(diagnosis, evidence)
+    assert new_diag.guardian == "DOWNGRADED"
+    assert "Sanitized" in new_diag.explanation

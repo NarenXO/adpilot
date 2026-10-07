@@ -120,5 +120,140 @@
         "result_summary": "Loaded from cache"
       }
     ]
+  },
+  "INC-001": {
+    "evidence": [
+      {
+        "id": "e_cf_1",
+        "tool": "creative_breakdown",
+        "description": "Creative metrics",
+        "values": {
+          "ctr_drop_pct": 42.5,
+          "avg_frequency": 6.8,
+          "age_days": 38,
+          "spend": 100.0
+        },
+        "provenance": "measured"
+      }
+    ],
+    "diagnosis": {
+      "cause": "CREATIVE_FATIGUE",
+      "source": "cache",
+      "evidence_ids": [
+        "e_cf_1"
+      ],
+      "explanation": "Creative fatigue confirmed on campaign camp_meta_01. CTR dropped by 42.5% over the last 14 days while creative ad_top_hook reached a high frequency of 6.8 and age of 38 days."
+    },
+    "trace": [
+      {
+        "step": 1,
+        "tool": "creative_breakdown",
+        "args": {
+          "campaign_id": "camp_meta_01"
+        },
+        "result_summary": "Generated 1 evidence items."
+      }
+    ]
+  },
+  "INC-002": {
+    "evidence": [
+      {
+        "id": "e_so_1",
+        "tool": "inventory_status",
+        "description": "Inventory metrics",
+        "values": {
+          "stock_units": 0,
+          "days_of_cover": 0.0,
+          "spend": 150.0
+        },
+        "provenance": "measured"
+      }
+    ],
+    "diagnosis": {
+      "cause": "STOCKOUT",
+      "source": "cache",
+      "evidence_ids": [
+        "e_so_1"
+      ],
+      "explanation": "Stockout confirmed for SKU SKU_SUMMER_01. Current inventory is 0 units with 0.0 days of cover while ad spend remains active at $150.00/day."
+    },
+    "trace": [
+      {
+        "step": 1,
+        "tool": "inventory_status",
+        "args": {
+          "sku": "SKU_SUMMER_01"
+        },
+        "result_summary": "Generated 1 evidence items."
+      }
+    ]
+  },
+  "INC-003": {
+    "evidence": [
+      {
+        "id": "e_tb_1",
+        "tool": "tracking_health_check",
+        "description": "Tracking break evidence",
+        "values": {
+          "conversion_drop": 85.0,
+          "pixel_purchases": 18,
+          "actual_transactions": 120,
+          "sessions": 2500
+        },
+        "provenance": "derived"
+      }
+    ],
+    "diagnosis": {
+      "cause": "TRACKING_BREAK",
+      "source": "cache",
+      "evidence_ids": [
+        "e_tb_1"
+      ],
+      "explanation": "Tracking break confirmed on meta. Pixel reported conversions dropped by 85.0% while GA transactions remained steady at 120 orders with 2500 sessions."
+    },
+    "trace": [
+      {
+        "step": 1,
+        "tool": "funnel_breakdown",
+        "args": {
+          "channel": "meta",
+          "date": "2026-10-01"
+        },
+        "result_summary": "Generated 1 evidence items."
+      }
+    ]
+  },
+  "INC-004": {
+    "evidence": [
+      {
+        "id": "e_ms_1",
+        "tool": "price_and_discount_changes",
+        "description": "Margin and pricing data",
+        "values": {
+          "margin": 14.5,
+          "discount": 30.0,
+          "cogs": 18.5
+        },
+        "provenance": "derived"
+      }
+    ],
+    "diagnosis": {
+      "cause": "MARGIN_SQUEEZE",
+      "source": "cache",
+      "evidence_ids": [
+        "e_ms_1"
+      ],
+      "explanation": "Margin squeeze confirmed on SKU SKU_PREMIUM_02. Unit margin dropped to 14.5% following a 30.0% promotional discount and $18.50 COGS increase."
+    },
+    "trace": [
+      {
+        "step": 1,
+        "tool": "price_and_discount_changes",
+        "args": {
+          "sku": "SKU_PREMIUM_02"
+        },
+        "result_summary": "Generated 1 evidence items."
+      }
+    ]
   }
 }

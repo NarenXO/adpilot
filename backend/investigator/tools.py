@@ -25,7 +25,7 @@ def compare_periods(incident_id: str, days: int = 14) -> List[EvidenceItem]:
     past_metrics = conn.execute(query, [days * 2]).fetchone()
     
     evidence = []
-    if current_metrics and past_metrics:
+    if current_metrics and current_metrics[0] is not None and past_metrics and past_metrics[0] is not None:
         evidence.append(
             EvidenceItem(
                 id=_generate_id(),
@@ -62,7 +62,7 @@ def funnel_breakdown(channel: str, date: str) -> List[EvidenceItem]:
     result = conn.execute(query, [channel, date]).fetchone()
     
     evidence = []
-    if result:
+    if result and result[0] is not None:
         sessions, atc, checkouts, transactions = result
         sessions = sessions or 0
         atc = atc or 0
@@ -234,7 +234,7 @@ def tracking_health_check(platform: str, date: str = None) -> List[EvidenceItem]
         result = conn.execute(query, [platform, platform]).fetchone()
 
     evidence = []
-    if result:
+    if result and (result[0] is not None or result[1] is not None):
         pixel_purchases, actual_transactions = result
         discrepancy = (pixel_purchases - actual_transactions) if (pixel_purchases is not None and actual_transactions is not None) else None
         
