@@ -77,7 +77,9 @@ export const Shell: React.FC<ShellProps> = ({
           : '"sidebar topbar" "sidebar main"',
         minHeight: '100vh',
         width: '100%',
-        backgroundColor: 'var(--bg-primary, #0a0d14)',
+        backgroundColor: '#f3f3ed',
+        backgroundImage: 'linear-gradient(#e1e1d8 1px, transparent 1px), linear-gradient(90deg, #e1e1d8 1px, transparent 1px)',
+        backgroundSize: '24px 24px',
         overflow: 'hidden',
         position: 'relative',
       }}
@@ -161,11 +163,10 @@ export const Shell: React.FC<ShellProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           minHeight: 'calc(100vh - 64px)',
-          backgroundColor: 'var(--bg-primary, #0a0d14)',
+          backgroundColor: 'transparent',
           boxSizing: 'border-box',
-          // Subtle inner scrollbar
           scrollbarWidth: 'thin',
-          scrollbarColor: 'var(--card-border, #1e293b) transparent',
+          scrollbarColor: '#000000 transparent',
         }}
         tabIndex={-1}
         aria-label="Main content"
