@@ -129,6 +129,9 @@ export const MissionControl: React.FC = () => {
   const [showInjectModal, setShowInjectModal] = useState<boolean>(false);
   const [selectedIncidentType, setSelectedIncidentType] = useState<string>('creative_fatigue');
 
+  // Incident detail modal state
+  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+
   // Simulation duration state
   const [simDuration, setSimDuration] = useState<number>(14);
 
@@ -150,14 +153,17 @@ export const MissionControl: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Escape key closes inject modal
+  // Escape key closes inject modal & incident detail modal
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setShowInjectModal(false);
+      if (e.key === 'Escape') {
+        setShowInjectModal(false);
+        setSelectedIncident(null);
+      }
     };
-    if (showInjectModal) window.addEventListener('keydown', handleKey);
+    if (showInjectModal || selectedIncident) window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [showInjectModal]);
+  }, [showInjectModal, selectedIncident]);
 
   const handleInjectIncident = useCallback(() => {
     const nowIso = new Date().toISOString();
@@ -375,9 +381,18 @@ export const MissionControl: React.FC = () => {
               const dirSign = inc.direction === 'up' ? '+' : '';
 
               return (
-                <a
+                <div
                   key={inc.id}
-                  href="/incidents"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelectedIncident(inc)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setSelectedIncident(inc);
+                    }
+                  }}
+                  className="cursor-pointer hover:bg-slate-800/60"
                   style={{
                     display: 'grid',
                     gridTemplateColumns: '8px auto 1fr auto auto',
@@ -387,17 +402,8 @@ export const MissionControl: React.FC = () => {
                     borderRadius: '0.375rem',
                     backgroundColor: 'rgba(255,255,255,0.03)',
                     border: '1px solid var(--card-border, #1e293b)',
-                    textDecoration: 'none',
                     color: 'inherit',
                     transition: 'all var(--transition-fast, 150ms ease)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.065)';
-                    e.currentTarget.style.borderColor = 'var(--card-border-hover, #334155)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)';
-                    e.currentTarget.style.borderColor = 'var(--card-border, #1e293b)';
                   }}
                   aria-label={`Incident ${inc.id}: ${inc.metric} ${inc.scope} ${dirSign}${inc.magnitude_pct.toFixed(1)}%`}
                 >
@@ -455,7 +461,7 @@ export const MissionControl: React.FC = () => {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted, #64748b)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <polyline points="9 18 15 12 9 6" />
                   </svg>
-                </a>
+                </div>
               );
             })}
           </div>
@@ -659,6 +665,178 @@ export const MissionControl: React.FC = () => {
               </Button>
               <Button variant="primary" size="sm" onClick={handleInjectIncident} autoFocus>
                 Confirm — Inject
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Incident Detail Modal ────────────────────────────────────────── */}
+      {selectedIncident && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="incident-modal-title"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.75)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1rem',
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setSelectedIncident(null); }}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--card-glass-elevated, rgba(30, 41, 59, 0.95))',
+              border: '1px solid var(--card-border-hover, #334155)',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+              borderRadius: 'var(--radius-xl, 0.875rem)',
+              padding: '1.75rem',
+              maxWidth: '480px',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.25rem',
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    fontFamily: 'var(--font-mono, monospace)',
+                    color: SEVERITY_CONFIG[selectedIncident.severity].color,
+                    backgroundColor: `${SEVERITY_CONFIG[selectedIncident.severity].color}20`,
+                    padding: '0.2rem 0.5rem',
+                    borderRadius: '0.25rem',
+                    border: `1px solid ${SEVERITY_CONFIG[selectedIncident.severity].color}40`,
+                  }}
+                >
+                  {SEVERITY_CONFIG[selectedIncident.severity].label}
+                </span>
+                <h2
+                  id="incident-modal-title"
+                  style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary, #f8fafc)', fontFamily: 'var(--font-mono, monospace)' }}
+                >
+                  {selectedIncident.id}
+                </h2>
+              </div>
+              <button
+                onClick={() => setSelectedIncident(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted, #64748b)',
+                  cursor: 'pointer',
+                  padding: '0.25rem',
+                  fontSize: '1.25rem',
+                  lineHeight: 1,
+                }}
+                aria-label="Close detail modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Description One-Liner */}
+            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary, #94a3b8)', lineHeight: 1.5 }}>
+              {selectedIncident.metric === 'CTR' && 'Click-through rate anomaly detected on this campaign.'}
+              {selectedIncident.metric === 'ROAS' && 'Return on ad spend has shifted beyond expected bounds.'}
+              {selectedIncident.metric === 'CVR' && 'Conversion rate collapse — possible stockout or tracking issue.'}
+              {selectedIncident.metric === 'CPM' && 'Cost per thousand impressions spike detected.'}
+              {selectedIncident.metric === 'Margin' && 'Unit margin compression detected on this SKU.'}
+              {!['CTR', 'ROAS', 'CVR', 'CPM', 'Margin'].includes(selectedIncident.metric) && 'Synthetic performance anomaly detected by Sentinel.'}
+            </p>
+
+            {/* Fields Grid */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '0.875rem',
+                backgroundColor: 'rgba(15, 23, 42, 0.6)',
+                padding: '1rem',
+                borderRadius: '0.5rem',
+                border: '1px solid var(--card-border, #1e293b)',
+              }}
+            >
+              <div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', marginBottom: '0.2rem' }}>Metric</div>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary, #f8fafc)' }}>{selectedIncident.metric}</div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', marginBottom: '0.2rem' }}>Scope</div>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary, #f8fafc)', fontFamily: 'var(--font-mono, monospace)' }}>{selectedIncident.scope}</div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', marginBottom: '0.2rem' }}>Direction / Magnitude</div>
+                <div
+                  style={{
+                    fontWeight: 700,
+                    fontSize: '0.875rem',
+                    color: selectedIncident.direction === 'down' ? 'var(--accent-red, #ef4444)' : 'var(--accent-neon-green, #10b981)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                  }}
+                >
+                  <span>{selectedIncident.direction === 'up' ? '▲ +' : '▼ '}</span>
+                  <span>{selectedIncident.magnitude_pct.toFixed(1)}%</span>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', marginBottom: '0.2rem' }}>Confidence</div>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary, #f8fafc)', fontFamily: 'var(--font-mono, monospace)' }}>
+                  {Math.round(selectedIncident.confidence * 100)}%
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', marginBottom: '0.2rem' }}>Severity</div>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: SEVERITY_CONFIG[selectedIncident.severity].color, textTransform: 'capitalize' }}>
+                  {selectedIncident.severity}
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', marginBottom: '0.2rem' }}>Status</div>
+                <div>
+                  <StatusBadge status={STATUS_CONFIG[selectedIncident.status].statusType}>
+                    {STATUS_CONFIG[selectedIncident.status].label}
+                  </StatusBadge>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedIncident(null)}>
+                Dismiss
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  setSelectedIncident(null);
+                  // TODO: wire to router / diagnosis deep-link in integration
+                  console.log('Navigate to Diagnosis for', selectedIncident.id);
+                  if (typeof window !== 'undefined' && window.location) {
+                    window.location.href = `/diagnosis?incident=${selectedIncident.id}`;
+                  }
+                }}
+              >
+                View Full Diagnosis →
               </Button>
             </div>
           </div>
