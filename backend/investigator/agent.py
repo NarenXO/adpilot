@@ -4,9 +4,11 @@ from typing import Tuple, List
 
 from backend.contracts import Incident, Diagnosis, EvidenceItem
 from backend.contracts.enums import Cause
+import os
 from backend.investigator.trace import AgentStep, AgentTrace
 from backend.investigator.playbook import diagnose_from_playbook
 from backend.investigator import tools
+from backend.guardian.verifier import verify
 
 TOOL_REGISTRY = {
     "compare_periods": tools.compare_periods,
@@ -19,7 +21,27 @@ TOOL_REGISTRY = {
     "recall_similar_incidents": tools.recall_similar_incidents
 }
 
+def load_cache():
+    cache_path = os.path.join(os.path.dirname(__file__), "cache.json")
+    if os.path.exists(cache_path):
+        with open(cache_path, "r") as f:
+            return json.load(f)
+    return {}
+
 def investigate(incident: Incident, max_steps: int = 4, ollama_url: str = "http://localhost:11434") -> Tuple[List[EvidenceItem], Diagnosis, List[AgentStep]]:
+    cache = load_cache()
+    if incident.id in cache:
+        c = cache[incident.id]
+        evidence = [EvidenceItem(**e) for e in c["evidence"]]
+        diag_data = c["diagnosis"].copy()
+        diag_data["cause"] = Cause[diag_data["cause"]]
+        diagnosis = Diagnosis(**diag_data)
+        trace_steps = [AgentStep(**s) for s in c["trace"]]
+        
+        # Verify the cached diagnosis via Guardian
+        verified_diagnosis = verify(diagnosis, evidence)
+        return evidence, verified_diagnosis, trace_steps
+
     trace = AgentTrace()
     evidence_list = []
     

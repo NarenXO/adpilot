@@ -197,3 +197,19 @@ def test_investigate_mocked_llm_loop(mock_get_db, mock_post):
     assert trace_steps[0].args == {"channel": "meta", "date": "2026-10-01"}
     
     assert len(evidence) > 0
+
+def test_investigate_cached_incident():
+    from backend.investigator.agent import investigate
+    
+    # Test one of the cached golden path incidents
+    inc = Incident(id="incident_margin_squeeze", metric="margin")
+    evidence, diagnosis, trace_steps = investigate(inc)
+    
+    assert diagnosis.source == "cache"
+    assert diagnosis.cause == Cause.MARGIN_SQUEEZE
+    assert diagnosis.guardian == "PASS"
+    assert len(evidence) == 1
+    assert evidence[0].values["margin"] == 14.5
+    assert len(trace_steps) == 1
+    assert trace_steps[0].tool == "price_and_discount_changes"
+
