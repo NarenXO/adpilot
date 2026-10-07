@@ -3,6 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ResponseCurve } from '../components/charts/ResponseCurve';
 import { SankeyChart } from '../components/charts/SankeyChart';
 
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', e => console.error('[OPT]', (e as any).error ?? e.message));
+  window.addEventListener('unhandledrejection', e => console.error('[OPT-REJECT]', (e as any).reason));
+}
+
 // Invente '26 Neo-Brutalist design tokens
 const T = {
   bg:      '#f3f3ed',
@@ -22,13 +27,13 @@ const T = {
   fontSans: 'Inter, system-ui, sans-serif',
 };
 
-class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean }> {
+class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean; error: Error | null }> {
   constructor(props: { children: ReactNode; fallback?: ReactNode }) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
   }
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.warn('OptimizerStudio caught component error:', error, info);
@@ -36,8 +41,11 @@ class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNod
   render() {
     if (this.state.hasError) {
       return this.props.fallback ?? (
-        <div style={{ padding: 16, background: T.card, border: T.border, boxShadow: T.shadow, textAlign: 'center', color: T.textSubtle, fontSize: 12 }}>
-          Chart temporarily unavailable.
+        <div style={{ padding: 20, background: '#fff', border: '3px solid #000', margin: 16 }}>
+          <div style={{ fontSize: 14, fontWeight: 900, color: '#ff4466', marginBottom: 8 }}>COMPONENT RENDER ERROR</div>
+          <pre style={{ margin: 0, padding: 12, background: '#f8f8f8', border: '1.5px solid #000', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 11, fontFamily: T.fontMono }}>
+            {String(this.state.error?.stack || this.state.error?.message || this.state.error)}
+          </pre>
         </div>
       );
     }
@@ -184,14 +192,15 @@ function ScoreBadge({ score }: { score: number }) {
 }
 
 function BarRow({ label, value, color }: { label: string; value: number; color: string }) {
+  const num = value ?? 0;
   return (
     <div style={{ marginBottom: 6 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
         <span style={{ fontSize: 10, color: T.textSubtle }}>{label}</span>
-        <span style={{ fontSize: 10, fontWeight: 800, color: T.black }}>{value.toFixed(0)}</span>
+        <span style={{ fontSize: 10, fontWeight: 800, color: T.black }}>{num.toFixed(0)}</span>
       </div>
       <div style={{ height: 6, background: '#e0e0d8', border: '1.5px solid #000', overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${Math.min(100, (value / 25) * 100)}%`, background: color, transition: 'width 0.6s' }} />
+        <div style={{ height: '100%', width: `${Math.min(100, (num / 25) * 100)}%`, background: color, transition: 'width 0.6s' }} />
       </div>
     </div>
   );
@@ -212,6 +221,11 @@ function StatusPill({ status }: { status: ActionItem['status'] }) {
 function ActionCard({ action, onApprove, onRollback }: { action: ActionItem; onApprove: (id: string) => void; onRollback: (id: string) => void }) {
   const canApprove  = action.status === 'pending' || action.status === 'rolling_out';
   const canRollback = action.status === 'rolling_out' || action.status === 'approved';
+  const changes = action.changes ?? [];
+  const guardMetric = String(action.rollback_guard?.metric ?? 'roas').toUpperCase();
+  const guardThreshold = action.rollback_guard?.threshold ?? 0;
+  const guardDays = action.rollback_guard?.window_days ?? 1;
+
   return (
     <div style={{ background: T.card, border: T.border, boxShadow: T.shadow, padding: '14px 16px', marginBottom: 14, transition: 'transform 0.1s' }}
       onMouseEnter={e => (e.currentTarget.style.transform = 'translate(-2px,-2px)')}
@@ -221,33 +235,35 @@ function ActionCard({ action, onApprove, onRollback }: { action: ActionItem; onA
           <span style={{ fontFamily: T.fontMono, fontSize: 11, fontWeight: 700, color: T.black }}>{action.id}</span>
           <StatusPill status={action.status} />
         </div>
-        <span style={{ fontSize: 10, color: T.textSubtle }}>{new Date(action.created_at).toLocaleDateString()}</span>
+        <span style={{ fontSize: 10, color: T.textSubtle }}>{action.created_at ? new Date(action.created_at).toLocaleDateString() : 'Active'}</span>
       </div>
-      {action.changes.map(ch => {
-        const delta = Math.round(ch.to_spend - ch.from_spend);
+      {changes.map(ch => {
+        const fromSpend = ch.from_spend ?? 0;
+        const toSpend = ch.to_spend ?? 0;
+        const delta = Math.round(toSpend - fromSpend);
         return (
           <div key={ch.campaign_id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, background: T.bg, border: '1.5px solid #000', padding: '8px 12px' }}>
             <span style={{ fontSize: 11, color: T.textSecondary, flex: 1, fontFamily: T.fontMono }}>{ch.campaign_id}</span>
-            <span style={{ fontSize: 12, color: T.pink, fontWeight: 700 }}>${Math.round(ch.from_spend)}</span>
+            <span style={{ fontSize: 12, color: T.pink, fontWeight: 700 }}>${Math.round(fromSpend)}</span>
             <span style={{ fontSize: 11, color: T.textSubtle }}>&#8594;</span>
-            <span style={{ fontSize: 12, color: T.black, fontWeight: 700 }}>${Math.round(ch.to_spend)}</span>
+            <span style={{ fontSize: 12, color: T.black, fontWeight: 700 }}>${Math.round(toSpend)}</span>
             <span style={{ fontSize: 10, fontWeight: 800, background: delta >= 0 ? T.lime : T.pink, color: T.black, padding: '1px 5px', border: '1.5px solid #000' }}>{delta >= 0 ? '+' : ''}{delta}</span>
           </div>
         );
       })}
-      {action.rollout_pct > 0 && (
+      {(action.rollout_pct ?? 0) > 0 && (
         <div style={{ marginBottom: 10 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
             <span style={{ fontSize: 10, color: T.textSubtle }}>Rollout</span>
             <span style={{ fontSize: 10, color: T.black, fontWeight: 700 }}>{action.rollout_pct}%</span>
           </div>
           <div style={{ height: 8, background: '#e0e0d8', border: '1.5px solid #000' }}>
-            <div style={{ height: '100%', width: `${action.rollout_pct}%`, background: T.cyan }} />
+            <div style={{ height: '100%', width: `${Math.min(100, action.rollout_pct)}%`, background: T.cyan }} />
           </div>
         </div>
       )}
       <div style={{ fontSize: 10, color: T.textSubtle, marginBottom: 10, fontFamily: T.fontMono }}>
-        Guard: {action.rollback_guard.metric.toUpperCase()} below {action.rollback_guard.threshold} / {action.rollback_guard.window_days}d
+        Guard: {guardMetric} below {guardThreshold} / {guardDays}d
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
         {canApprove  && <button id={`approve-${action.id}`}  onClick={() => onApprove(action.id)}  style={{ flex: 1, padding: '7px 0', background: T.lime,  border: T.border, color: T.black, fontSize: 11, fontWeight: 800, cursor: 'pointer', boxShadow: T.shadowSm }}>Approve ✓</button>}
@@ -335,7 +351,7 @@ function WhatIfPanel({ curves }: { curves: CurveData[] }) {
   );
 }
 
-export default function OptimizerStudio() {
+function OptimizerStudioContent() {
   const qc = useQueryClient();
   const [selectedRec, setSelectedRec] = useState(RECS_FIXTURE[0].id);
   const [activeTab, setActiveTab]     = useState<'curves' | 'whatif'>('curves');
@@ -367,10 +383,10 @@ export default function OptimizerStudio() {
     onSuccess: (_, id) => { setActions(prev => prev.map(a => a.id === id ? { ...a, status: 'rolled_back' as const } : a)); qc.invalidateQueries({ queryKey: ['actions'] }); },
   });
 
-  const activeCurves = curves ?? CURVE_FIXTURE;
-  const activeRecs   = recs ?? RECS_FIXTURE;
+  const activeCurves = (curves && curves.length ? curves : CURVE_FIXTURE);
+  const activeRecs   = (recs && recs.length ? recs : RECS_FIXTURE);
   const currentRec   = activeRecs.find(r => r.id === selectedRec) ?? activeRecs[0];
-  const allScores    = scores ?? RECS_FIXTURE.flatMap(r => r.opportunity_scores);
+  const allScores    = (scores && scores.length ? scores : RECS_FIXTURE.flatMap(r => r.opportunity_scores ?? []));
 
   const kanban = useMemo(() => ({
     pending: actions.filter(a => a.status === 'pending'),
@@ -378,10 +394,10 @@ export default function OptimizerStudio() {
     done:    actions.filter(a => a.status === 'rolled_back' || a.status === 'rejected'),
   }), [actions]);
 
-  const totalSpend = activeCurves.reduce((s, c) => s + c.current_spend, 0);
-  const totalRec   = activeCurves.reduce((s, c) => s + c.recommended_spend, 0);
+  const totalSpend = activeCurves.reduce((s, c) => s + (c.current_spend ?? 0), 0);
+  const totalRec   = activeCurves.reduce((s, c) => s + (c.recommended_spend ?? 0), 0);
   const delta      = totalRec - totalSpend;
-  const avgScore   = allScores.reduce((s, sc) => s + sc.total_score, 0) / Math.max(1, allScores.length);
+  const avgScore   = allScores.reduce((s, sc) => s + (sc.total_score ?? 0), 0) / Math.max(1, allScores.length);
 
   const kpiCards = [
     { id: 'kpi-portfolio-spend',   label: 'Portfolio Spend',   val: `$${totalSpend.toLocaleString()}`, sub: '/day',      accent: T.cyan   },
@@ -429,14 +445,15 @@ export default function OptimizerStudio() {
         <div style={{ overflowY: 'auto', padding: '20px 24px', borderRight: '3px solid #000' }}>
           {/* Rec selector */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' as const }}>
-            {activeRecs.map(rec => {
+            {(activeRecs ?? []).map(rec => {
               const active = selectedRec === rec.id;
-              const modeAccent = rec.mode === 'profit' ? T.lime : T.cyan;
+              const modeStr = String(rec.mode ?? 'profit').toLowerCase();
+              const modeAccent = modeStr === 'profit' ? T.lime : T.cyan;
               return (
                 <button key={rec.id} id={`rec-btn-${rec.id}`} onClick={() => setSelectedRec(rec.id)}
                   style={{ padding: '7px 16px', fontSize: 11, fontWeight: 800, cursor: 'pointer', background: active ? T.black : T.card, border: T.border, color: active ? T.lime : T.black, boxShadow: active ? T.shadowSm : 'none', transition: 'all 0.15s' }}>
                   {rec.id}
-                  <span style={{ marginLeft: 8, background: modeAccent, color: T.black, padding: '1px 6px', fontSize: 9, fontWeight: 800, border: '1.5px solid #000' }}>{rec.mode.toUpperCase()}</span>
+                  <span style={{ marginLeft: 8, background: modeAccent, color: T.black, padding: '1px 6px', fontSize: 9, fontWeight: 800, border: '1.5px solid #000' }}>{modeStr.toUpperCase()}</span>
                 </button>
               );
             })}
@@ -446,18 +463,18 @@ export default function OptimizerStudio() {
             <div style={{ background: T.black, border: T.border, boxShadow: T.shadow, padding: '14px 18px', marginBottom: 16, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }}>
               <div>
                 <div style={{ fontSize: 9, color: '#aaa', marginBottom: 4, letterSpacing: '0.08em' }}>PROFIT DELTA (MID)</div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: T.lime }}>+${currentRec.expected_profit_delta.mid}</div>
-                <div style={{ fontSize: 10, color: '#888' }}>Low ${currentRec.expected_profit_delta.low} / High ${currentRec.expected_profit_delta.high}</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: T.lime }}>+${(currentRec.expected_profit_delta?.mid ?? 0).toFixed(0)}</div>
+                <div style={{ fontSize: 10, color: '#888' }}>Low ${(currentRec.expected_profit_delta?.low ?? 0).toFixed(0)} / High ${(currentRec.expected_profit_delta?.high ?? 0).toFixed(0)}</div>
               </div>
               <div>
                 <div style={{ fontSize: 9, color: '#aaa', marginBottom: 4, letterSpacing: '0.08em' }}>CONFIDENCE</div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: T.cyan }}>{(currentRec.confidence * 100).toFixed(0)}%</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: T.cyan }}>{((currentRec.confidence ?? 0) * 100).toFixed(0)}%</div>
                 <div style={{ fontSize: 10, color: '#888' }}>Model certainty</div>
               </div>
               <div>
                 <div style={{ fontSize: 9, color: '#aaa', marginBottom: 4, letterSpacing: '0.08em' }}>CONSTRAINTS</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 4, marginTop: 4 }}>
-                  {currentRec.constraints_binding.map(c => (
+                  {(currentRec.constraints_binding ?? []).map(c => (
                     <span key={c} style={{ background: T.yellow, color: T.black, border: '2px solid #fff', padding: '1px 6px', fontSize: 9, fontWeight: 700 }}>{c}</span>
                   ))}
                 </div>
@@ -475,9 +492,9 @@ export default function OptimizerStudio() {
           </div>
           {activeTab === 'curves' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {activeCurves.map(curve => (
+              {(activeCurves ?? []).map(curve => (
                 <ErrorBoundary key={curve.campaign_id}>
-                  <ResponseCurve campaignId={curve.campaign_id} sku={curve.sku} dataPoints={curve.data_points} currentSpend={curve.current_spend} recommendedSpend={curve.recommended_spend} opportunityScore={curve.opportunity_score} height="280px" />
+                  <ResponseCurve campaignId={curve.campaign_id} sku={curve.sku} dataPoints={curve.data_points ?? []} currentSpend={curve.current_spend ?? 0} recommendedSpend={curve.recommended_spend ?? 0} opportunityScore={curve.opportunity_score ?? 0} height="280px" />
                 </ErrorBoundary>
               ))}
             </div>
@@ -487,8 +504,8 @@ export default function OptimizerStudio() {
           <div style={{ marginTop: 22, background: T.card, border: T.border, boxShadow: T.shadow, padding: 18 }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: T.black, marginBottom: 14, letterSpacing: '0.08em' }}>PREDICTIVE OPPORTUNITY SCORES</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 14 }}>
-              {allScores.map(sc => (
-                <div key={sc.campaign_id} style={{ background: T.bg, border: T.border, boxShadow: T.shadowSm, padding: '14px 16px', transition: 'transform 0.1s' }}
+              {(allScores ?? []).map((sc, scIdx) => (
+                <div key={`${sc.campaign_id}-${sc.sku}-${scIdx}`} style={{ background: T.bg, border: T.border, boxShadow: T.shadowSm, padding: '14px 16px', transition: 'transform 0.1s' }}
                   onMouseEnter={e => (e.currentTarget.style.transform = 'translate(-2px,-2px)')}
                   onMouseLeave={e => (e.currentTarget.style.transform = '')}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -496,12 +513,12 @@ export default function OptimizerStudio() {
                       <div style={{ fontSize: 12, fontWeight: 700, color: T.black, fontFamily: T.fontMono }}>{sc.campaign_id}</div>
                       <div style={{ fontSize: 10, color: T.textSubtle, fontFamily: T.fontMono }}>{sc.sku}</div>
                     </div>
-                    <ScoreBadge score={sc.total_score} />
+                    <ScoreBadge score={Number(sc.total_score ?? 0)} />
                   </div>
-                  <BarRow label="Forecast Momentum" value={sc.forecast_component} color={T.cyan}   />
-                  <BarRow label="Curve Efficiency"  value={sc.curve_component}    color={T.pink}   />
-                  <BarRow label="SKU Margin"         value={sc.margin_component}   color={T.lime}   />
-                  <BarRow label="Stock Safety"        value={sc.stock_component}    color={T.yellow} />
+                  <BarRow label="Forecast Momentum" value={sc.forecast_component ?? 0} color={T.cyan}   />
+                  <BarRow label="Curve Efficiency"  value={sc.curve_component ?? 0}    color={T.pink}   />
+                  <BarRow label="SKU Margin"         value={sc.margin_component ?? 0}   color={T.lime}   />
+                  <BarRow label="Stock Safety"        value={sc.stock_component ?? 0}    color={T.yellow} />
                 </div>
               ))}
             </div>
@@ -511,7 +528,7 @@ export default function OptimizerStudio() {
         <div style={{ overflowY: 'auto', padding: '20px 16px', background: T.bg }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: T.black, letterSpacing: '0.08em' }}>ACTIONS PANEL</div>
-            <span style={{ background: T.cyan, color: T.black, border: T.border, padding: '2px 10px', fontSize: 10, fontWeight: 800, boxShadow: T.shadowSm }}>{actions.length} actions</span>
+            <span style={{ background: T.cyan, color: T.black, border: T.border, padding: '2px 10px', fontSize: 10, fontWeight: 800, boxShadow: T.shadowSm }}>{(actions ?? []).length} actions</span>
           </div>
           {[
             { label: 'Pending', accent: T.yellow, items: kanban.pending },
@@ -521,9 +538,9 @@ export default function OptimizerStudio() {
             <div key={label} style={{ marginBottom: 22 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <span style={{ background: accent, color: T.black, border: T.border, padding: '2px 10px', fontSize: 10, fontWeight: 800, boxShadow: T.shadowSm }}>{label.toUpperCase()}</span>
-                <span style={{ fontWeight: 800, fontSize: 12 }}>{items.length}</span>
+                <span style={{ fontWeight: 800, fontSize: 12 }}>{(items ?? []).length}</span>
               </div>
-              {items.length === 0
+              {(items ?? []).length === 0
                 ? <div style={{ background: T.card, border: '2px dashed #000', padding: 16, textAlign: 'center' as const, color: T.textSubtle, fontSize: 11 }}>Empty</div>
                 : items.map(a => <ActionCard key={a.id} action={a} onApprove={id => approveMut.mutate(id)} onRollback={id => rollbackMut.mutate(id)} />)
               }
@@ -547,5 +564,13 @@ export default function OptimizerStudio() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OptimizerStudio() {
+  return (
+    <ErrorBoundary>
+      <OptimizerStudioContent />
+    </ErrorBoundary>
   );
 }
