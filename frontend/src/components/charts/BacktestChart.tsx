@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import * as echarts from 'echarts';
+import { palette } from '../../theme/tokens';
 
 export interface BacktestChartProps {
   backtestData?: {
@@ -34,7 +35,7 @@ export const BacktestChart: React.FC<BacktestChartProps> = ({ backtestData }) =>
     if (!chartRef.current) return;
 
     if (!chartInstance.current) {
-      chartInstance.current = echarts.init(chartRef.current, 'dark', {
+      chartInstance.current = echarts.init(chartRef.current, undefined, {
         renderer: 'canvas',
       });
     }
@@ -48,26 +49,25 @@ export const BacktestChart: React.FC<BacktestChartProps> = ({ backtestData }) =>
     const worstSeedActualIdx = worstIdx >= 0 ? worstIdx : profits.indexOf(Math.min(...profits));
 
     const option: echarts.EChartsOption = {
-      backgroundColor: 'transparent',
-      animationDuration: 800,
+      backgroundColor: '#ffffff',
+      animationDuration: 700,
       animationEasing: 'cubicOut',
       tooltip: {
         trigger: 'axis',
         axisPointer: {
           type: 'line',
-          lineStyle: { color: 'rgba(56, 189, 248, 0.4)', type: 'dashed' },
+          lineStyle: { color: '#000000', width: 2, type: 'dashed' },
         },
-        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-        borderColor: 'rgba(56, 189, 248, 0.25)',
-        borderWidth: 1,
+        backgroundColor: '#ffffff',
+        borderColor: '#000000',
+        borderWidth: 3,
         padding: [12, 16],
         textStyle: {
-          color: '#f1f5f9',
+          color: '#000000',
           fontSize: 12,
-          fontFamily: 'Inter, system-ui, sans-serif',
+          fontFamily: '"Space Grotesk", sans-serif',
         },
-        extraCssText:
-          'backdrop-filter: blur(12px); box-shadow: 0 20px 40px -8px rgba(0,0,0,0.6); border-radius: 10px;',
+        extraCssText: 'box-shadow: 4px 4px 0px #000000; border-radius: 0px;',
         formatter: (params: any) => {
           if (!Array.isArray(params)) return '';
           const seedLabel = params[0]?.axisValue ?? '';
@@ -75,21 +75,21 @@ export const BacktestChart: React.FC<BacktestChartProps> = ({ backtestData }) =>
           const profitVal = profitParam ? profitParam.value : '—';
           const isWorst = profitVal !== '—' && Number(profitVal) === data.worst_seed;
 
-          let html = `<div style="font-weight:700;color:#e2e8f0;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:4px">🧪 ${seedLabel}</div>`;
+          let html = `<div style="font-weight:900;text-transform:uppercase;color:#000;margin-bottom:6px;border-bottom:2px solid #000;padding-bottom:4px">🧪 ${seedLabel}</div>`;
           html += `<div style="display:flex;justify-content:space-between;gap:20px;font-size:12px">`;
-          html += `<span style="color:#94a3b8">Profit Δ</span>`;
-          html += `<span style="font-family:JetBrains Mono,monospace;font-weight:700;color:${Number(profitVal) >= 0 ? '#34d399' : '#fb7185'}">${Number(profitVal) >= 0 ? '+' : ''}${profitVal}%</span>`;
+          html += `<span style="font-weight:700">Profit Δ</span>`;
+          html += `<span style="font-family:monospace;font-weight:900;color:${Number(profitVal) >= 0 ? '#16a34a' : '#e11d48'}">${Number(profitVal) >= 0 ? '+' : ''}${profitVal}%</span>`;
           html += `</div>`;
           html += `<div style="display:flex;justify-content:space-between;gap:20px;font-size:11px;margin-top:4px">`;
-          html += `<span style="color:#64748b">95% CI Band</span>`;
-          html += `<span style="font-family:monospace;color:#67e8f9">[${data.ci_low}%, ${data.ci_high}%]</span>`;
+          html += `<span style="font-weight:600">95% CI Band</span>`;
+          html += `<span style="font-family:monospace;font-weight:800;color:#0284c7">[${data.ci_low}%, ${data.ci_high}%]</span>`;
           html += `</div>`;
           html += `<div style="display:flex;justify-content:space-between;gap:20px;font-size:11px;margin-top:2px">`;
-          html += `<span style="color:#64748b">Mean Δ</span>`;
-          html += `<span style="font-family:monospace;color:#a5b4fc">+${data.mean_profit_delta}%</span>`;
+          html += `<span style="font-weight:600">Mean Δ</span>`;
+          html += `<span style="font-family:monospace;font-weight:800;color:#16a34a">+${data.mean_profit_delta}%</span>`;
           html += `</div>`;
           if (isWorst) {
-            html += `<div style="margin-top:6px;padding:4px 8px;background:rgba(251,113,133,0.12);border-left:3px solid #fb7185;border-radius:4px;font-size:10px;color:#fda4af">⚠️ Worst Performing Seed</div>`;
+            html += `<div style="margin-top:6px;padding:4px 8px;background:${palette.accent.pink};border:2px solid #000;font-size:10px;font-weight:900;color:#000">⚠️ WORST PERFORMING SEED</div>`;
           }
           return html;
         },
@@ -98,7 +98,7 @@ export const BacktestChart: React.FC<BacktestChartProps> = ({ backtestData }) =>
         show: true,
         top: 8,
         right: 16,
-        textStyle: { color: '#94a3b8', fontSize: 11 },
+        textStyle: { color: '#000000', fontWeight: 'bold', fontSize: 11, fontFamily: '"Space Grotesk", sans-serif' },
         data: ['Seed Profit Uplift', 'Mean Δ', '95% CI Band'],
       },
       grid: {
@@ -111,11 +111,13 @@ export const BacktestChart: React.FC<BacktestChartProps> = ({ backtestData }) =>
       xAxis: {
         type: 'category',
         data: seeds,
-        axisLine: { lineStyle: { color: '#334155' } },
-        axisTick: { show: false },
+        axisLine: { lineStyle: { color: '#000000', width: 2 } },
+        axisTick: { show: true, lineStyle: { color: '#000000', width: 2 } },
         axisLabel: {
-          color: '#64748b',
+          color: '#000000',
           fontSize: 10,
+          fontWeight: 'bold',
+          fontFamily: '"Space Grotesk", monospace',
           rotate: seeds.length > 15 ? 35 : 0,
           formatter: (v: string) => v.replace('Seed ', 'S'),
         },
@@ -123,14 +125,15 @@ export const BacktestChart: React.FC<BacktestChartProps> = ({ backtestData }) =>
       yAxis: {
         type: 'value',
         name: 'Profit Δ (%)',
-        nameTextStyle: { color: '#64748b', fontSize: 10, align: 'right' },
-        axisLine: { show: true, lineStyle: { color: '#334155' } },
+        nameTextStyle: { color: '#000000', fontSize: 10, fontWeight: 'bold', align: 'right' },
+        axisLine: { show: true, lineStyle: { color: '#000000', width: 2 } },
         splitLine: {
-          lineStyle: { color: 'rgba(51, 65, 85, 0.3)', type: 'dashed' },
+          lineStyle: { color: palette.bg.gridLine, type: 'dashed' },
         },
         axisLabel: {
-          color: '#64748b',
+          color: '#000000',
           fontSize: 10,
+          fontWeight: 'bold',
           formatter: (v: number) => `${v >= 0 ? '+' : ''}${v}%`,
         },
       },
@@ -142,28 +145,24 @@ export const BacktestChart: React.FC<BacktestChartProps> = ({ backtestData }) =>
           data: profits,
           smooth: 0.35,
           lineStyle: {
-            color: '#38bdf8',
-            width: 2.5,
-            shadowColor: 'rgba(56, 189, 248, 0.4)',
-            shadowBlur: 8,
+            color: '#000000',
+            width: 3,
           },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(56, 189, 248, 0.18)' },
-              { offset: 1, color: 'rgba(56, 189, 248, 0.01)' },
+              { offset: 0, color: 'rgba(120, 219, 246, 0.30)' },
+              { offset: 1, color: 'rgba(120, 219, 246, 0.02)' },
             ]),
           },
           symbol: 'circle',
-          symbolSize: 8,
+          symbolSize: 10,
           itemStyle: {
             color: (params: any) => {
-              if (params.dataIndex === worstSeedActualIdx) return '#fb7185';
-              return params.value >= data.mean_profit_delta ? '#34d399' : '#38bdf8';
+              if (params.dataIndex === worstSeedActualIdx) return palette.accent.pink;
+              return params.value >= data.mean_profit_delta ? palette.accent.lime : palette.accent.cyan;
             },
-            borderColor: '#0f172a',
+            borderColor: '#000000',
             borderWidth: 2,
-            shadowBlur: 6,
-            shadowColor: 'rgba(56, 189, 248, 0.4)',
           },
           z: 10,
           markArea: {
@@ -175,8 +174,8 @@ export const BacktestChart: React.FC<BacktestChartProps> = ({ backtestData }) =>
                   yAxis: data.ci_low,
                   itemStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                      { offset: 0, color: 'rgba(52, 211, 153, 0.16)' },
-                      { offset: 1, color: 'rgba(56, 189, 248, 0.08)' },
+                      { offset: 0, color: 'rgba(130, 230, 111, 0.28)' },
+                      { offset: 1, color: 'rgba(120, 219, 246, 0.16)' },
                     ]),
                   },
                 },
@@ -192,24 +191,28 @@ export const BacktestChart: React.FC<BacktestChartProps> = ({ backtestData }) =>
             data: [
               {
                 yAxis: data.ci_high,
-                lineStyle: { color: 'rgba(52, 211, 153, 0.55)', type: 'dashed', width: 1 },
+                lineStyle: { color: '#16a34a', type: 'dashed', width: 2 },
                 label: {
                   show: true,
                   position: 'insideEndTop',
-                  formatter: `CI High: +${data.ci_high}%`,
-                  color: '#6ee7b7',
+                  formatter: `CI HIGH: +${data.ci_high}%`,
+                  color: '#000000',
                   fontSize: 10,
+                  fontWeight: 'bold',
+                  fontFamily: '"Space Grotesk", sans-serif',
                 },
               },
               {
                 yAxis: data.ci_low,
-                lineStyle: { color: 'rgba(56, 189, 248, 0.55)', type: 'dashed', width: 1 },
+                lineStyle: { color: '#0284c7', type: 'dashed', width: 2 },
                 label: {
                   show: true,
                   position: 'insideEndBottom',
-                  formatter: `CI Low: +${data.ci_low}%`,
-                  color: '#67e8f9',
+                  formatter: `CI LOW: +${data.ci_low}%`,
+                  color: '#000000',
                   fontSize: 10,
+                  fontWeight: 'bold',
+                  fontFamily: '"Space Grotesk", sans-serif',
                 },
               },
             ],
@@ -223,15 +226,15 @@ export const BacktestChart: React.FC<BacktestChartProps> = ({ backtestData }) =>
                 symbol: 'pin',
                 symbolSize: 48,
                 itemStyle: {
-                  color: '#fb7185',
-                  shadowBlur: 14,
-                  shadowColor: 'rgba(251, 113, 133, 0.6)',
+                  color: palette.accent.pink,
+                  borderColor: '#000000',
+                  borderWidth: 2,
                 },
                 label: {
                   show: true,
-                  color: '#fff',
+                  color: '#000000',
                   fontSize: 9,
-                  fontWeight: 'bold',
+                  fontWeight: 900,
                   formatter: 'WORST',
                 },
               },
@@ -246,11 +249,11 @@ export const BacktestChart: React.FC<BacktestChartProps> = ({ backtestData }) =>
           smooth: false,
           showSymbol: false,
           lineStyle: {
-            color: '#a5b4fc',
-            width: 2,
+            color: '#7c3aed',
+            width: 2.5,
             type: 'dashed',
           },
-          itemStyle: { color: '#a5b4fc' },
+          itemStyle: { color: '#7c3aed' },
           z: 8,
         },
         // Zero baseline reference line
@@ -260,7 +263,7 @@ export const BacktestChart: React.FC<BacktestChartProps> = ({ backtestData }) =>
           data: seeds.map(() => 0),
           smooth: false,
           showSymbol: false,
-          lineStyle: { color: '#475569', width: 1, type: 'dotted' },
+          lineStyle: { color: '#000000', width: 1.5, type: 'dotted' },
           silent: true,
           tooltip: { show: false },
         },
@@ -288,91 +291,96 @@ export const BacktestChart: React.FC<BacktestChartProps> = ({ backtestData }) =>
       : sortedDeltas[Math.floor(sortedDeltas.length / 2)].profit_delta;
 
   return (
-    <div className="w-full bg-slate-900/60 border border-slate-800/80 rounded-xl backdrop-blur-md shadow-xl overflow-hidden">
+    <div
+      style={{
+        background: '#ffffff',
+        border: '3px solid #000000',
+        boxShadow: '5px 5px 0px #000000',
+        padding: '1.25rem',
+        width: '100%',
+        fontFamily: '"Space Grotesk", sans-serif',
+      }}
+    >
       {/* Header */}
-      <div className="px-5 pt-4 pb-2">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3
-              style={{
-                fontSize: '14px',
-                fontWeight: 700,
-                color: '#e2e8f0',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                margin: 0,
-              }}
-            >
-              <span
-                style={{
-                  display: 'inline-block',
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  background: '#34d399',
-                  boxShadow: '0 0 8px rgba(52,211,153,0.5)',
-                  animation: 'pulse 2s infinite',
-                }}
-              />
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 900, textTransform: 'uppercase', color: '#000' }}>
               Walk-Forward Backtest — {data.n_seeds}-Seed Profit Uplift
             </h3>
-            <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0' }}>
-              95% CI band with per-seed scatter. Worst-case seed highlighted.
-            </p>
+            <span
+              style={{
+                background: palette.accent.lime,
+                border: '2px solid #000',
+                boxShadow: '2px 2px 0px #000',
+                padding: '0.15rem 0.5rem',
+                fontSize: '0.7rem',
+                fontWeight: 900,
+                textTransform: 'uppercase',
+              }}
+            >
+              Validated
+            </span>
           </div>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                background: 'rgba(52,211,153,0.08)',
-                border: '1px solid rgba(52,211,153,0.2)',
-                borderRadius: 8,
-                padding: '6px 14px',
-              }}
-            >
-              <span style={{ fontSize: 10, color: '#6ee7b7', letterSpacing: '0.05em' }}>MEAN Δ</span>
-              <span style={{ fontSize: 18, fontWeight: 800, color: '#34d399', fontFamily: 'JetBrains Mono, monospace' }}>
-                +{data.mean_profit_delta}%
-              </span>
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                background: 'rgba(56,189,248,0.08)',
-                border: '1px solid rgba(56,189,248,0.2)',
-                borderRadius: 8,
-                padding: '6px 14px',
-              }}
-            >
-              <span style={{ fontSize: 10, color: '#67e8f9', letterSpacing: '0.05em' }}>MEDIAN</span>
-              <span style={{ fontSize: 18, fontWeight: 800, color: '#22d3ee', fontFamily: 'JetBrains Mono, monospace' }}>
-                +{median.toFixed(1)}%
-              </span>
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                background: 'rgba(251,113,133,0.08)',
-                border: '1px solid rgba(251,113,133,0.2)',
-                borderRadius: 8,
-                padding: '6px 14px',
-              }}
-            >
-              <span style={{ fontSize: 10, color: '#fda4af', letterSpacing: '0.05em' }}>WORST</span>
-              <span style={{ fontSize: 18, fontWeight: 800, color: '#fb7185', fontFamily: 'JetBrains Mono, monospace' }}>
-                {data.worst_seed >= 0 ? '+' : ''}{data.worst_seed}%
-              </span>
-            </div>
+          <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', fontWeight: 600, color: '#444' }}>
+            95% CI band with per-seed scatter. Worst-case seed flagged.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.6rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              background: palette.accent.lime,
+              border: '2px solid #000',
+              boxShadow: '2px 2px 0px #000',
+              padding: '0.35rem 0.85rem',
+            }}
+          >
+            <span style={{ fontSize: '0.65rem', fontWeight: 900, letterSpacing: '0.05em' }}>MEAN Δ</span>
+            <span style={{ fontSize: '1.1rem', fontWeight: 900, fontFamily: 'monospace' }}>
+              +{data.mean_profit_delta}%
+            </span>
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              background: palette.accent.cyan,
+              border: '2px solid #000',
+              boxShadow: '2px 2px 0px #000',
+              padding: '0.35rem 0.85rem',
+            }}
+          >
+            <span style={{ fontSize: '0.65rem', fontWeight: 900, letterSpacing: '0.05em' }}>MEDIAN</span>
+            <span style={{ fontSize: '1.1rem', fontWeight: 900, fontFamily: 'monospace' }}>
+              +{median.toFixed(1)}%
+            </span>
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              background: palette.accent.pink,
+              border: '2px solid #000',
+              boxShadow: '2px 2px 0px #000',
+              padding: '0.35rem 0.85rem',
+            }}
+          >
+            <span style={{ fontSize: '0.65rem', fontWeight: 900, letterSpacing: '0.05em' }}>WORST</span>
+            <span style={{ fontSize: '1.1rem', fontWeight: 900, fontFamily: 'monospace' }}>
+              {data.worst_seed >= 0 ? '+' : ''}{data.worst_seed}%
+            </span>
           </div>
         </div>
       </div>
+
       {/* Chart */}
       <div ref={chartRef} style={{ width: '100%', height: '340px' }} />
     </div>

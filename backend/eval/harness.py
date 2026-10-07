@@ -96,8 +96,8 @@ def main() -> None:
     parser.add_argument(
         "--output",
         metavar="PATH",
-        default=None,
-        help="Output path for the JSON scorecard (prints to stdout if not provided).",
+        default="fixtures/scorecard.json",
+        help="Output path for the JSON scorecard (defaults to fixtures/scorecard.json).",
     )
     args = parser.parse_args()
 

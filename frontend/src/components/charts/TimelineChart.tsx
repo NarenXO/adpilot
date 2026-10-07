@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import * as echarts from 'echarts';
+import { palette } from '../../theme/tokens';
 
 export interface Scope {
   platform?: string | null;
@@ -125,13 +126,11 @@ export const TimelineChart: React.FC<TimelineChartProps> = ({
   useEffect(() => {
     if (!chartRef.current) return;
 
-    // Initialize or reuse ECharts instance with dark theme
     if (!chartInstance.current) {
-      chartInstance.current = echarts.init(chartRef.current, 'dark', {
+      chartInstance.current = echarts.init(chartRef.current, undefined, {
         renderer: 'canvas',
       });
 
-      // Click handler for incident selection
       chartInstance.current.on('click', (params: any) => {
         if (params.componentType === 'markPoint' || params.seriesName === 'Anomalies') {
           const rawId = params.data?.incidentId;
@@ -149,27 +148,22 @@ export const TimelineChart: React.FC<TimelineChartProps> = ({
       .filter((ev) => dates.some((d) => d >= ev.startDate && d <= ev.endDate))
       .map((ev) => [
         {
-          name: `🛡️ Decoy: ${ev.name}`,
+          name: `DECOY: ${ev.name}`,
           xAxis: ev.startDate,
           itemStyle: {
-            color:
-              ev.type.toUpperCase() === 'HOLIDAY'
-                ? 'rgba(168, 85, 247, 0.12)' // Purple for holidays
-                : 'rgba(56, 189, 248, 0.12)', // Cyan for promos
-            borderColor: 'rgba(255, 255, 255, 0.05)',
-            borderWidth: 1,
+            color: 'rgba(120, 219, 246, 0.18)',
+            borderWidth: 2,
+            borderColor: '#78dbf6',
+            borderType: 'dashed' as const,
           },
           label: {
             show: true,
-            position: 'insideTop',
-            distance: 10,
-            formatter: `🛡️ Decoy: ${ev.name} (${ev.type})\n[Alerts Suppressed]`,
-            color: '#cbd5e1',
+            position: 'insideTop' as const,
+            formatter: `[DECOY NOISE] ${ev.name}`,
+            color: '#000000',
+            fontWeight: 'bold',
             fontSize: 10,
-            fontFamily: 'monospace',
-            backgroundColor: 'rgba(15, 23, 42, 0.7)',
-            padding: [4, 8],
-            borderRadius: 4,
+            fontFamily: '"Space Grotesk", sans-serif',
           },
         },
         {
@@ -177,100 +171,86 @@ export const TimelineChart: React.FC<TimelineChartProps> = ({
         },
       ]);
 
-    // Build markPoints for Incidents on Spend series
-    const markPointData = incidents.map((inc) => {
+    // Build markPoint data for incidents
+    const anomalyMarkPoints: any[] = [];
+    incidents.forEach((inc) => {
+      if (!dates.includes(inc.sim_date)) return;
+
       const isCritical = inc.severity >= 150;
-      const color = isCritical ? '#f43f5e' : '#f59e0b';
-      const labelText = isCritical ? 'CRIT' : 'WARN';
+      const markerColor = isCritical ? palette.accent.pink : palette.accent.yellow;
 
-      // Find spend value on that date for positioning
-      const point = seriesData.find((d) => d.date === inc.sim_date);
-      const spendVal = point ? point.spend : 400;
-
-      return {
-        name: `${inc.metric} Incident`,
-        coord: [inc.sim_date, spendVal],
-        value: labelText,
+      anomalyMarkPoints.push({
+        name: inc.id,
         incidentId: inc.id,
+        coord: [inc.sim_date, 0],
+        value: inc.id,
+        symbol: 'pin',
+        symbolSize: isCritical ? 44 : 36,
         itemStyle: {
-          color,
-          shadowBlur: isCritical ? 12 : 6,
-          shadowColor: color,
+          color: markerColor,
+          borderColor: '#000000',
+          borderWidth: 2,
+          shadowBlur: 0,
         },
-        symbol: isCritical ? 'pin' : 'circle',
-        symbolSize: isCritical ? 44 : 32,
-      };
+        label: {
+          show: true,
+          formatter: inc.id.replace('INC-', '#'),
+          fontSize: 10,
+          fontWeight: 900,
+          color: '#000000',
+          fontFamily: '"Space Grotesk", sans-serif',
+        },
+      });
     });
 
+    const spendValues = seriesData.map((d) => d.spend);
+    const roasValues = seriesData.map((d) => d.roas);
+    const ctrValues = seriesData.map((d) => d.ctr);
+    const docValues = seriesData.map((d) => d.days_of_cover ?? 0);
+
     const option: echarts.EChartsOption = {
-      backgroundColor: 'transparent',
+      backgroundColor: '#ffffff',
       animationDuration: 600,
       tooltip: {
         trigger: 'axis',
         axisPointer: {
           type: 'cross',
-          crossStyle: { color: '#64748b' },
-          lineStyle: { color: '#475569', type: 'dashed' },
+          crossStyle: { color: '#000000', width: 2 },
         },
-        backgroundColor: 'rgba(15, 23, 42, 0.92)',
-        borderColor: 'rgba(148, 163, 184, 0.25)',
-        borderWidth: 1,
+        backgroundColor: '#ffffff',
+        borderColor: '#000000',
+        borderWidth: 3,
         padding: [12, 16],
         textStyle: {
-          color: '#f8fafc',
+          color: '#000000',
           fontSize: 12,
-          fontFamily: 'Inter, system-ui, sans-serif',
+          fontFamily: '"Space Grotesk", sans-serif',
         },
-        extraCssText:
-          'backdrop-filter: blur(12px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5); border-radius: 8px;',
+        extraCssText: 'box-shadow: 4px 4px 0px #000000; border-radius: 0px;',
         formatter: (params: any) => {
-          if (!Array.isArray(params) || params.length === 0) return '';
-          const dateStr = params[0].axisValue;
+          if (!Array.isArray(params)) return '';
+          const dateStr = params[0]?.axisValue;
           const dayIncidents = incidentDateMap.get(dateStr) || [];
-          const activeDecoy = decoyEvents.find(
-            (ev) => dateStr >= ev.startDate && dateStr <= ev.endDate
-          );
 
-          let html = `<div style="margin-bottom: 8px; font-weight: 600; color: #e2e8f0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">`;
-          html += `📅 <span>${dateStr}</span></div>`;
+          let html = `<div style="font-weight:900;text-transform:uppercase;color:#000;border-bottom:2px solid #000;padding-bottom:4px;margin-bottom:6px">📅 DATE: ${dateStr}</div>`;
 
-          // Timeseries metric values
           params.forEach((p: any) => {
-            if (p.seriesName === 'Anomalies') return;
-            const marker = `<span style="display:inline-block;margin-right:6px;border-radius:50%;width:8px;height:8px;background-color:${p.color};"></span>`;
-            let valStr = `${p.value}`;
-            if (p.seriesName === 'Daily Spend ($)') valStr = `$${Number(p.value).toLocaleString()}`;
-            else if (p.seriesName === 'CTR (%)') valStr = `${p.value}%`;
-            else if (p.seriesName === 'ROAS') valStr = `${p.value}x`;
-            else if (p.seriesName === 'Days of Cover') valStr = `${p.value} days`;
-
-            html += `<div style="display: flex; justify-content: space-between; gap: 16px; margin: 3px 0; font-size: 11px;">`;
-            html += `<span>${marker}${p.seriesName}</span><span style="font-family: monospace; font-weight: 600;">${valStr}</span>`;
-            html += `</div>`;
+            if (p.seriesName && !p.seriesName.startsWith('_')) {
+              html += `<div style="display:flex;justify-content:space-between;gap:16px;font-size:12px;margin-bottom:2px">
+                <span style="font-weight:700">${p.marker} ${p.seriesName}</span>
+                <span style="font-weight:900;font-family:monospace">${p.value}</span>
+              </div>`;
+            }
           });
 
-          // Decoy banner if active
-          if (activeDecoy) {
-            html += `<div style="margin-top: 8px; padding: 6px 8px; background: rgba(56, 189, 248, 0.15); border-left: 3px solid #38bdf8; border-radius: 4px; font-size: 11px;">`;
-            html += `<div style="font-weight: 600; color: #38bdf8;">🛡️ Decoy Event Active</div>`;
-            html += `<div style="color: #94a3b8; font-size: 10px;">${activeDecoy.name} (${activeDecoy.type}) — Alerts Suppressed</div>`;
-            html += `</div>`;
-          }
-
-          // Incident alerts on this date
           if (dayIncidents.length > 0) {
-            html += `<div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1);">`;
+            html += `<div style="margin-top:8px;padding-top:6px;border-top:2px solid #000">`;
+            html += `<div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#000;margin-bottom:4px">⚠️ DETECTED ANOMALIES (${dayIncidents.length}):</div>`;
             dayIncidents.forEach((inc) => {
-              const isCrit = inc.severity >= 150;
-              const badgeColor = isCrit ? '#f43f5e' : '#f59e0b';
-              const bg = isCrit ? 'rgba(244, 63, 94, 0.15)' : 'rgba(245, 158, 11, 0.15)';
-              html += `<div style="margin-top: 4px; padding: 6px 8px; background: ${bg}; border-left: 3px solid ${badgeColor}; border-radius: 4px; font-size: 11px;">`;
-              html += `<div style="font-weight: 700; color: ${badgeColor}; display: flex; justify-content: space-between;">`;
-              html += `<span>🚨 ${inc.metric.toUpperCase()} (${inc.detector})</span><span>Sev: ${inc.severity}</span></div>`;
-              html += `<div style="color: #cbd5e1; font-size: 10px; margin-top: 2px;">`;
-              html += `Risk: <b>$${inc.money_at_risk.toFixed(2)}</b> &bull; Mag: <b>${inc.magnitude_pct.toFixed(1)}% ${inc.direction}</b> &bull; Conf: <b>${(inc.confidence * 100).toFixed(0)}%</b>`;
-              html += `</div>`;
-              html += `</div>`;
+              const bg = inc.severity >= 150 ? palette.accent.pink : palette.accent.yellow;
+              html += `<div style="background:${bg};border:2px solid #000;padding:4px 6px;margin-bottom:4px;font-size:11px">
+                <strong>[${inc.id}]</strong> ${inc.detector.toUpperCase()} — Drop: <strong>-${inc.magnitude_pct}%</strong> | Sev: <strong>${inc.severity}</strong>
+              </div>`;
             });
             html += `</div>`;
           }
@@ -279,186 +259,168 @@ export const TimelineChart: React.FC<TimelineChartProps> = ({
         },
       },
       legend: {
-        top: 10,
-        right: 20,
-        textStyle: { color: '#94a3b8', fontSize: 11 },
-        selected: {
-          'Daily Spend ($)': true,
-          'ROAS': true,
-          'CTR (%)': true,
-          'Days of Cover': true,
-        },
+        data: ['Daily Spend ($)', 'Blended ROAS', 'CTR (%)', 'Days of Cover'],
+        top: 8,
+        right: 16,
+        textStyle: { color: '#000000', fontWeight: 'bold', fontSize: 11, fontFamily: '"Space Grotesk", sans-serif' },
       },
       grid: {
-        top: 60,
+        top: 50,
         left: 55,
-        right: 65,
-        bottom: 75,
+        right: 55,
+        bottom: 50,
         containLabel: false,
       },
       xAxis: {
         type: 'category',
         data: dates,
-        boundaryGap: false,
-        axisLine: { lineStyle: { color: '#334155' } },
-        axisTick: { alignWithLabel: true, lineStyle: { color: '#334155' } },
+        axisLine: { lineStyle: { color: '#000000', width: 2 } },
+        axisTick: { show: true, lineStyle: { color: '#000000', width: 2 } },
         axisLabel: {
-          color: '#64748b',
+          color: '#000000',
+          fontWeight: 'bold',
           fontSize: 10,
-          formatter: (val: string) => {
-            const parts = val.split('-');
-            return `${parts[1]}/${parts[2]}`;
-          },
+          fontFamily: '"Space Grotesk", monospace',
+          formatter: (v: string) => v.slice(5),
         },
       },
       yAxis: [
         {
           type: 'value',
           name: 'Spend ($)',
-          nameTextStyle: { color: '#64748b', fontSize: 10, align: 'right' },
           position: 'left',
-          axisLine: { show: true, lineStyle: { color: '#334155' } },
-          splitLine: {
-            lineStyle: { color: 'rgba(51, 65, 85, 0.35)', type: 'dashed' },
-          },
-          axisLabel: {
-            color: '#64748b',
-            fontSize: 10,
-            formatter: (v: number) => `$${v}`,
-          },
+          axisLine: { show: true, lineStyle: { color: '#000000', width: 2 } },
+          splitLine: { lineStyle: { color: palette.bg.gridLine, type: 'dashed' } },
+          axisLabel: { color: '#000000', fontWeight: 'bold', fontSize: 10, formatter: '${value}' },
         },
         {
           type: 'value',
-          name: 'Metrics / Ratio',
-          nameTextStyle: { color: '#64748b', fontSize: 10, align: 'left' },
+          name: 'ROAS / Ratio',
           position: 'right',
-          axisLine: { show: true, lineStyle: { color: '#334155' } },
+          axisLine: { show: true, lineStyle: { color: '#000000', width: 2 } },
           splitLine: { show: false },
-          axisLabel: {
-            color: '#64748b',
-            fontSize: 10,
-          },
-        },
-      ],
-      dataZoom: [
-        {
-          type: 'slider',
-          show: true,
-          xAxisIndex: [0],
-          bottom: 12,
-          height: 22,
-          start: 0,
-          end: 100,
-          borderColor: '#334155',
-          fillerColor: 'rgba(56, 189, 248, 0.15)',
-          handleStyle: { color: '#38bdf8', borderColor: '#0284c7' },
-          textStyle: { color: '#94a3b8', fontSize: 9 },
-          brushSelect: true,
-        },
-        {
-          type: 'inside',
-          xAxisIndex: [0],
-          zoomOnMouseWheel: true,
-          moveOnMouseMove: true,
+          axisLabel: { color: '#000000', fontWeight: 'bold', fontSize: 10, formatter: '{value}x' },
         },
       ],
       series: [
         {
           name: 'Daily Spend ($)',
-          type: 'line',
+          type: 'bar',
+          data: spendValues,
           yAxisIndex: 0,
-          data: seriesData.map((d) => d.spend),
-          smooth: true,
-          showSymbol: false,
-          itemStyle: { color: '#38bdf8' },
-          lineStyle: { width: 2.5, color: '#38bdf8' },
-          areaStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(56, 189, 248, 0.28)' },
-              { offset: 1, color: 'rgba(56, 189, 248, 0.01)' },
-            ]),
+          barMaxWidth: 16,
+          itemStyle: {
+            color: '#000000',
+            borderColor: '#000000',
+            borderWidth: 1,
           },
           markArea: {
             silent: true,
             data: markAreaPieces as any,
           },
           markPoint: {
-            data: markPointData,
+            data: anomalyMarkPoints,
           },
         },
         {
-          name: 'ROAS',
+          name: 'Blended ROAS',
           type: 'line',
+          data: roasValues,
           yAxisIndex: 1,
-          data: seriesData.map((d) => d.roas),
           smooth: true,
-          showSymbol: false,
-          itemStyle: { color: '#10b981' },
-          lineStyle: { width: 2, color: '#10b981' },
+          lineStyle: { color: '#0284c7', width: 3 },
+          itemStyle: { color: '#0284c7', borderColor: '#000', borderWidth: 1 },
+          symbol: 'circle',
+          symbolSize: 6,
         },
         {
           name: 'CTR (%)',
           type: 'line',
+          data: ctrValues,
           yAxisIndex: 1,
-          data: seriesData.map((d) => d.ctr),
           smooth: true,
-          showSymbol: false,
-          itemStyle: { color: '#a855f7' },
-          lineStyle: { width: 1.8, color: '#a855f7', type: 'dashed' },
+          lineStyle: { color: '#16a34a', width: 3 },
+          itemStyle: { color: '#16a34a', borderColor: '#000', borderWidth: 1 },
+          symbol: 'rect',
+          symbolSize: 6,
         },
         {
           name: 'Days of Cover',
           type: 'line',
+          data: docValues,
           yAxisIndex: 1,
-          data: seriesData.map((d) => d.days_of_cover ?? null),
           smooth: true,
-          showSymbol: false,
-          itemStyle: { color: '#f59e0b' },
-          lineStyle: { width: 1.8, color: '#f59e0b' },
+          lineStyle: { color: '#d97706', width: 2.5, type: 'dashed' },
+          itemStyle: { color: '#ffd23f', borderColor: '#000', borderWidth: 1 },
+          symbol: 'triangle',
+          symbolSize: 6,
         },
       ],
     };
 
     chart.setOption(option, true);
 
-    const handleResize = () => {
-      chart.resize();
-    };
-
+    const handleResize = () => chart.resize();
     window.addEventListener('resize', handleResize);
-
     return () => {
       window.removeEventListener('resize', handleResize);
+      chart.dispose();
+      chartInstance.current = null;
     };
   }, [seriesData, dates, incidents, decoyEvents, incidentDateMap, onSelectIncident]);
 
   return (
-    <div className="w-full bg-slate-900/60 border border-slate-800/80 rounded-xl p-4 backdrop-blur-md shadow-xl">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-2 px-1">
+    <div
+      style={{
+        background: '#ffffff',
+        border: '3px solid #000000',
+        boxShadow: '5px 5px 0px #000000',
+        padding: '1.25rem',
+        width: '100%',
+        fontFamily: '"Space Grotesk", sans-serif',
+      }}
+    >
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
         <div>
-          <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-            Multichannel Performance & Anomaly Timeline
-          </h3>
-          <p className="text-xs text-slate-400">
-            30-day continuous telemetry with automated EWMA seasonality, anomaly markers, and decoy noise suppression.
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 900, textTransform: 'uppercase', color: '#000' }}>
+              Multichannel Telemetry & Anomaly Timeline
+            </h3>
+            <span
+              style={{
+                background: palette.accent.cyan,
+                border: '2px solid #000',
+                boxShadow: '2px 2px 0px #000',
+                padding: '0.15rem 0.5rem',
+                fontSize: '0.7rem',
+                fontWeight: 900,
+                textTransform: 'uppercase',
+              }}
+            >
+              30-Day Window
+            </span>
+          </div>
+          <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', fontWeight: 600, color: '#444' }}>
+            Seasonal EWMA baseline telemetry with interactive anomaly pins and suppressed decoy holiday regions.
           </p>
         </div>
-        <div className="flex items-center gap-4 text-xs font-mono">
-          <div className="flex items-center gap-1.5 text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-md border border-rose-500/20">
-            <span className="w-2 h-2 rounded-full bg-rose-500" />
-            Critical (|Z| &gt; 2.5, Sev &ge; 150)
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', fontSize: '0.75rem', fontWeight: 800 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: palette.accent.pink, border: '2px solid #000', boxShadow: '2px 2px 0px #000', padding: '0.2rem 0.6rem' }}>
+            <span style={{ width: 8, height: 8, background: '#000', borderRadius: '50%' }} />
+            CRITICAL (|Z| &ge; 2.5, SEV &ge; 150)
           </div>
-          <div className="flex items-center gap-1.5 text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">
-            <span className="w-2 h-2 rounded-full bg-amber-500" />
-            Warning (Sev &lt; 150)
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: palette.accent.yellow, border: '2px solid #000', boxShadow: '2px 2px 0px #000', padding: '0.2rem 0.6rem' }}>
+            <span style={{ width: 8, height: 8, background: '#000', borderRadius: '50%' }} />
+            WARNING (SEV &lt; 150)
           </div>
-          <div className="flex items-center gap-1.5 text-purple-300 bg-purple-500/10 px-2.5 py-1 rounded-md border border-purple-500/20">
-            <span className="w-2 h-2 rounded-full bg-purple-400" />
-            Decoy Period (Suppressed)
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: palette.accent.cyan, border: '2px solid #000', boxShadow: '2px 2px 0px #000', padding: '0.2rem 0.6rem' }}>
+            <span style={{ width: 8, height: 8, border: '1px dashed #000', display: 'inline-block' }} />
+            DECOY PERIOD (SUPPRESSED)
           </div>
         </div>
       </div>
+
       <div ref={chartRef} style={{ width: '100%', height: '360px' }} />
     </div>
   );

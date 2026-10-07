@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import * as echarts from 'echarts';
+import { palette } from '../../theme/tokens';
 
 export interface CalibrationPoint {
   expected: number;
@@ -38,7 +39,7 @@ export const CalibrationPlot: React.FC<CalibrationPlotProps> = ({ points }) => {
     if (!chartRef.current) return;
 
     if (!chartInstance.current) {
-      chartInstance.current = echarts.init(chartRef.current, 'dark', {
+      chartInstance.current = echarts.init(chartRef.current, undefined, {
         renderer: 'canvas',
       });
     }
@@ -58,42 +59,32 @@ export const CalibrationPlot: React.FC<CalibrationPlotProps> = ({ points }) => {
       parseFloat((p.observed - p.expected).toFixed(3)),
     ]);
 
-    // Compute R² for summary
-    const meanObs = data.reduce((s, p) => s + p.observed, 0) / data.length;
-    const ssRes = data.reduce((s, p) => s + (p.observed - p.expected) ** 2, 0);
-    const ssTot = data.reduce((s, p) => s + (p.observed - meanObs) ** 2, 0);
-    const rSquared = ssTot > 0 ? (1 - ssRes / ssTot) : 0;
-
-    // Mean Absolute Error
-    const mae = data.reduce((s, p) => s + Math.abs(p.observed - p.expected), 0) / data.length;
-
     const option: echarts.EChartsOption = {
-      backgroundColor: 'transparent',
+      backgroundColor: '#ffffff',
       animationDuration: 700,
       animationEasing: 'cubicOut',
       tooltip: {
         trigger: 'item',
-        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-        borderColor: 'rgba(139, 92, 246, 0.3)',
-        borderWidth: 1,
+        backgroundColor: '#ffffff',
+        borderColor: '#000000',
+        borderWidth: 3,
         padding: [12, 16],
         textStyle: {
-          color: '#f1f5f9',
+          color: '#000000',
           fontSize: 12,
-          fontFamily: 'Inter, system-ui, sans-serif',
+          fontFamily: '"Space Grotesk", sans-serif',
         },
-        extraCssText:
-          'backdrop-filter: blur(12px); box-shadow: 0 16px 40px -8px rgba(0,0,0,0.55); border-radius: 10px;',
+        extraCssText: 'box-shadow: 4px 4px 0px #000000; border-radius: 0px;',
         formatter: (params: any) => {
           const d = params.data;
           if (!Array.isArray(d)) return '';
           const [expected, observed, label, residual] = d;
-          const resColor = Math.abs(residual) < 1.5 ? '#34d399' : residual > 0 ? '#fbbf24' : '#fb7185';
+          const resColor = Math.abs(residual) < 1.0 ? '#16a34a' : residual > 0 ? '#d97706' : '#e11d48';
 
-          let html = `<div style="font-weight:700;color:#e2e8f0;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:4px">📌 ${label || 'Point'}</div>`;
-          html += `<div style="display:flex;justify-content:space-between;gap:20px;font-size:12px"><span style="color:#94a3b8">Predicted</span><span style="font-family:monospace;font-weight:700;color:#a5b4fc">${expected >= 0 ? '+' : ''}${expected}%</span></div>`;
-          html += `<div style="display:flex;justify-content:space-between;gap:20px;font-size:12px;margin-top:3px"><span style="color:#94a3b8">Observed</span><span style="font-family:monospace;font-weight:700;color:#67e8f9">${observed >= 0 ? '+' : ''}${observed}%</span></div>`;
-          html += `<div style="display:flex;justify-content:space-between;gap:20px;font-size:12px;margin-top:3px"><span style="color:#94a3b8">Residual</span><span style="font-family:monospace;font-weight:700;color:${resColor}">${residual >= 0 ? '+' : ''}${residual}%</span></div>`;
+          let html = `<div style="font-weight:900;text-transform:uppercase;color:#000;margin-bottom:6px;border-bottom:2px solid #000;padding-bottom:4px">📌 ${label || 'Point'}</div>`;
+          html += `<div style="display:flex;justify-content:space-between;gap:20px;font-size:12px"><span style="font-weight:700">Predicted</span><span style="font-family:monospace;font-weight:900;color:#0284c7">${expected >= 0 ? '+' : ''}${expected}%</span></div>`;
+          html += `<div style="display:flex;justify-content:space-between;gap:20px;font-size:12px;margin-top:3px"><span style="font-weight:700">Observed</span><span style="font-family:monospace;font-weight:900;color:#16a34a">${observed >= 0 ? '+' : ''}${observed}%</span></div>`;
+          html += `<div style="display:flex;justify-content:space-between;gap:20px;font-size:12px;margin-top:3px"><span style="font-weight:700">Residual</span><span style="font-family:monospace;font-weight:900;color:${resColor}">${residual >= 0 ? '+' : ''}${residual}%</span></div>`;
           return html;
         },
       },
@@ -109,16 +100,17 @@ export const CalibrationPlot: React.FC<CalibrationPlotProps> = ({ points }) => {
         name: 'Predicted Profit Δ (%)',
         nameLocation: 'middle',
         nameGap: 32,
-        nameTextStyle: { color: '#94a3b8', fontSize: 11 },
+        nameTextStyle: { color: '#000000', fontSize: 11, fontWeight: 'bold' },
         min: axisMin,
         max: axisMax,
-        axisLine: { lineStyle: { color: '#334155' } },
+        axisLine: { lineStyle: { color: '#000000', width: 2 } },
         splitLine: {
-          lineStyle: { color: 'rgba(51,65,85,0.25)', type: 'dashed' },
+          lineStyle: { color: palette.bg.gridLine, type: 'dashed' },
         },
         axisLabel: {
-          color: '#64748b',
+          color: '#000000',
           fontSize: 10,
+          fontWeight: 'bold',
           formatter: (v: number) => `${v >= 0 ? '+' : ''}${v}%`,
         },
       },
@@ -127,21 +119,22 @@ export const CalibrationPlot: React.FC<CalibrationPlotProps> = ({ points }) => {
         name: 'Observed Profit Δ (%)',
         nameLocation: 'middle',
         nameGap: 42,
-        nameTextStyle: { color: '#94a3b8', fontSize: 11 },
+        nameTextStyle: { color: '#000000', fontSize: 11, fontWeight: 'bold' },
         min: axisMin,
         max: axisMax,
-        axisLine: { show: true, lineStyle: { color: '#334155' } },
+        axisLine: { show: true, lineStyle: { color: '#000000', width: 2 } },
         splitLine: {
-          lineStyle: { color: 'rgba(51,65,85,0.25)', type: 'dashed' },
+          lineStyle: { color: palette.bg.gridLine, type: 'dashed' },
         },
         axisLabel: {
-          color: '#64748b',
+          color: '#000000',
           fontSize: 10,
+          fontWeight: 'bold',
           formatter: (v: number) => `${v >= 0 ? '+' : ''}${v}%`,
         },
       },
       series: [
-        // 45° ideal calibration line
+        // 45° ideal calibration line (y = x)
         {
           name: 'Ideal (y = x)',
           type: 'line',
@@ -152,8 +145,8 @@ export const CalibrationPlot: React.FC<CalibrationPlotProps> = ({ points }) => {
           smooth: false,
           showSymbol: false,
           lineStyle: {
-            color: 'rgba(148, 163, 184, 0.35)',
-            width: 2,
+            color: '#000000',
+            width: 2.5,
             type: 'dashed',
           },
           silent: true,
@@ -167,19 +160,17 @@ export const CalibrationPlot: React.FC<CalibrationPlotProps> = ({ points }) => {
           data: scatterData,
           symbolSize: (val: number[]) => {
             const residual = Math.abs(val[3] ?? 0);
-            return Math.max(10, Math.min(24, 12 + residual * 2));
+            return Math.max(12, Math.min(26, 14 + residual * 2));
           },
           itemStyle: {
             color: (params: any) => {
               const residual = Math.abs(params.data[3] ?? 0);
-              if (residual < 1.0) return '#34d399';      // Near-perfect → emerald
-              if (residual < 2.5) return '#fbbf24';      // Moderate → amber
-              return '#fb7185';                           // Large error → rose
+              if (residual < 1.0) return palette.accent.lime;
+              if (residual < 2.5) return palette.accent.yellow;
+              return palette.accent.pink;
             },
-            shadowBlur: 12,
-            shadowColor: 'rgba(139, 92, 246, 0.3)',
-            borderColor: 'rgba(255,255,255,0.1)',
-            borderWidth: 1,
+            borderColor: '#000000',
+            borderWidth: 2,
           },
           z: 10,
         },
@@ -205,108 +196,99 @@ export const CalibrationPlot: React.FC<CalibrationPlotProps> = ({ points }) => {
   const mae = data.reduce((s, p) => s + Math.abs(p.observed - p.expected), 0) / data.length;
 
   return (
-    <div className="w-full bg-slate-900/60 border border-slate-800/80 rounded-xl backdrop-blur-md shadow-xl overflow-hidden">
+    <div
+      style={{
+        background: '#ffffff',
+        border: '3px solid #000000',
+        boxShadow: '5px 5px 0px #000000',
+        padding: '1.25rem',
+        width: '100%',
+        fontFamily: '"Space Grotesk", sans-serif',
+      }}
+    >
       {/* Header */}
-      <div className="px-5 pt-4 pb-2">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3
-              style={{
-                fontSize: 14,
-                fontWeight: 700,
-                color: '#e2e8f0',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                margin: 0,
-              }}
-            >
-              <span
-                style={{
-                  display: 'inline-block',
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  background: '#a78bfa',
-                  boxShadow: '0 0 8px rgba(167,139,250,0.5)',
-                  animation: 'pulse 2s infinite',
-                }}
-              />
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 900, textTransform: 'uppercase', color: '#000' }}>
               Expected vs. Observed Profit Calibration
             </h3>
-            <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0' }}>
-              Scatter points with confidence halos. Dashed line = ideal y=x.
-            </p>
+            <span
+              style={{
+                background: palette.accent.cyan,
+                border: '2px solid #000',
+                boxShadow: '2px 2px 0px #000',
+                padding: '0.15rem 0.5rem',
+                fontSize: '0.7rem',
+                fontWeight: 900,
+                textTransform: 'uppercase',
+              }}
+            >
+              Residual Fit
+            </span>
           </div>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                background: 'rgba(139,92,246,0.08)',
-                border: '1px solid rgba(139,92,246,0.2)',
-                borderRadius: 8,
-                padding: '6px 14px',
-              }}
-            >
-              <span style={{ fontSize: 10, color: '#c4b5fd', letterSpacing: '0.05em' }}>R²</span>
-              <span
-                style={{
-                  fontSize: 18,
-                  fontWeight: 800,
-                  color: rSquared > 0.7 ? '#a5b4fc' : '#fbbf24',
-                  fontFamily: 'JetBrains Mono, monospace',
-                }}
-              >
-                {rSquared.toFixed(3)}
-              </span>
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                background: 'rgba(56,189,248,0.08)',
-                border: '1px solid rgba(56,189,248,0.2)',
-                borderRadius: 8,
-                padding: '6px 14px',
-              }}
-            >
-              <span style={{ fontSize: 10, color: '#67e8f9', letterSpacing: '0.05em' }}>MAE</span>
-              <span
-                style={{
-                  fontSize: 18,
-                  fontWeight: 800,
-                  color: mae < 2.0 ? '#34d399' : '#fbbf24',
-                  fontFamily: 'JetBrains Mono, monospace',
-                }}
-              >
-                {mae.toFixed(2)}%
-              </span>
-            </div>
+          <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', fontWeight: 600, color: '#444' }}>
+            Scatter points comparing model predictions against simulation outcomes. Dashed line = ideal y=x.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.6rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              background: palette.accent.cyan,
+              border: '2px solid #000',
+              boxShadow: '2px 2px 0px #000',
+              padding: '0.35rem 0.85rem',
+            }}
+          >
+            <span style={{ fontSize: '0.65rem', fontWeight: 900, letterSpacing: '0.05em' }}>R² FIT</span>
+            <span style={{ fontSize: '1.1rem', fontWeight: 900, fontFamily: 'monospace' }}>
+              {rSquared.toFixed(3)}
+            </span>
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              background: palette.accent.lime,
+              border: '2px solid #000',
+              boxShadow: '2px 2px 0px #000',
+              padding: '0.35rem 0.85rem',
+            }}
+          >
+            <span style={{ fontSize: '0.65rem', fontWeight: 900, letterSpacing: '0.05em' }}>MAE</span>
+            <span style={{ fontSize: '1.1rem', fontWeight: 900, fontFamily: 'monospace' }}>
+              {mae.toFixed(2)}%
+            </span>
           </div>
         </div>
       </div>
+
       {/* Legend */}
-      <div style={{ display: 'flex', gap: 16, padding: '0 20px 4px', fontSize: 11, color: '#94a3b8' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', fontSize: '0.75rem', fontWeight: 800, marginBottom: '0.5rem' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#34d399', display: 'inline-block' }} />
-          |Residual| &lt; 1%
+          <span style={{ width: 10, height: 10, background: palette.accent.lime, border: '1px solid #000', display: 'inline-block' }} />
+          |RESIDUAL| &lt; 1% (HIGH)
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#fbbf24', display: 'inline-block' }} />
-          1–2.5%
+          <span style={{ width: 10, height: 10, background: palette.accent.yellow, border: '1px solid #000', display: 'inline-block' }} />
+          1–2.5% (MODERATE)
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#fb7185', display: 'inline-block' }} />
-          &gt; 2.5%
+          <span style={{ width: 10, height: 10, background: palette.accent.pink, border: '1px solid #000', display: 'inline-block' }} />
+          &gt; 2.5% (HIGH RESIDUAL)
         </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 8 }}>
-          <span style={{ width: 16, height: 0, borderTop: '2px dashed #94a3b8', display: 'inline-block' }} />
-          Ideal (y = x)
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
+          <span style={{ width: 16, height: 0, borderTop: '2px dashed #000', display: 'inline-block' }} />
+          IDEAL (y = x)
         </span>
       </div>
+
       {/* Chart */}
       <div ref={chartRef} style={{ width: '100%', height: '340px' }} />
     </div>

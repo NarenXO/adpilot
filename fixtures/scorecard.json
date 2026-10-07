@@ -1,72 +1,147 @@
 {
   "detection": {
-    "precision": 0.85,
-    "recall": 0.92,
-    "false_alarms_per_week": 0.3,
+    "precision": 1.0,
+    "recall": 1.0,
+    "false_alarms_per_week": 0.0,
     "per_type": {
       "CREATIVE_FATIGUE": {
-        "precision": 0.9,
+        "precision": 1.0,
         "recall": 1.0
       },
       "STOCKOUT": {
-        "precision": 0.88,
-        "recall": 0.9
+        "precision": 1.0,
+        "recall": 1.0
       },
       "TRACKING_BREAK": {
-        "precision": 0.8,
-        "recall": 0.85
+        "precision": 1.0,
+        "recall": 1.0
       },
       "MARGIN_SQUEEZE": {
-        "precision": 0.82,
-        "recall": 0.92
+        "precision": 1.0,
+        "recall": 1.0
       }
     },
     "baseline_comparison": {
-      "naive_precision": 0.6,
-      "naive_recall": 0.7
+      "naive_precision": 0.55,
+      "naive_recall": 0.6
     }
   },
   "forecast": {
-    "mape": 12.3
+    "mape": 5.2853,
+    "holdout_days": 30,
+    "n_samples": 30
   },
   "backtest": {
-    "mean_profit_delta": 8.2,
-    "ci_low": 4.1,
-    "ci_high": 12.3,
-    "worst_seed": -1.2,
+    "mean_profit_delta": 7.39,
+    "ci_low": 0.68,
+    "ci_high": 15.65,
+    "worst_seed": 0.12,
     "n_seeds": 20,
     "curve": [
       {
+        "seed": 0,
+        "profit_delta": 17.38
+      },
+      {
         "seed": 1,
-        "profit_delta": 9.1
+        "profit_delta": 6.58
       },
       {
         "seed": 2,
-        "profit_delta": 7.3
+        "profit_delta": 12.25
+      },
+      {
+        "seed": 3,
+        "profit_delta": 3.83
+      },
+      {
+        "seed": 4,
+        "profit_delta": 8.42
+      },
+      {
+        "seed": 5,
+        "profit_delta": 4.91
+      },
+      {
+        "seed": 6,
+        "profit_delta": 7.91
+      },
+      {
+        "seed": 7,
+        "profit_delta": 0.12
+      },
+      {
+        "seed": 8,
+        "profit_delta": 4.27
+      },
+      {
+        "seed": 9,
+        "profit_delta": 7.31
+      },
+      {
+        "seed": 10,
+        "profit_delta": 12.62
+      },
+      {
+        "seed": 11,
+        "profit_delta": 6.25
+      },
+      {
+        "seed": 12,
+        "profit_delta": 10.4
+      },
+      {
+        "seed": 13,
+        "profit_delta": 6.78
+      },
+      {
+        "seed": 14,
+        "profit_delta": 1.57
+      },
+      {
+        "seed": 15,
+        "profit_delta": 11.24
+      },
+      {
+        "seed": 16,
+        "profit_delta": 4.95
+      },
+      {
+        "seed": 17,
+        "profit_delta": 6.02
+      },
+      {
+        "seed": 18,
+        "profit_delta": 1.29
+      },
+      {
+        "seed": 19,
+        "profit_delta": 13.74
       }
     ]
   },
   "regime_shift": {
-    "cpm_jump_detected": true,
-    "rollback_triggered": true
+    "shift_detected": false,
+    "variance_ratio": 1.0,
+    "method": "variance_ratio"
   },
   "placebo": {
-    "false_effect_detected": false,
-    "p_value": 0.72
+    "false_positive_rate": 0.0,
+    "tests_run": 5,
+    "failures": []
   },
   "agent_vs_playbook": {
-    "agent_accuracy": 0.88,
-    "playbook_accuracy": 0.85,
-    "primary": "agent"
+    "agreement_rate": 0.87,
+    "ticks_compared": 7
   },
   "guardian": {
-    "catches": 3,
-    "examples": [
-      "Fabricated 42% drop; actual was 35%"
-    ]
+    "spend_within_band": true,
+    "roas_above_floor": true,
+    "total_spend_usd": 0.0,
+    "avg_roas": 0.0
   },
-  "stockout_spend_avoided": 1200.0,
-  "median_time_to_diagnosis_s": 4.2,
+  "stockout_spend_avoided": 1248.5,
+  "median_time_to_diagnosis_s": 45.0,
   "honest_limits": [
     "Data is synthetic and outcomes are simulated by a separate twin.",
     "Margin and inventory are scenario inputs.",
