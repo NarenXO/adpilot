@@ -16,7 +16,7 @@ class CurveErrorBoundary extends Component<{ children: ReactNode; fallback?: Rea
   render() {
     if (this.state.hasError) {
       return this.props.fallback ?? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-[#1f2d45] bg-[#111827] p-8 text-center text-xs text-[#94a3b8]">
+        <div style={{ background: '#ffffff', border: '3px solid #000000', boxShadow: '4px 4px 0px #000000', borderRadius: '10px', padding: '24px', textAlign: 'center', fontFamily: "'Space Grotesk', sans-serif", color: '#4a4a4a', fontSize: '12px', fontWeight: 700 }}>
           Unable to render response curve chart.
         </div>
       );
@@ -55,11 +55,23 @@ export const ResponseCurve: React.FC<ResponseCurveProps> = ({
   if (!dataPoints || dataPoints.length === 0) {
     return (
       <div
-        className="flex flex-col items-center justify-center rounded-xl border border-[#1f2d45] bg-[#111827] p-8 text-center"
-        style={{ height }}
+        style={{
+          height,
+          background: '#ffffff',
+          border: '3px solid #000000',
+          boxShadow: '4px 4px 0px #000000',
+          borderRadius: '10px',
+          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          fontFamily: "'Space Grotesk', sans-serif",
+        }}
       >
-        <div className="mb-2 text-sm font-semibold text-[#94a3b8]">No Response Curve Available</div>
-        <p className="text-xs text-[#64748b]">
+        <div style={{ fontSize: '14px', fontWeight: 800, color: '#000000', marginBottom: '6px' }}>No Response Curve Available</div>
+        <p style={{ fontSize: '12px', color: '#666666', fontWeight: 600, margin: 0 }}>
           Insufficient ad performance data to fit the Hill curve for {campaignId}.
         </p>
       </div>
@@ -126,13 +138,13 @@ export const ResponseCurve: React.FC<ResponseCurveProps> = ({
       },
       tooltip: {
         trigger: 'axis',
-        backgroundColor: '#0a0d14',
-        borderColor: '#1f2d45',
-        borderWidth: 1,
+        backgroundColor: '#ffffff',
+        borderColor: '#000000',
+        borderWidth: 3,
         padding: [10, 14],
         textStyle: {
-          color: '#e2e8f0',
-          fontFamily: 'Inter, sans-serif',
+          color: '#000000',
+          fontFamily: "'Space Grotesk', sans-serif",
           fontSize: 12,
         },
         formatter: (params: any) => {
@@ -142,22 +154,22 @@ export const ResponseCurve: React.FC<ResponseCurveProps> = ({
           if (!pt) return '';
 
           return `
-            <div style="font-family:Inter,sans-serif;min-width:180px;">
-              <div style="font-weight:700;font-size:13px;color:#e2e8f0;margin-bottom:6px;">
+            <div style="font-family:'Space Grotesk',sans-serif;min-width:180px;color:#000000;">
+              <div style="font-weight:800;font-size:13px;color:#000000;margin-bottom:6px;border-bottom:2px solid #000;padding-bottom:3px;">
                 Spend: $${pt.spend.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </div>
               <table style="width:100%;font-size:12px;border-collapse:collapse;">
                 <tr>
-                  <td style="color:#60a5fa;padding:2px 0;">Expected (Mid):</td>
-                  <td style="color:#e2e8f0;text-align:right;font-weight:600;">$${pt.revenue_mid.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                  <td style="color:#000000;font-weight:700;padding:2px 0;">Expected (Mid):</td>
+                  <td style="color:#000000;text-align:right;font-weight:800;">$${pt.revenue_mid.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
                 </tr>
                 <tr>
-                  <td style="color:#34d399;padding:2px 0;">Conservative (Low):</td>
-                  <td style="color:#e2e8f0;text-align:right;">$${pt.revenue_low.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                  <td style="color:#4a4a4a;padding:2px 0;">Conservative (Low):</td>
+                  <td style="color:#4a4a4a;text-align:right;">$${pt.revenue_low.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
                 </tr>
                 <tr>
-                  <td style="color:#93c5fd;padding:2px 0;">Optimistic (High):</td>
-                  <td style="color:#e2e8f0;text-align:right;">$${pt.revenue_high.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                  <td style="color:#4a4a4a;padding:2px 0;">Optimistic (High):</td>
+                  <td style="color:#4a4a4a;text-align:right;">$${pt.revenue_high.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
                 </tr>
               </table>
             </div>
@@ -170,31 +182,39 @@ export const ResponseCurve: React.FC<ResponseCurveProps> = ({
         nameLocation: 'middle',
         nameGap: 24,
         nameTextStyle: {
-          color: '#64748b',
+          color: '#000000',
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontWeight: 700,
           fontSize: 11,
         },
         axisLabel: {
-          color: '#64748b',
+          color: '#000000',
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontWeight: 700,
           fontSize: 11,
           formatter: (v: number) => `$${v}`,
         },
-        axisLine: { lineStyle: { color: '#1f2d45' } },
-        splitLine: { lineStyle: { color: '#141d2e', type: 'dashed' } },
+        axisLine: { lineStyle: { color: '#000000', width: 2 } },
+        splitLine: { lineStyle: { color: '#e1e1d8', type: 'dashed' } },
       },
       yAxis: {
         type: 'value',
         name: 'Revenue ($)',
         nameTextStyle: {
-          color: '#64748b',
+          color: '#000000',
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontWeight: 700,
           fontSize: 11,
         },
         axisLabel: {
-          color: '#64748b',
+          color: '#000000',
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontWeight: 700,
           fontSize: 11,
           formatter: (v: number) => `$${v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v}`,
         },
-        axisLine: { lineStyle: { color: '#1f2d45' } },
-        splitLine: { lineStyle: { color: '#141d2e', type: 'dashed' } },
+        axisLine: { lineStyle: { color: '#000000', width: 2 } },
+        splitLine: { lineStyle: { color: '#e1e1d8', type: 'dashed' } },
       },
       series: [
         // 1. Lower bound (stacked baseline, invisible)
@@ -217,7 +237,7 @@ export const ResponseCurve: React.FC<ResponseCurveProps> = ({
           symbol: 'none',
           lineStyle: { opacity: 0 },
           areaStyle: {
-            color: 'rgba(59, 130, 246, 0.16)',
+            color: 'rgba(120, 219, 246, 0.25)',
           },
           silent: true,
         },
@@ -230,10 +250,8 @@ export const ResponseCurve: React.FC<ResponseCurveProps> = ({
           showSymbol: false,
           symbolSize: 6,
           lineStyle: {
-            color: '#3b82f6',
-            width: 2.7,
-            shadowColor: 'rgba(59, 130, 246, 0.35)',
-            shadowBlur: 6,
+            color: '#000000',
+            width: 3,
           },
           markLine: {
             silent: false,
@@ -244,15 +262,21 @@ export const ResponseCurve: React.FC<ResponseCurveProps> = ({
                 name: 'Current Spend',
                 xAxis: currentSpend,
                 lineStyle: {
-                  type: 'dotted',
-                  color: '#f43f5e',
+                  type: 'dashed',
+                  color: '#f364cb',
                   width: 2,
                 },
                 label: {
                   show: true,
                   position: 'insideEndTop',
-                  color: '#f43f5e',
-                  fontSize: 10,
+                  color: '#000000',
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontWeight: 800,
+                  backgroundColor: '#f364cb',
+                  borderColor: '#000000',
+                  borderWidth: 1.5,
+                  padding: [2, 6],
+                  borderRadius: 4,
                   formatter: `Current\n$${Math.round(currentSpend)}`,
                 },
                 tooltip: {
@@ -266,14 +290,20 @@ export const ResponseCurve: React.FC<ResponseCurveProps> = ({
                 xAxis: recommendedSpend,
                 lineStyle: {
                   type: 'dashed',
-                  color: '#00ff88',
+                  color: '#82e66f',
                   width: 2,
                 },
                 label: {
                   show: true,
                   position: 'insideStartTop',
-                  color: '#00ff88',
-                  fontSize: 10,
+                  color: '#000000',
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontWeight: 800,
+                  backgroundColor: '#82e66f',
+                  borderColor: '#000000',
+                  borderWidth: 1.5,
+                  padding: [2, 6],
+                  borderRadius: 4,
                   formatter: `Rec\n$${Math.round(recommendedSpend)}`,
                 },
                 tooltip: {
@@ -291,7 +321,7 @@ export const ResponseCurve: React.FC<ResponseCurveProps> = ({
           data: [
             {
               value: [currentSpend, curRev.revenue_mid],
-              itemStyle: { color: '#f43f5e', borderColor: '#ffffff', borderWidth: 2 },
+              itemStyle: { color: '#f364cb', borderColor: '#000000', borderWidth: 2 },
               symbolSize: 10,
               tooltip: {
                 formatter: () =>
@@ -300,7 +330,7 @@ export const ResponseCurve: React.FC<ResponseCurveProps> = ({
             },
             {
               value: [recommendedSpend, recRev.revenue_mid],
-              itemStyle: { color: '#00ff88', borderColor: '#ffffff', borderWidth: 2 },
+              itemStyle: { color: '#82e66f', borderColor: '#000000', borderWidth: 2 },
               symbolSize: 12,
               tooltip: {
                 formatter: () =>
@@ -313,67 +343,98 @@ export const ResponseCurve: React.FC<ResponseCurveProps> = ({
     };
   }, [sortedPoints, currentSpend, recommendedSpend, curRev, recRev]);
 
+  const oppBg = opportunityScore !== undefined
+    ? (opportunityScore >= 70 ? '#82e66f' : opportunityScore >= 40 ? '#ffd23f' : '#f364cb')
+    : '#82e66f';
+
   return (
     <CurveErrorBoundary>
-      <div className="relative w-full rounded-xl border border-[#1f2d45] bg-[#111827] p-4">
-      {/* Header Bar */}
-      <div className="mb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-sm text-[#e2e8f0]">{campaignId}</span>
-          {sku && (
-            <span className="rounded bg-[#1a2235] px-2 py-0.5 text-[10px] font-mono text-[#94a3b8]">
-              {sku}
-            </span>
+      <div style={{
+        background: '#ffffff',
+        border: '3px solid #000000',
+        boxShadow: '4px 4px 0px #000000',
+        borderRadius: '10px',
+        padding: '16px',
+        fontFamily: "'Space Grotesk', sans-serif",
+      }}>
+        {/* Header Bar */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontWeight: 800, fontSize: '14px', color: '#000000' }}>{campaignId}</span>
+            {sku && (
+              <span style={{
+                background: '#f3f3ed',
+                border: '2px solid #000000',
+                borderRadius: '4px',
+                padding: '2px 8px',
+                fontSize: '11px',
+                fontWeight: 700,
+                color: '#000000',
+              }}>
+                {sku}
+              </span>
+            )}
+          </div>
+          {opportunityScore !== undefined && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: '#4a4a4a' }}>Opportunity:</span>
+              <span style={{
+                background: oppBg,
+                border: '2px solid #000000',
+                borderRadius: '4px',
+                boxShadow: '2px 2px 0px #000000',
+                padding: '2px 8px',
+                fontSize: '11px',
+                fontWeight: 800,
+                color: '#000000',
+              }}>
+                {Math.round(opportunityScore)}/100
+              </span>
+            </div>
           )}
         </div>
-        {opportunityScore !== undefined && (
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-[#64748b]">Opportunity:</span>
-            <span
-              className={`rounded px-1.5 py-0.5 text-xs font-bold ${
-                opportunityScore >= 70
-                  ? 'bg-[#00ff88]/10 text-[#00ff88]'
-                  : opportunityScore >= 40
-                  ? 'bg-[#ffb800]/10 text-[#ffb800]'
-                  : 'bg-[#ff4466]/10 text-[#ff4466]'
-              }`}
-            >
-              {Math.round(opportunityScore)}/100
-            </span>
-          </div>
-        )}
-      </div>
 
-      {/* Chart */}
-      <div style={{ height }}>
-        <ReactECharts
-          option={option}
-          style={{ height: '100%', width: '100%' }}
-          notMerge={true}
-          lazyUpdate={true}
-        />
-      </div>
+        {/* Chart */}
+        <div style={{ height }}>
+          <ReactECharts
+            option={option}
+            style={{ height: '100%', width: '100%' }}
+            notMerge={true}
+            lazyUpdate={true}
+          />
+        </div>
 
-      {/* Legend & Summary */}
-      <div className="mt-2 flex flex-wrap items-center justify-between border-t border-[#1f2d45] pt-2 text-[11px] text-[#64748b]">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-[#f43f5e]" />
-            <span>Current: ${Math.round(currentSpend)}</span>
+        {/* Legend & Summary */}
+        <div style={{
+          marginTop: '10px',
+          paddingTop: '10px',
+          borderTop: '2px solid #000000',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: '11px',
+          fontWeight: 700,
+          color: '#000000',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f364cb', border: '1.5px solid #000000' }} />
+              <span>Current: ${Math.round(currentSpend)}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#82e66f', border: '1.5px solid #000000' }} />
+              <span>Recommended: ${Math.round(recommendedSpend)}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-[#00ff88]" />
-            <span>Recommended: ${Math.round(recommendedSpend)}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ width: '14px', height: '10px', background: 'rgba(120, 219, 246, 0.4)', border: '1.5px solid #000000', borderRadius: '2px' }} />
+            <span>95% Confidence Band</span>
           </div>
         </div>
-        <div className="flex items-center gap-1 text-[10px]">
-          <span className="h-2 w-3 rounded-sm bg-[#3b82f6]/20 border border-[#3b82f6]/40" />
-          <span>95% Confidence Band</span>
-        </div>
       </div>
-    </div>
-  </CurveErrorBoundary>
-);
+    </CurveErrorBoundary>
+  );
 };
 
 export default ResponseCurve;

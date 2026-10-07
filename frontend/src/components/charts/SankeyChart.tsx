@@ -40,7 +40,18 @@ export class ChartErrorBoundary extends Component<ErrorBoundaryProps, ErrorBound
     if (this.state.hasError) {
       return (
         this.props.fallback ?? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-[#1f2d45] bg-[#111827] p-8 text-center text-xs text-[#94a3b8]">
+          <div style={{
+            background: '#ffffff',
+            border: '3px solid #000000',
+            boxShadow: '4px 4px 0px #000000',
+            borderRadius: '10px',
+            padding: '24px',
+            textAlign: 'center',
+            fontFamily: "'Space Grotesk', sans-serif",
+            color: '#4a4a4a',
+            fontSize: '12px',
+            fontWeight: 700,
+          }}>
             Unable to render Sankey flow chart.
           </div>
         )
@@ -63,8 +74,8 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
 
   // Pre-calculate sources (decreases) and targets (increases)
   const { sources, targets, totalSource, totalTarget } = useMemo(() => {
-    const srcPalette = ['#f43f5e', '#fb7185', '#e11d48', '#fda4af', '#f87171'];
-    const tgtPalette = ['#00ff88', '#34d399', '#10b981', '#6ee7b7', '#059669'];
+    const srcPalette = ['#f364cb', '#f783d7', '#e04eb5', '#ff94e2', '#d639a9'];
+    const tgtPalette = ['#82e66f', '#96eb85', '#6ed95a', '#a8f09b', '#5ac446'];
 
     const src: Array<{ name: string; campaignId: string; amount: number; color: string }> = [];
     const tgt: Array<{ name: string; campaignId: string; amount: number; color: string }> = [];
@@ -110,16 +121,23 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
   if (!activeChanges || activeChanges.length === 0) {
     return (
       <div
-        className="flex flex-col items-center justify-center rounded-xl border border-[#1f2d45] bg-[#111827] p-8 text-center"
-        style={{ height }}
+        style={{
+          height,
+          background: '#ffffff',
+          border: '3px solid #000000',
+          boxShadow: '4px 4px 0px #000000',
+          borderRadius: '10px',
+          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          fontFamily: "'Space Grotesk', sans-serif",
+        }}
       >
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#1a2235] text-[#3b82f6]">
-          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-        <div className="mb-1 text-sm font-semibold text-[#e2e8f0]">Portfolio Spend is Stable</div>
-        <p className="max-w-md text-xs text-[#64748b]">
+        <div style={{ fontSize: '14px', fontWeight: 800, color: '#000000', marginBottom: '6px' }}>Portfolio Spend is Stable</div>
+        <p style={{ fontSize: '12px', color: '#666666', fontWeight: 600, margin: 0 }}>
           No budget reallocations today. Portfolio spend is stable.
         </p>
       </div>
@@ -131,16 +149,23 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
   if (sources.length === 0 || targets.length === 0 || totalSource <= 0 || totalTarget <= 0) {
     return (
       <div
-        className="flex flex-col items-center justify-center rounded-xl border border-[#1f2d45] bg-[#111827] p-8 text-center"
-        style={{ height }}
+        style={{
+          height,
+          background: '#ffffff',
+          border: '3px solid #000000',
+          boxShadow: '4px 4px 0px #000000',
+          borderRadius: '10px',
+          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          fontFamily: "'Space Grotesk', sans-serif",
+        }}
       >
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#1a2235] text-[#f59e0b]">
-          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-        </div>
-        <div className="mb-1 text-sm font-semibold text-[#e2e8f0]">Reallocation Flow Incomplete</div>
-        <p className="max-w-md text-xs text-[#64748b]">
+        <div style={{ fontSize: '14px', fontWeight: 800, color: '#000000', marginBottom: '6px' }}>Reallocation Flow Incomplete</div>
+        <p style={{ fontSize: '12px', color: '#666666', fontWeight: 600, margin: 0 }}>
           Adjust both decreasing and increasing campaigns to visualize budget reallocation flows.
         </p>
       </div>
@@ -162,7 +187,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         name: `Reserve Savings [+$${diff}]`,
         campaignId: 'Reserve Savings',
         amount: diff,
-        color: '#3b82f6',
+        color: '#78dbf6',
       });
     } else if (totalInc > totalDec) {
       const diff = totalInc - totalDec;
@@ -170,7 +195,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         name: `Budget Expansion [-$${diff}]`,
         campaignId: 'Budget Expansion',
         amount: diff,
-        color: '#3b82f6',
+        color: '#78dbf6',
       });
     }
 
@@ -184,11 +209,11 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     const nodes = [
       ...workingSources.map((s) => ({
         name: s.name,
-        itemStyle: { color: s.color, borderColor: '#1f2d45', borderWidth: 1 },
+        itemStyle: { color: s.color, borderColor: '#000000', borderWidth: 2 },
       })),
       ...workingTargets.map((t) => ({
         name: t.name,
-        itemStyle: { color: t.color, borderColor: '#1f2d45', borderWidth: 1 },
+        itemStyle: { color: t.color, borderColor: '#000000', borderWidth: 2 },
       })),
     ];
 
@@ -215,38 +240,38 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       animationDuration: 600,
       tooltip: {
         trigger: 'item',
-        backgroundColor: '#0a0d14',
-        borderColor: '#1f2d45',
-        borderWidth: 1,
+        backgroundColor: '#ffffff',
+        borderColor: '#000000',
+        borderWidth: 3,
         padding: [10, 14],
         textStyle: {
-          color: '#e2e8f0',
-          fontFamily: 'Inter, sans-serif',
+          color: '#000000',
+          fontFamily: "'Space Grotesk', sans-serif",
           fontSize: 12,
         },
         formatter: (params: any) => {
           if (params.dataType === 'edge') {
             const edge = params.data;
             return `
-              <div style="font-family:Inter,sans-serif;min-width:200px;">
-                <div style="font-size:11px;color:#94a3b8;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">
+              <div style="font-family:'Space Grotesk',sans-serif;min-width:200px;color:#000000;">
+                <div style="font-size:11px;color:#4a4a4a;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">
                   Budget Reallocation Flow
                 </div>
-                <div style="font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:6px;">
+                <div style="font-size:14px;font-weight:800;color:#000000;margin-bottom:6px;border-bottom:2px solid #000;padding-bottom:3px;">
                   Reallocating $${Math.round(edge.value).toLocaleString()}
                 </div>
-                <div style="display:flex;flex-direction:column;gap:2px;font-size:12px;">
-                  <span style="color:#64748b;">From: <b style="color:#f43f5e;">${edge.sourceCamp}</b></span>
-                  <span style="color:#64748b;">To: <b style="color:#00ff88;">${edge.targetCamp}</b></span>
+                <div style="display:flex;flex-direction:column;gap:3px;font-size:12px;">
+                  <span style="color:#000000;">From: <b style="color:#f364cb;">${edge.sourceCamp}</b></span>
+                  <span style="color:#000000;">To: <b style="color:#82e66f;">${edge.targetCamp}</b></span>
                 </div>
               </div>
             `;
           } else {
             return `
-              <div style="font-family:Inter,sans-serif;padding:2px 4px;">
-                <div style="font-weight:700;color:#e2e8f0;font-size:13px;">${params.name}</div>
-                <div style="font-size:12px;color:#94a3b8;margin-top:2px;">
-                  Total Shift: <b>$${Math.round(params.value).toLocaleString()}</b>
+              <div style="font-family:'Space Grotesk',sans-serif;padding:2px 4px;color:#000000;">
+                <div style="font-weight:800;color:#000000;font-size:13px;border-bottom:2px solid #000;padding-bottom:2px;margin-bottom:4px;">${params.name}</div>
+                <div style="font-size:12px;color:#4a4a4a;margin-top:2px;font-weight:600;">
+                  Total Shift: <b style="color:#000000;font-weight:800;">$${Math.round(params.value).toLocaleString()}</b>
                 </div>
               </div>
             `;
@@ -269,15 +294,15 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
           bottom: 20,
           left: 20,
           label: {
-            color: '#e2e8f0',
-            fontFamily: 'Inter, sans-serif',
+            color: '#000000',
+            fontFamily: "'Space Grotesk', sans-serif",
             fontSize: 11,
-            fontWeight: 500,
+            fontWeight: 700,
           },
           lineStyle: {
             color: 'source',
             curveness: 0.5,
-            opacity: 0.42,
+            opacity: 0.45,
           },
           data: nodes,
           links: links,
@@ -290,32 +315,66 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     <ChartErrorBoundary
       fallback={
         <div
-          className="flex flex-col items-center justify-center rounded-xl border border-[#1f2d45] bg-[#111827] p-8 text-center"
-          style={{ height }}
+          style={{
+            height,
+            background: '#ffffff',
+            border: '3px solid #000000',
+            boxShadow: '4px 4px 0px #000000',
+            borderRadius: '10px',
+            padding: '24px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            fontFamily: "'Space Grotesk', sans-serif",
+          }}
         >
-          <div className="mb-1 text-sm font-semibold text-[#e2e8f0]">Unable to Render Reallocation Chart</div>
-          <p className="max-w-md text-xs text-[#64748b]">
+          <div style={{ fontSize: '14px', fontWeight: 800, color: '#000000', marginBottom: '6px' }}>Unable to Render Reallocation Chart</div>
+          <p style={{ fontSize: '12px', color: '#666666', fontWeight: 600, margin: 0 }}>
             Adjust both decreasing and increasing campaigns to visualize budget reallocation flows.
           </p>
         </div>
       }
     >
-      <div className="relative w-full rounded-xl border border-[#1f2d45] bg-[#111827] p-4">
+      <div style={{
+        background: '#ffffff',
+        border: '3px solid #000000',
+        boxShadow: '4px 4px 0px #000000',
+        borderRadius: '10px',
+        padding: '16px',
+        fontFamily: "'Space Grotesk', sans-serif",
+      }}>
         {/* Header */}
-        <div className="mb-2 flex items-center justify-between border-b border-[#1f2d45] pb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-[#e2e8f0]">Budget Reallocation Flow</span>
-            <span className="rounded bg-[#1a2235] px-2 py-0.5 text-[10px] text-[#64748b]">
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: '2px solid #000000',
+          paddingBottom: '10px',
+          marginBottom: '10px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 800, color: '#000000' }}>Budget Reallocation Flow</span>
+            <span style={{
+              background: '#78dbf6',
+              border: '2px solid #000000',
+              borderRadius: '4px',
+              padding: '2px 8px',
+              fontSize: '10px',
+              fontWeight: 700,
+              color: '#000000',
+            }}>
               Source → Target
             </span>
           </div>
-          <div className="flex items-center gap-4 text-[11px] text-[#64748b]">
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-[#f43f5e]" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '11px', fontWeight: 700, color: '#000000' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f364cb', border: '1.5px solid #000000' }} />
               <span>Decreased Spend</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-[#00ff88]" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#82e66f', border: '1.5px solid #000000' }} />
               <span>Increased Spend</span>
             </div>
           </div>

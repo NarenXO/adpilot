@@ -10,21 +10,26 @@ if (typeof window !== 'undefined') {
 
 // Invente '26 Neo-Brutalist design tokens
 const T = {
-  bg:      '#f3f3ed',
-  card:    '#ffffff',
-  border:  '3px solid #000000',
-  shadow:  '5px 5px 0px #000000',
-  shadowSm:'3px 3px 0px #000000',
-  lime:    '#82e66f',
-  pink:    '#f364cb',
-  cyan:    '#78dbf6',
-  yellow:  '#ffd23f',
-  black:   '#000000',
-  textPrimary:   '#000000',
-  textSecondary: '#333333',
-  textSubtle:    '#666666',
-  fontMono: 'JetBrains Mono, Consolas, monospace',
-  fontSans: 'Inter, system-ui, sans-serif',
+  bg:          '#f3f3ed',
+  gridLine:    '#e1e1d8',
+  card:        '#ffffff',
+  border:      '3px solid #000000',
+  borderThin:  '2px solid #000000',
+  shadow:      '4px 4px 0px #000000',
+  shadowSm:    '3px 3px 0px #000000',
+  radius:      '10px',
+  lime:        '#82e66f',
+  pink:        '#f364cb',
+  cyan:        '#78dbf6',
+  yellow:      '#ffd23f',
+  black:       '#000000',
+  white:       '#ffffff',
+  textPrimary: '#000000',
+  textSecondary:'#333333',
+  textSubtle:  '#666666',
+  textMuted:   '#4a4a4a',
+  fontSans:    "'Space Grotesk', sans-serif",
+  fontMono:    "'Space Grotesk', monospace",
 };
 
 class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean; error: Error | null }> {
@@ -173,20 +178,33 @@ async function doRollback(id: string) {
 }
 
 function ScoreBadge({ score }: { score: number }) {
-  const accent = score >= 70 ? T.lime : score >= 40 ? T.yellow : T.pink;
-  const label  = score >= 70 ? 'HIGH' : score >= 40 ? 'MED' : 'LOW';
-  const circ   = 2 * Math.PI * 18;
+  const num = Number(score ?? 0);
+  const accent = num >= 70 ? T.lime : num >= 40 ? T.yellow : T.pink;
+  const label  = num >= 70 ? 'HIGH' : num >= 40 ? 'MED' : 'LOW';
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{ position: 'relative', width: 44, height: 44 }}>
-        <svg width="44" height="44" viewBox="0 0 44 44" style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx="22" cy="22" r="18" fill="none" stroke="#ddd" strokeWidth="3.5" />
-          <circle cx="22" cy="22" r="18" fill="none" stroke={accent} strokeWidth="3.5"
-            strokeDasharray={`${(score / 100) * circ} ${circ}`} strokeLinecap="round" />
-        </svg>
-        <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: T.black }}>{Math.round(score)}</span>
+      <div style={{
+        background: '#ffffff',
+        border: '2px solid #000000',
+        borderRadius: '6px',
+        padding: '3px 8px',
+        fontWeight: 800,
+        fontSize: 12,
+        color: '#000000',
+        boxShadow: '2px 2px 0px #000000',
+      }}>
+        {Math.round(num)}
       </div>
-      <span style={{ background: accent, color: T.black, border: T.border, padding: '2px 7px', fontSize: 10, fontWeight: 800, boxShadow: T.shadowSm }}>{label}</span>
+      <span style={{
+        background: accent,
+        color: '#000000',
+        border: '2px solid #000000',
+        borderRadius: '4px',
+        padding: '2px 8px',
+        fontSize: 10,
+        fontWeight: 800,
+        boxShadow: '2px 2px 0px #000000',
+      }}>{label}</span>
     </div>
   );
 }
@@ -196,10 +214,10 @@ function BarRow({ label, value, color }: { label: string; value: number; color: 
   return (
     <div style={{ marginBottom: 6 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-        <span style={{ fontSize: 10, color: T.textSubtle }}>{label}</span>
-        <span style={{ fontSize: 10, fontWeight: 800, color: T.black }}>{num.toFixed(0)}</span>
+        <span style={{ fontSize: 10, color: T.textMuted, fontWeight: 700 }}>{label}</span>
+        <span style={{ fontSize: 10, fontWeight: 800, color: '#000000' }}>{num.toFixed(0)}</span>
       </div>
-      <div style={{ height: 6, background: '#e0e0d8', border: '1.5px solid #000', overflow: 'hidden' }}>
+      <div style={{ height: 8, background: '#e1e1d8', border: '1.5px solid #000000', borderRadius: '4px', overflow: 'hidden' }}>
         <div style={{ height: '100%', width: `${Math.min(100, (num / 25) * 100)}%`, background: color, transition: 'width 0.6s' }} />
       </div>
     </div>
@@ -208,14 +226,14 @@ function BarRow({ label, value, color }: { label: string; value: number; color: 
 
 function StatusPill({ status }: { status: ActionItem['status'] }) {
   const map: Record<string, { accent: string; label: string }> = {
-    pending:     { accent: T.yellow, label: 'Pending'     },
-    rolling_out: { accent: T.cyan,   label: 'Rolling Out' },
-    approved:    { accent: T.lime,   label: 'Approved'    },
-    rolled_back: { accent: T.pink,   label: 'Rolled Back' },
-    rejected:    { accent: '#aaa',   label: 'Rejected'    },
+    pending:     { accent: T.yellow, label: 'REVIEW'   },
+    rolling_out: { accent: T.cyan,   label: 'ROLLOUT'  },
+    approved:    { accent: T.lime,   label: 'AUTO'     },
+    rolled_back: { accent: T.pink,   label: 'BLOCK'    },
+    rejected:    { accent: T.pink,   label: 'REJECTED' },
   };
   const s = map[status] ?? map['pending'];
-  return <span style={{ background: s.accent, color: T.black, border: T.border, padding: '2px 8px', fontSize: 10, fontWeight: 800, boxShadow: '2px 2px 0px #000' }}>{s.label}</span>;
+  return <span style={{ background: s.accent, color: '#000000', border: '2px solid #000000', padding: '2px 8px', fontSize: 10, fontWeight: 800, borderRadius: '4px', boxShadow: '1.5px 1.5px 0px #000000' }}>{s.label}</span>;
 }
 
 function ActionCard({ action, onApprove, onRollback }: { action: ActionItem; onApprove: (id: string) => void; onRollback: (id: string) => void }) {
@@ -227,47 +245,87 @@ function ActionCard({ action, onApprove, onRollback }: { action: ActionItem; onA
   const guardDays = action.rollback_guard?.window_days ?? 1;
 
   return (
-    <div style={{ background: T.card, border: T.border, boxShadow: T.shadow, padding: '14px 16px', marginBottom: 14, transition: 'transform 0.1s' }}
+    <div style={{
+      background: T.card,
+      border: T.border,
+      boxShadow: T.shadow,
+      borderRadius: T.radius,
+      padding: '14px 16px',
+      marginBottom: 14,
+      transition: 'transform 0.1s',
+    }}
       onMouseEnter={e => (e.currentTarget.style.transform = 'translate(-2px,-2px)')}
       onMouseLeave={e => (e.currentTarget.style.transform = 'translate(0,0)')}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontFamily: T.fontMono, fontSize: 11, fontWeight: 700, color: T.black }}>{action.id}</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: '#000000' }}>{action.id}</span>
           <StatusPill status={action.status} />
         </div>
-        <span style={{ fontSize: 10, color: T.textSubtle }}>{action.created_at ? new Date(action.created_at).toLocaleDateString() : 'Active'}</span>
+        <span style={{ fontSize: 10, color: T.textSubtle, fontWeight: 600 }}>{action.created_at ? new Date(action.created_at).toLocaleDateString() : 'Active'}</span>
       </div>
       {changes.map(ch => {
         const fromSpend = ch.from_spend ?? 0;
         const toSpend = ch.to_spend ?? 0;
         const delta = Math.round(toSpend - fromSpend);
         return (
-          <div key={ch.campaign_id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, background: T.bg, border: '1.5px solid #000', padding: '8px 12px' }}>
-            <span style={{ fontSize: 11, color: T.textSecondary, flex: 1, fontFamily: T.fontMono }}>{ch.campaign_id}</span>
-            <span style={{ fontSize: 12, color: T.pink, fontWeight: 700 }}>${Math.round(fromSpend)}</span>
-            <span style={{ fontSize: 11, color: T.textSubtle }}>&#8594;</span>
-            <span style={{ fontSize: 12, color: T.black, fontWeight: 700 }}>${Math.round(toSpend)}</span>
-            <span style={{ fontSize: 10, fontWeight: 800, background: delta >= 0 ? T.lime : T.pink, color: T.black, padding: '1px 5px', border: '1.5px solid #000' }}>{delta >= 0 ? '+' : ''}{delta}</span>
+          <div key={ch.campaign_id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, background: T.bg, border: '2px solid #000000', borderRadius: '6px', padding: '8px 12px' }}>
+            <span style={{ fontSize: 11, color: '#000000', flex: 1, fontWeight: 700 }}>{ch.campaign_id}</span>
+            <span style={{ fontSize: 12, color: T.pink, fontWeight: 800 }}>${Math.round(fromSpend)}</span>
+            <span style={{ fontSize: 11, color: T.textSubtle }}>→</span>
+            <span style={{ fontSize: 12, color: '#000000', fontWeight: 800 }}>${Math.round(toSpend)}</span>
+            <span style={{ fontSize: 10, fontWeight: 800, background: delta >= 0 ? T.lime : T.pink, color: '#000000', padding: '1px 6px', border: '1.5px solid #000000', borderRadius: '4px', boxShadow: '1px 1px 0px #000000' }}>{delta >= 0 ? '+' : ''}{delta}</span>
           </div>
         );
       })}
       {(action.rollout_pct ?? 0) > 0 && (
         <div style={{ marginBottom: 10 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-            <span style={{ fontSize: 10, color: T.textSubtle }}>Rollout</span>
-            <span style={{ fontSize: 10, color: T.black, fontWeight: 700 }}>{action.rollout_pct}%</span>
+            <span style={{ fontSize: 10, color: T.textSubtle, fontWeight: 700 }}>Rollout</span>
+            <span style={{ fontSize: 10, color: '#000000', fontWeight: 800 }}>{action.rollout_pct}%</span>
           </div>
-          <div style={{ height: 8, background: '#e0e0d8', border: '1.5px solid #000' }}>
+          <div style={{ height: 8, background: '#e1e1d8', border: '1.5px solid #000000', borderRadius: '4px', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${Math.min(100, action.rollout_pct)}%`, background: T.cyan }} />
           </div>
         </div>
       )}
-      <div style={{ fontSize: 10, color: T.textSubtle, marginBottom: 10, fontFamily: T.fontMono }}>
+      <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 10, fontWeight: 700 }}>
         Guard: {guardMetric} below {guardThreshold} / {guardDays}d
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
-        {canApprove  && <button id={`approve-${action.id}`}  onClick={() => onApprove(action.id)}  style={{ flex: 1, padding: '7px 0', background: T.lime,  border: T.border, color: T.black, fontSize: 11, fontWeight: 800, cursor: 'pointer', boxShadow: T.shadowSm }}>Approve ✓</button>}
-        {canRollback && <button id={`rollback-${action.id}`} onClick={() => onRollback(action.id)} style={{ flex: 1, padding: '7px 0', background: T.pink,  border: T.border, color: T.black, fontSize: 11, fontWeight: 800, cursor: 'pointer', boxShadow: T.shadowSm }}>Rollback ↩</button>}
+        {canApprove && (
+          <button id={`approve-${action.id}`} onClick={() => onApprove(action.id)} style={{
+            flex: 1,
+            padding: '7px 0',
+            background: T.lime,
+            border: '2px solid #000000',
+            boxShadow: '2px 2px 0px #000000',
+            color: '#000000',
+            fontWeight: 700,
+            fontSize: 11,
+            cursor: 'pointer',
+            borderRadius: '6px',
+            fontFamily: T.fontSans,
+          }}>
+            Approve ✓
+          </button>
+        )}
+        {canRollback && (
+          <button id={`rollback-${action.id}`} onClick={() => onRollback(action.id)} style={{
+            flex: 1,
+            padding: '7px 0',
+            background: T.pink,
+            border: '2px solid #000000',
+            boxShadow: '2px 2px 0px #000000',
+            color: '#000000',
+            fontWeight: 700,
+            fontSize: 11,
+            cursor: 'pointer',
+            borderRadius: '6px',
+            fontFamily: T.fontSans,
+          }}>
+            Rollback ↩
+          </button>
+        )}
       </div>
     </div>
   );
@@ -300,8 +358,8 @@ function WhatIfPanel({ curves }: { curves: CurveData[] }) {
   const sankeyChanges = useMemo(() => curves.map(c => ({ campaignId: c.campaign_id, fromSpend: c.current_spend, toSpend: sliders[c.campaign_id] ?? c.current_spend })), [curves, sliders]);
   return (
     <div>
-      <div style={{ background: T.card, border: T.border, boxShadow: T.shadow, padding: 18, marginBottom: 16 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, color: T.black, marginBottom: 14, letterSpacing: '0.08em' }}>BUDGET SLIDERS</div>
+      <div style={{ background: T.card, border: T.border, boxShadow: T.shadow, borderRadius: T.radius, padding: 20, marginBottom: 16 }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: '#000000', marginBottom: 16, letterSpacing: '0.06em' }}>BUDGET SLIDERS</div>
         {curves.map(curve => {
           const val = sliders[curve.campaign_id] ?? curve.current_spend;
           const max = Math.max(curve.current_spend * 1.5, 800);
@@ -312,32 +370,32 @@ function WhatIfPanel({ curves }: { curves: CurveData[] }) {
             <div key={curve.campaign_id} style={{ marginBottom: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <div>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: T.black, fontFamily: T.fontMono }}>{curve.campaign_id}</span>
-                  <span style={{ fontSize: 10, color: T.textSubtle, marginLeft: 6 }}>{curve.sku}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: '#000000' }}>{curve.campaign_id}</span>
+                  <span style={{ fontSize: 11, color: T.textSubtle, marginLeft: 8, fontWeight: 600 }}>{curve.sku}</span>
                 </div>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <span style={{ fontSize: 10, color: T.textSubtle }}>was ${Math.round(curve.current_spend)}</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, background: up ? T.lime : dn ? T.pink : T.yellow, color: T.black, padding: '1px 8px', border: '2px solid #000' }}>${Math.round(val)}</span>
+                  <span style={{ fontSize: 11, color: T.textSubtle, fontWeight: 600 }}>was ${Math.round(curve.current_spend)}</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, background: up ? T.lime : dn ? T.pink : T.yellow, color: '#000000', padding: '2px 8px', border: '2px solid #000000', borderRadius: '4px', boxShadow: '1.5px 1.5px 0px #000000' }}>${Math.round(val)}</span>
                 </div>
               </div>
               <div style={{ position: 'relative', paddingTop: 14 }}>
-                <div style={{ position: 'absolute', top: 0, left: `${Math.min(99, (curve.recommended_spend / max) * 100)}%`, transform: 'translateX(-50%)', fontSize: 8, color: T.black, fontWeight: 800, whiteSpace: 'nowrap', background: T.lime, padding: '0 3px', border: '1px solid #000' }}>REC</div>
+                <div style={{ position: 'absolute', top: 0, left: `${Math.min(99, (curve.recommended_spend / max) * 100)}%`, transform: 'translateX(-50%)', fontSize: 9, color: '#000000', fontWeight: 800, whiteSpace: 'nowrap', background: T.lime, padding: '1px 5px', border: '1.5px solid #000000', borderRadius: '3px' }}>REC</div>
                 <input id={`slider-${curve.campaign_id}`} type="range" min={50} max={max} step={25} value={val}
                   onChange={e => setSliders(prev => ({ ...prev, [curve.campaign_id]: Number(e.target.value) }))}
-                  style={{ width: '100%', height: 6, appearance: 'none' as React.CSSProperties['appearance'], background: `linear-gradient(90deg,#000 ${pct}%,#d8d8d0 ${pct}%)`, cursor: 'pointer', outline: 'none', border: '1.5px solid #000' }} />
+                  style={{ width: '100%', height: 8, appearance: 'none' as React.CSSProperties['appearance'], background: `linear-gradient(90deg,#000000 ${pct}%,#e1e1d8 ${pct}%)`, cursor: 'pointer', outline: 'none', border: '2px solid #000000', borderRadius: '4px' }} />
               </div>
             </div>
           );
         })}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 4, paddingTop: 14, borderTop: '3px solid #000' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 4, paddingTop: 16, borderTop: '2px solid #000000' }}>
           {[
             { l: 'Spend Delta',  accent: T.lime,   v: totSim - totCur,                   signed: true,  fmt: (n: number) => `$${Math.abs(n) >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(Math.round(n))}` },
             { l: 'Revenue Lift', accent: T.cyan,   v: simRev - curRev,                   signed: true,  fmt: (n: number) => `$${Math.abs(n) >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(Math.round(n))}` },
             { l: 'Sim ROAS',     accent: T.yellow, v: totSim > 0 ? simRev / totSim : 0,  signed: false, fmt: (n: number) => `${n.toFixed(2)}x` },
           ].map(({ l, accent, v, signed, fmt }) => (
-            <div key={l} style={{ background: accent, border: T.border, boxShadow: T.shadowSm, padding: '10px 12px', textAlign: 'center' as const }}>
-              <div style={{ fontSize: 9, color: T.black, marginBottom: 4, fontWeight: 700, letterSpacing: '0.06em' }}>{l.toUpperCase()}</div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: T.black }}>
+            <div key={l} style={{ background: accent, border: T.borderThin, borderRadius: '8px', boxShadow: '2px 2px 0px #000000', padding: '10px 12px', textAlign: 'center' as const }}>
+              <div style={{ fontSize: 10, color: '#000000', marginBottom: 4, fontWeight: 800, letterSpacing: '0.06em' }}>{l.toUpperCase()}</div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: '#000000' }}>
                 {signed && v > 0 ? '+' : ''}{fmt(v)}
               </div>
             </div>
@@ -407,89 +465,201 @@ function OptimizerStudioContent() {
   ];
 
   return (
-    <div style={{ margin: '-2rem', minHeight: 'calc(100vh - 130px)', background: T.bg, fontFamily: T.fontSans, color: T.textPrimary }}>
+    <div style={{ margin: '-2rem', minHeight: 'calc(100vh - 130px)', background: T.bg, fontFamily: T.fontSans, color: T.textPrimary, padding: '24px 32px' }}>
       {/* Header */}
-      <div style={{ background: T.black, borderBottom: '3px solid #000', padding: '20px 32px 18px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <div style={{ width: 34, height: 34, background: T.lime, border: '3px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>&#9889;</div>
-              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, letterSpacing: '-0.02em', color: '#fff' }}>Optimizer Studio</h1>
-              <span style={{ background: T.cyan, color: T.black, border: '2px solid #fff', padding: '2px 10px', fontSize: 10, fontWeight: 800, letterSpacing: '0.06em' }}>SLSQP Engine</span>
-            </div>
-            <p style={{ margin: 0, fontSize: 11, color: '#aaa' }}>Budget allocation optimizer · Predictive opportunity scoring · Policy-gated actions</p>
+      <div style={{
+        background: T.card,
+        border: T.border,
+        boxShadow: T.shadow,
+        borderRadius: T.radius,
+        padding: '20px 24px',
+        marginBottom: '20px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+            <div style={{ width: 34, height: 34, background: T.lime, border: T.borderThin, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, boxShadow: '2px 2px 0px #000' }}>⚡</div>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, letterSpacing: '-0.02em', color: '#000000' }}>Optimizer Studio</h1>
+            <span style={{ background: T.cyan, color: '#000000', border: T.borderThin, borderRadius: '4px', padding: '2px 10px', fontSize: 10, fontWeight: 800, letterSpacing: '0.06em', boxShadow: '2px 2px 0px #000' }}>SLSQP Engine</span>
           </div>
-          <div id="kill-switch-container" style={{ display: 'flex', alignItems: 'center', gap: 10, background: ksActive ? T.pink : '#222', border: `3px solid ${ksActive ? T.pink : '#555'}`, boxShadow: ksActive ? `5px 5px 0px ${T.pink}` : '5px 5px 0px #444', padding: '8px 16px', transition: 'all 0.2s' }}>
-            <span style={{ fontSize: 11, color: ksActive ? T.black : '#aaa', fontWeight: 700 }}>{ksActive ? 'KILL SWITCH ACTIVE' : 'System Active'}</span>
-            <button id="kill-switch-toggle" onClick={() => setKsActive(p => !p)} style={{ width: 40, height: 22, background: ksActive ? T.black : '#444', border: '2px solid #fff', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
-              <div style={{ width: 14, height: 14, background: ksActive ? T.pink : '#aaa', position: 'absolute', top: 2, left: ksActive ? 22 : 2, transition: 'left 0.2s' }} />
-            </button>
-          </div>
+          <p style={{ margin: 0, fontSize: 11, color: T.textMuted, fontWeight: 600 }}>Budget allocation optimizer · Predictive opportunity scoring · Policy-gated actions</p>
         </div>
-        {/* KPI Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginTop: 18 }}>
-          {kpiCards.map(({ id, label, val, sub, accent }) => (
-            <div key={id} id={id} style={{ background: accent, border: '3px solid #fff', boxShadow: '4px 4px 0px rgba(255,255,255,0.3)', padding: '14px 18px' }}>
-              <div style={{ fontSize: 9, color: T.black, marginBottom: 4, fontWeight: 800, letterSpacing: '0.1em' }}>{label.toUpperCase()}</div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                <span style={{ fontSize: 22, fontWeight: 900, color: T.black }}>{val}</span>
-                <span style={{ fontSize: 10, color: 'rgba(0,0,0,0.6)' }}>{sub}</span>
-              </div>
-            </div>
-          ))}
+        <div id="kill-switch-container" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          background: ksActive ? T.pink : T.card,
+          border: T.border,
+          boxShadow: T.shadowSm,
+          borderRadius: '8px',
+          padding: '8px 16px',
+          transition: 'all 0.2s',
+        }}>
+          <span style={{ fontSize: 11, color: '#000000', fontWeight: 800 }}>{ksActive ? 'KILL SWITCH ACTIVE' : 'System Active'}</span>
+          <button id="kill-switch-toggle" onClick={() => setKsActive(p => !p)} style={{
+            width: 44,
+            height: 24,
+            background: ksActive ? '#000000' : '#e1e1d8',
+            border: T.borderThin,
+            borderRadius: '12px',
+            cursor: 'pointer',
+            position: 'relative',
+            transition: 'background 0.2s',
+          }}>
+            <div style={{
+              width: 16,
+              height: 16,
+              background: ksActive ? T.pink : '#ffffff',
+              border: '1.5px solid #000000',
+              borderRadius: '50%',
+              position: 'absolute',
+              top: 2,
+              left: ksActive ? 22 : 2,
+              transition: 'left 0.2s',
+            }} />
+          </button>
         </div>
       </div>
+
+      {/* KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
+        {kpiCards.map(({ id, label, val, sub, accent }) => (
+          <div key={id} id={id} style={{
+            background: T.card,
+            border: T.border,
+            boxShadow: T.shadow,
+            borderRadius: T.radius,
+            padding: '16px 20px',
+            position: 'relative',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <span style={{ fontSize: 10, color: T.textMuted, fontWeight: 800, letterSpacing: '0.08em' }}>{label.toUpperCase()}</span>
+              <span style={{ width: 12, height: 12, borderRadius: '50%', background: accent, border: '2px solid #000000' }} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontSize: 24, fontWeight: 900, color: '#000000' }}>{val}</span>
+              <span style={{ fontSize: 11, color: T.textSubtle, fontWeight: 700 }}>{sub}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Body */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', height: 'calc(100vh - 234px)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20 }}>
         {/* Left */}
-        <div style={{ overflowY: 'auto', padding: '20px 24px', borderRight: '3px solid #000' }}>
+        <div style={{ overflowY: 'auto' }}>
           {/* Rec selector */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' as const }}>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' as const }}>
             {(activeRecs ?? []).map(rec => {
               const active = selectedRec === rec.id;
               const modeStr = String(rec.mode ?? 'profit').toLowerCase();
               const modeAccent = modeStr === 'profit' ? T.lime : T.cyan;
               return (
                 <button key={rec.id} id={`rec-btn-${rec.id}`} onClick={() => setSelectedRec(rec.id)}
-                  style={{ padding: '7px 16px', fontSize: 11, fontWeight: 800, cursor: 'pointer', background: active ? T.black : T.card, border: T.border, color: active ? T.lime : T.black, boxShadow: active ? T.shadowSm : 'none', transition: 'all 0.15s' }}>
+                  style={{
+                    padding: '8px 18px',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    background: active ? T.cyan : T.card,
+                    border: active ? T.border : T.borderThin,
+                    boxShadow: active ? T.shadowSm : 'none',
+                    color: '#000000',
+                    borderRadius: '8px',
+                    transition: 'all 0.15s',
+                    fontFamily: T.fontSans,
+                  }}>
                   {rec.id}
-                  <span style={{ marginLeft: 8, background: modeAccent, color: T.black, padding: '1px 6px', fontSize: 9, fontWeight: 800, border: '1.5px solid #000' }}>{modeStr.toUpperCase()}</span>
+                  <span style={{
+                    marginLeft: 8,
+                    background: modeAccent,
+                    color: '#000000',
+                    padding: '2px 8px',
+                    fontSize: 10,
+                    fontWeight: 800,
+                    border: '1.5px solid #000000',
+                    borderRadius: '4px',
+                    boxShadow: '1px 1px 0px #000000',
+                  }}>
+                    {modeStr.toUpperCase()}
+                  </span>
                 </button>
               );
             })}
           </div>
+
           {/* Rec details */}
           {currentRec && (
-            <div style={{ background: T.black, border: T.border, boxShadow: T.shadow, padding: '14px 18px', marginBottom: 16, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }}>
+            <div style={{
+              background: T.card,
+              border: T.border,
+              boxShadow: T.shadow,
+              borderRadius: T.radius,
+              padding: '18px 20px',
+              marginBottom: 20,
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3,1fr)',
+              gap: 16,
+            }}>
               <div>
-                <div style={{ fontSize: 9, color: '#aaa', marginBottom: 4, letterSpacing: '0.08em' }}>PROFIT DELTA (MID)</div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: T.lime }}>+${(currentRec.expected_profit_delta?.mid ?? 0).toFixed(0)}</div>
-                <div style={{ fontSize: 10, color: '#888' }}>Low ${(currentRec.expected_profit_delta?.low ?? 0).toFixed(0)} / High ${(currentRec.expected_profit_delta?.high ?? 0).toFixed(0)}</div>
+                <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, marginBottom: 4, letterSpacing: '0.06em' }}>PROFIT DELTA (MID)</div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: '#000000' }}>
+                  <span style={{ background: (currentRec?.expected_profit_delta?.mid ?? 0) >= 0 ? T.lime : T.pink, border: T.borderThin, borderRadius: '4px', padding: '2px 8px', boxShadow: '2px 2px 0px #000' }}>
+                    {(currentRec?.expected_profit_delta?.mid ?? 0) >= 0 ? '+' : ''}${(currentRec?.expected_profit_delta?.mid ?? 0).toFixed(0)}
+                  </span>
+                </div>
+                <div style={{ fontSize: 11, color: T.textSubtle, fontWeight: 600, marginTop: 6 }}>
+                  Low ${(currentRec?.expected_profit_delta?.low ?? 0).toFixed(0)} / High ${(currentRec?.expected_profit_delta?.high ?? 0).toFixed(0)}
+                </div>
               </div>
               <div>
-                <div style={{ fontSize: 9, color: '#aaa', marginBottom: 4, letterSpacing: '0.08em' }}>CONFIDENCE</div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: T.cyan }}>{((currentRec.confidence ?? 0) * 100).toFixed(0)}%</div>
-                <div style={{ fontSize: 10, color: '#888' }}>Model certainty</div>
+                <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, marginBottom: 4, letterSpacing: '0.06em' }}>CONFIDENCE</div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: '#000000' }}>
+                  <span style={{ background: T.cyan, border: T.borderThin, borderRadius: '4px', padding: '2px 8px', boxShadow: '2px 2px 0px #000' }}>
+                    {((currentRec?.confidence ?? 0) * 100).toFixed(0)}%
+                  </span>
+                </div>
+                <div style={{ fontSize: 11, color: T.textSubtle, fontWeight: 600, marginTop: 6 }}>Model certainty</div>
               </div>
               <div>
-                <div style={{ fontSize: 9, color: '#aaa', marginBottom: 4, letterSpacing: '0.08em' }}>CONSTRAINTS</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 4, marginTop: 4 }}>
-                  {(currentRec.constraints_binding ?? []).map(c => (
-                    <span key={c} style={{ background: T.yellow, color: T.black, border: '2px solid #fff', padding: '1px 6px', fontSize: 9, fontWeight: 700 }}>{c}</span>
+                <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, marginBottom: 4, letterSpacing: '0.06em' }}>CONSTRAINTS BINDING</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginTop: 4 }}>
+                  {(currentRec?.constraints_binding ?? []).map(c => (
+                    <span key={c} style={{ background: T.yellow, color: '#000000', border: T.borderThin, borderRadius: '4px', padding: '2px 8px', fontSize: 10, fontWeight: 800, boxShadow: '2px 2px 0px #000' }}>{c}</span>
                   ))}
                 </div>
               </div>
             </div>
           )}
+
           {/* Tab bar */}
-          <div style={{ display: 'flex', gap: 0, marginBottom: 16, border: T.border, width: 'fit-content', boxShadow: T.shadowSm }}>
-            {(['curves', 'whatif'] as const).map(tab => (
-              <button key={tab} id={`tab-${tab}`} onClick={() => setActiveTab(tab)}
-                style={{ padding: '8px 18px', fontSize: 11, fontWeight: 800, cursor: 'pointer', border: 'none', background: activeTab === tab ? T.black : T.card, color: activeTab === tab ? T.lime : T.black, borderRight: tab === 'curves' ? '3px solid #000' : 'none', letterSpacing: '0.04em' }}>
-                {tab === 'curves' ? 'Response Curves' : 'What-If Simulation'}
-              </button>
-            ))}
+          <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+            {(['curves', 'whatif'] as const).map(tab => {
+              const isActive = activeTab === tab;
+              return (
+                <button key={tab} id={`tab-${tab}`} onClick={() => setActiveTab(tab)}
+                  style={{
+                    padding: '8px 20px',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    background: isActive ? T.cyan : T.card,
+                    border: isActive ? T.border : T.borderThin,
+                    boxShadow: isActive ? T.shadowSm : 'none',
+                    color: '#000000',
+                    borderRadius: '8px',
+                    letterSpacing: '0.04em',
+                    fontFamily: T.fontSans,
+                    transition: 'all 0.15s',
+                  }}>
+                  {tab === 'curves' ? 'Response Curves' : 'What-If Simulation'}
+                </button>
+              );
+            })}
           </div>
+
           {activeTab === 'curves' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {(activeCurves ?? []).map(curve => (
@@ -500,18 +670,26 @@ function OptimizerStudioContent() {
             </div>
           )}
           {activeTab === 'whatif' && <WhatIfPanel curves={activeCurves} />}
+
           {/* Opportunity Scores */}
-          <div style={{ marginTop: 22, background: T.card, border: T.border, boxShadow: T.shadow, padding: 18 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: T.black, marginBottom: 14, letterSpacing: '0.08em' }}>PREDICTIVE OPPORTUNITY SCORES</div>
+          <div style={{ marginTop: 20, background: T.card, border: T.border, boxShadow: T.shadow, borderRadius: T.radius, padding: 20 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: '#000000', marginBottom: 16, letterSpacing: '0.06em' }}>PREDICTIVE OPPORTUNITY SCORES</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 14 }}>
               {(allScores ?? []).map((sc, scIdx) => (
-                <div key={`${sc.campaign_id}-${sc.sku}-${scIdx}`} style={{ background: T.bg, border: T.border, boxShadow: T.shadowSm, padding: '14px 16px', transition: 'transform 0.1s' }}
+                <div key={`${sc.campaign_id}-${sc.sku}-${scIdx}`} style={{
+                  background: T.bg,
+                  border: T.border,
+                  boxShadow: T.shadowSm,
+                  borderRadius: '8px',
+                  padding: '14px 16px',
+                  transition: 'transform 0.1s',
+                }}
                   onMouseEnter={e => (e.currentTarget.style.transform = 'translate(-2px,-2px)')}
                   onMouseLeave={e => (e.currentTarget.style.transform = '')}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                     <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: T.black, fontFamily: T.fontMono }}>{sc.campaign_id}</div>
-                      <div style={{ fontSize: 10, color: T.textSubtle, fontFamily: T.fontMono }}>{sc.sku}</div>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: '#000000' }}>{sc.campaign_id}</div>
+                      <div style={{ fontSize: 10, color: T.textSubtle, fontWeight: 600 }}>{sc.sku}</div>
                     </div>
                     <ScoreBadge score={Number(sc.total_score ?? 0)} />
                   </div>
@@ -524,40 +702,42 @@ function OptimizerStudioContent() {
             </div>
           </div>
         </div>
+
         {/* Right – Actions */}
-        <div style={{ overflowY: 'auto', padding: '20px 16px', background: T.bg }}>
+        <div style={{ overflowY: 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: T.black, letterSpacing: '0.08em' }}>ACTIONS PANEL</div>
-            <span style={{ background: T.cyan, color: T.black, border: T.border, padding: '2px 10px', fontSize: 10, fontWeight: 800, boxShadow: T.shadowSm }}>{(actions ?? []).length} actions</span>
+            <div style={{ fontSize: 12, fontWeight: 800, color: '#000000', letterSpacing: '0.06em' }}>ACTIONS PANEL</div>
+            <span style={{ background: T.cyan, color: '#000000', border: T.borderThin, padding: '2px 10px', fontSize: 11, fontWeight: 800, borderRadius: '4px', boxShadow: '2px 2px 0px #000' }}>{(actions ?? []).length} actions</span>
           </div>
           {[
-            { label: 'Pending', accent: T.yellow, items: kanban.pending },
-            { label: 'Active',  accent: T.lime,   items: kanban.active  },
-            { label: 'Done',    accent: '#bbb',    items: kanban.done    },
+            { label: 'REVIEW', accent: T.yellow, items: kanban.pending },
+            { label: 'AUTO',   accent: T.lime,   items: kanban.active  },
+            { label: 'BLOCK',  accent: T.pink,   items: kanban.done    },
           ].map(({ label, accent, items }) => (
-            <div key={label} style={{ marginBottom: 22 }}>
+            <div key={label} style={{ marginBottom: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <span style={{ background: accent, color: T.black, border: T.border, padding: '2px 10px', fontSize: 10, fontWeight: 800, boxShadow: T.shadowSm }}>{label.toUpperCase()}</span>
-                <span style={{ fontWeight: 800, fontSize: 12 }}>{(items ?? []).length}</span>
+                <span style={{ background: accent, color: '#000000', border: '3px solid #000000', padding: '3px 12px', fontSize: 11, fontWeight: 800, borderRadius: '6px', boxShadow: '3px 3px 0px #000000' }}>{label}</span>
+                <span style={{ fontWeight: 800, fontSize: 12, color: '#000000' }}>{(items ?? []).length}</span>
               </div>
               {(items ?? []).length === 0
-                ? <div style={{ background: T.card, border: '2px dashed #000', padding: 16, textAlign: 'center' as const, color: T.textSubtle, fontSize: 11 }}>Empty</div>
+                ? <div style={{ background: T.card, border: '2px dashed #000000', borderRadius: '8px', padding: 16, textAlign: 'center' as const, color: T.textSubtle, fontSize: 11, fontWeight: 600 }}>Empty</div>
                 : items.map(a => <ActionCard key={a.id} action={a} onApprove={id => approveMut.mutate(id)} onRollback={id => rollbackMut.mutate(id)} />)
               }
             </div>
           ))}
+
           {/* Policy Engine */}
-          <div style={{ background: T.black, border: '3px solid #000', boxShadow: T.shadow, padding: '14px 16px' }}>
-            <div style={{ fontSize: 10, color: '#aaa', marginBottom: 10, letterSpacing: '0.08em', fontWeight: 800 }}>POLICY ENGINE STATUS</div>
+          <div style={{ background: T.card, border: T.border, boxShadow: T.shadow, borderRadius: T.radius, padding: '16px 18px', marginTop: 16 }}>
+            <div style={{ fontSize: 11, color: '#000000', marginBottom: 12, letterSpacing: '0.06em', fontWeight: 800 }}>POLICY ENGINE STATUS</div>
             {[
               { rule: 'max_change_30pct', status: 'BINDING', accent: T.yellow },
               { rule: 'min_spend_50',      status: 'BINDING', accent: T.yellow },
               { rule: 'daily_risk_budget', status: 'OK',      accent: T.lime   },
-              { rule: 'kill_switch',       status: ksActive ? 'ACTIVE' : 'OFF', accent: ksActive ? T.pink : '#555' },
+              { rule: 'kill_switch',       status: ksActive ? 'ACTIVE' : 'OFF', accent: ksActive ? T.pink : '#e1e1d8' },
             ].map(({ rule, status, accent }) => (
-              <div key={rule} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #333' }}>
-                <span style={{ fontSize: 10, color: '#aaa', fontFamily: T.fontMono }}>{rule}</span>
-                <span style={{ fontSize: 9, fontWeight: 800, color: T.black, background: accent, border: '1.5px solid #fff', padding: '2px 6px' }}>{status}</span>
+              <div key={rule} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1.5px solid #e1e1d8' }}>
+                <span style={{ fontSize: 11, color: '#000000', fontWeight: 700 }}>{rule}</span>
+                <span style={{ fontSize: 10, fontWeight: 800, color: '#000000', background: accent, border: T.borderThin, borderRadius: '4px', padding: '2px 8px', boxShadow: '1.5px 1.5px 0px #000' }}>{status}</span>
               </div>
             ))}
           </div>
