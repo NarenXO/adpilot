@@ -71,19 +71,22 @@ export function BubbleChart({ data, onSkuClick, highlightedSku }: Props) {
     return {
       name: quadrantLabels[q],
       type: 'scatter',
-      data: items.map(b => ({
-        value: [b.days_of_cover, b.margin_pct * 100, bubbleSize(b.spend)],
-        _bubble: b,
-        // Highlighted bubble gets a bold ring
-        itemStyle: {
-          color: QUADRANT_COLORS[q],
-          borderColor: '#000',
-          borderWidth: highlightedSku === b.sku ? 4 : 2,
-          shadowColor: highlightedSku === b.sku ? '#000' : 'transparent',
-          shadowBlur: highlightedSku === b.sku ? 10 : 0,
-          opacity: highlightedSku && highlightedSku !== b.sku ? 0.35 : 1,
-        },
-      })),
+      data: items.map(b => {
+        const marginPctNormalized = b.margin_pct <= 1 ? b.margin_pct * 100 : b.margin_pct;
+        return {
+          value: [b.days_of_cover, marginPctNormalized, bubbleSize(b.spend)],
+          _bubble: b,
+          // Highlighted bubble gets a bold ring
+          itemStyle: {
+            color: QUADRANT_COLORS[q],
+            borderColor: '#000000',
+            borderWidth: highlightedSku === b.sku ? 4 : 2,
+            shadowColor: highlightedSku === b.sku ? '#000000' : 'transparent',
+            shadowBlur: highlightedSku === b.sku ? 10 : 0,
+            opacity: highlightedSku && highlightedSku !== b.sku ? 0.35 : 1,
+          },
+        };
+      }),
       symbolSize: (val: number[]) => val[2],
       // Quadrant background tint via markArea
       markArea: {
