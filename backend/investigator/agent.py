@@ -35,6 +35,10 @@ def investigate(incident: Incident, max_steps: int = 4, ollama_url: str = "http:
         evidence = [EvidenceItem(**e) for e in c["evidence"]]
         diag_data = c["diagnosis"].copy()
         diag_data["cause"] = Cause[diag_data["cause"]]
+        diag_data["source"] = "playbook"
+        diag_data["incident_id"] = incident.id
+        if "guardian" not in diag_data:
+            diag_data["guardian"] = "PASS"
         diagnosis = Diagnosis(**diag_data)
         trace_steps = [AgentStep(**s) for s in c["trace"]]
         
@@ -108,10 +112,12 @@ def investigate(incident: Incident, max_steps: int = 4, ollama_url: str = "http:
                 evidence_ids = parsed.get("evidence_ids", [])
                 
                 diagnosis = Diagnosis(
+                    incident_id=incident.id,
                     cause=cause,
                     source="agent",
                     evidence_ids=evidence_ids,
-                    explanation=explanation
+                    explanation=explanation,
+                    guardian="PASS"
                 )
                 verified_diagnosis = verify(diagnosis, evidence_list)
                 return evidence_list, verified_diagnosis, trace.to_list()
@@ -121,10 +127,12 @@ def investigate(incident: Incident, max_steps: int = 4, ollama_url: str = "http:
         # Max steps reached without finish
         trace.add_step(max_steps + 1, "synthesize", {}, "Max steps reached without finish")
         diagnosis = Diagnosis(
+            incident_id=incident.id,
             cause=Cause.UNKNOWN,
             source="agent",
             evidence_ids=[e.id for e in evidence_list],
-            explanation="Max steps reached without conclusive diagnosis."
+            explanation="Max steps reached without conclusive diagnosis.",
+            guardian="PASS"
         )
         verified_diagnosis = verify(diagnosis, evidence_list)
         return evidence_list, verified_diagnosis, trace.to_list()

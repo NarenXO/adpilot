@@ -102,7 +102,7 @@ def creative_breakdown(campaign_id: str) -> List[EvidenceItem]:
             c.hook_type,
             SUM(a.clicks) * 1.0 / NULLIF(SUM(a.impressions), 0) as ctr,
             SUM(a.spend) * 1000.0 / NULLIF(SUM(a.impressions), 0) as cpm,
-            AVG(a.frequency) as avg_frequency
+            CAST(SUM(a.impressions) * 1.0 / NULLIF(SUM(a.clicks), 0) AS DOUBLE) as avg_frequency
         FROM creatives c
         JOIN ad_performance a ON c.creative_id = a.creative_id
         WHERE c.campaign_id = ?
@@ -235,8 +235,9 @@ def tracking_health_check(platform: str, date: str = None) -> List[EvidenceItem]
 
     evidence = []
     if result and (result[0] is not None or result[1] is not None):
-        pixel_purchases, actual_transactions = result
-        discrepancy = (pixel_purchases - actual_transactions) if (pixel_purchases is not None and actual_transactions is not None) else None
+        pixel_purchases = float(result[0] or 0)
+        actual_transactions = float(result[1] or 0)
+        discrepancy = abs(pixel_purchases - actual_transactions) / actual_transactions * 100.0 if actual_transactions > 0 else 0.0
         
         evidence.append(
             EvidenceItem(

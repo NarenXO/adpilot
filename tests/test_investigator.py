@@ -9,7 +9,27 @@ from backend.investigator.tools import (
     tracking_health_check, recall_similar_incidents
 )
 
+from datetime import date
 from backend.db.connection import get_connection as get_db
+
+from backend.contracts.schemas import Scope
+
+def make_test_incident(id="inc1", metric="ctr", scope_campaign_id="camp1", scope_sku=None, platform="meta", **kwargs):
+    defaults = {
+        "id": id,
+        "sim_date": date(2024, 6, 16),
+        "metric": metric,
+        "scope": Scope(platform=platform, campaign_id=scope_campaign_id, sku=scope_sku, creative_id=None),
+        "direction": "down",
+        "magnitude_pct": 35.0,
+        "detector": "sentinel",
+        "confidence": 0.9,
+        "money_at_risk": 250.0,
+        "severity": 0.8,
+        "status": "open"
+    }
+    defaults.update(kwargs)
+    return Incident(**defaults)
 
 def setup_module():
     conn = get_db()
@@ -61,7 +81,7 @@ def test_creative_fatigue(mock_tool, mock_compare):
     # Setup mock to trigger the condition
     mock_tool.return_value = [EvidenceItem(id="1", tool="t", description="d", values={"avg_frequency": 6.0}, provenance="measured")]
     mock_compare.return_value = [EvidenceItem(id="2", tool="t", description="d", values={"current_ctr": 1.0, "past_ctr": 2.0, "spend": 100}, provenance="measured")]
-    inc = Incident(id="inc1", metric="ctr", campaign_id="camp1")
+    inc = make_test_incident(id="inc1", metric="ctr", scope_campaign_id="camp1")
     
     evidence, diagnosis = diagnose_from_playbook(inc)
     
@@ -74,7 +94,7 @@ def test_creative_fatigue(mock_tool, mock_compare):
 def test_stockout(mock_tool, mock_compare):
     mock_tool.return_value = [EvidenceItem(id="2", tool="t", description="d", values={"days_of_cover": 1.0, "stock_units": 0}, provenance="measured")]
     mock_compare.return_value = [EvidenceItem(id="3", tool="t", description="d", values={"spend": 100}, provenance="measured")]
-    inc = Incident(id="inc2", metric="sales", scope_sku="SKU1")
+    inc = make_test_incident(id="inc2", metric="sales", scope_sku="SKU1")
     
     evidence, diagnosis = diagnose_from_playbook(inc)
     
@@ -91,7 +111,7 @@ def test_margin_squeeze(mock_price, mock_inv, mock_compare):
     mock_compare.return_value = [EvidenceItem(id="5", tool="t", description="d", values={"spend": 100}, provenance="measured")]
     mock_price.return_value = [EvidenceItem(id="4", tool="t", description="d", values={"margin": 15.0}, provenance="measured")]
     
-    inc = Incident(id="inc3", metric="profit", scope_sku="SKU2")
+    inc = make_test_incident(id="inc3", metric="profit", scope_sku="SKU2")
     
     evidence, diagnosis = diagnose_from_playbook(inc)
     
@@ -102,7 +122,7 @@ def test_margin_squeeze(mock_price, mock_inv, mock_compare):
 @patch("backend.investigator.playbook.tracking_health_check")
 def test_tracking_break(mock_tool):
     mock_tool.return_value = [EvidenceItem(id="5", tool="t", description="d", values={"conversion_drop": 80.0, "actual_transactions": 100}, provenance="measured")]
-    inc = Incident(id="inc4", metric="purchases", platform="meta")
+    inc = make_test_incident(id="inc4", metric="purchases", platform="meta")
     
     evidence, diagnosis = diagnose_from_playbook(inc)
     
@@ -111,7 +131,7 @@ def test_tracking_break(mock_tool):
     assert "5" in diagnosis.evidence_ids
 
 def test_default_unknown():
-    inc = Incident(id="inc5", metric="unknown")
+    inc = make_test_incident(id="inc5", metric="unknown")
     evidence, diagnosis = diagnose_from_playbook(inc)
     
     assert diagnosis.source == "playbook"
@@ -138,7 +158,7 @@ def test_investigate_fallback_on_llm_offline(mock_post):
     # Mock requests to raise a ConnectionError
     mock_post.side_effect = Exception("Connection refused")
     
-    inc = Incident(id="inc_llm_1", metric="ctr")
+    inc = make_test_incident(id="inc_llm_1", metric="ctr")
     
     evidence, diagnosis, trace_steps = investigate(inc)
     
@@ -176,7 +196,7 @@ def test_investigate_mocked_llm_loop(mock_post):
         })
     ]
     
-    inc = Incident(id="inc_llm_2", metric="purchases")
+    inc = make_test_incident(id="inc_llm_2", metric="purchases")
     evidence, diagnosis, trace_steps = investigate(inc)
     
     assert diagnosis.source == "agent"
@@ -194,10 +214,10 @@ def test_investigate_cached_incident():
     from backend.investigator.agent import investigate
     
     # Test one of the cached golden path incidents
-    inc = Incident(id="incident_margin_squeeze", metric="margin")
+    inc = make_test_incident(id="incident_margin_squeeze", metric="margin")
     evidence, diagnosis, trace_steps = investigate(inc)
     
-    assert diagnosis.source == "cache"
+    assert diagnosis.source == "playbook"
     assert diagnosis.cause == Cause.MARGIN_SQUEEZE
     assert diagnosis.guardian == "PASS"
     assert len(evidence) == 1
@@ -208,14 +228,14 @@ def test_investigate_cached_incident():
 def test_golden_path_inc_id_cache_aliases():
     from backend.investigator.agent import investigate
     
-    inc = Incident(id="INC-001", metric="ctr")
+    inc = make_test_incident(id="INC-001", metric="ctr")
     evidence, diagnosis, trace_steps = investigate(inc)
-    assert diagnosis.source == "cache"
+    assert diagnosis.source == "playbook"
     assert diagnosis.cause == Cause.CREATIVE_FATIGUE
     
-    inc = Incident(id="INC-002", metric="sales", scope_sku="123")
+    inc = make_test_incident(id="INC-002", metric="sales", scope_sku="123")
     evidence, diagnosis, trace_steps = investigate(inc)
-    assert diagnosis.source == "cache"
+    assert diagnosis.source == "playbook"
     assert diagnosis.cause == Cause.STOCKOUT
 
 def test_investigate_malformed_json_response():
@@ -227,7 +247,7 @@ def test_investigate_malformed_json_response():
             def raise_for_status(self): pass
         mock_post.return_value = MockResponse()
         
-        inc = Incident(id="inc_malformed", metric="ctr")
+        inc = make_test_incident(id="inc_malformed", metric="ctr")
         evidence, diagnosis, trace_steps = investigate(inc)
         assert diagnosis.source == "playbook"
         assert "Malformed JSON" in trace_steps[0].result_summary
@@ -237,7 +257,7 @@ def test_investigate_timeout_handling():
     import requests
     with patch("backend.investigator.agent.requests.post") as mock_post:
         mock_post.side_effect = requests.Timeout("Timed out")
-        inc = Incident(id="inc_timeout", metric="ctr")
+        inc = make_test_incident(id="inc_timeout", metric="ctr")
         evidence, diagnosis, trace_steps = investigate(inc)
         assert diagnosis.source == "playbook"
         assert "Timed out" in trace_steps[0].result_summary

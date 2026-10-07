@@ -22,7 +22,7 @@ def diagnose_from_playbook(incident: Incident, db_conn=None) -> Tuple[List[Evide
     
     # 1. CREATIVE_FATIGUE
     if incident.metric == "ctr":
-        evidence = creative_breakdown(incident.campaign_id or "default")
+        evidence = creative_breakdown(incident.scope.campaign_id or "default")
         all_evidence.extend(evidence)
         # also get spend to check active spend
         perf_evidence = compare_periods(incident.id)
@@ -43,11 +43,11 @@ def diagnose_from_playbook(incident: Incident, db_conn=None) -> Tuple[List[Evide
             # Since playbook is an inference engine, it applies rules directly
             if ctr_drop > 15.0 and (freq > 5.0 or age > 30) and spend > 0:
                 cause = Cause.CREATIVE_FATIGUE
-                explanation = f"Creative fatigue detected on campaign {incident.campaign_id}. CTR dropped by {ctr_drop:.1f}% with creative age exceeding threshold and high frequency saturation."
+                explanation = f"Creative fatigue detected on campaign {incident.scope.campaign_id}. CTR dropped by {ctr_drop:.1f}% with creative age exceeding threshold and high frequency saturation."
                 
     # 2. STOCKOUT
-    elif incident.scope_sku:
-        evidence = inventory_status(incident.scope_sku)
+    elif incident.scope.sku:
+        evidence = inventory_status(incident.scope.sku)
         all_evidence.extend(evidence)
         perf_evidence = compare_periods(incident.id)
         all_evidence.extend(perf_evidence)
@@ -62,11 +62,11 @@ def diagnose_from_playbook(incident: Incident, db_conn=None) -> Tuple[List[Evide
             
             if (days < 1.5 or stock <= 0) and spend > 0:
                 cause = Cause.STOCKOUT
-                explanation = f"Stockout detected on SKU {incident.scope_sku}. Days of cover is {days} with {stock} units remaining while ad spend continues."
+                explanation = f"Stockout detected on SKU {incident.scope.sku}. Days of cover is {days} with {stock} units remaining while ad spend continues."
 
         # 4. MARGIN_SQUEEZE - if not stockout
         if cause == Cause.UNKNOWN:
-            evidence = price_and_discount_changes(incident.scope_sku)
+            evidence = price_and_discount_changes(incident.scope.sku)
             all_evidence.extend(evidence)
             if evidence:
                 v_agg = {}
@@ -77,11 +77,11 @@ def diagnose_from_playbook(incident: Incident, db_conn=None) -> Tuple[List[Evide
                 
                 if margin_pct < 20.0 or cogs_inc > 0 or discount > 25.0:
                     cause = Cause.MARGIN_SQUEEZE
-                    explanation = f"Margin squeeze detected on SKU {incident.scope_sku}. Product margin dropped to {margin_pct}% due to COGS increase or aggressive promotional discount."
+                    explanation = f"Margin squeeze detected on SKU {incident.scope.sku}. Product margin dropped to {margin_pct}% due to COGS increase or aggressive promotional discount."
 
     # 3. TRACKING_BREAK
-    elif incident.metric in ["purchases", "cvr"] and incident.platform:
-        evidence = tracking_health_check(incident.platform)
+    elif incident.metric in ["purchases", "cvr"] and incident.scope.platform:
+        evidence = tracking_health_check(incident.scope.platform)
         all_evidence.extend(evidence)
         
         if evidence:
@@ -98,7 +98,7 @@ def diagnose_from_playbook(incident: Incident, db_conn=None) -> Tuple[List[Evide
                 
             if (conv_drop > 50.0 or discrepancy > 40.0) and actual > 0:
                 cause = Cause.TRACKING_BREAK
-                explanation = f"Tracking break detected on {incident.platform}. Pixel reported conversions dropped significantly, showing a {discrepancy:.1f}% discrepancy while GA funnel transactions remain stable."
+                explanation = f"Tracking break detected on {incident.scope.platform}. Pixel reported conversions dropped significantly, showing a {discrepancy:.1f}% discrepancy while GA funnel transactions remain stable."
 
     if cause == Cause.UNKNOWN:
         # Collect baseline evidence
@@ -106,10 +106,12 @@ def diagnose_from_playbook(incident: Incident, db_conn=None) -> Tuple[List[Evide
         all_evidence.extend(evidence)
 
     diagnosis = Diagnosis(
+        incident_id=incident.id,
         cause=cause,
         source="playbook",
         evidence_ids=[e.id for e in all_evidence],
-        explanation=explanation
+        explanation=explanation,
+        guardian="PASS"
     )
     
     return all_evidence, diagnosis
