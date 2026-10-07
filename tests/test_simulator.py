@@ -602,3 +602,141 @@ def test_outcome_twin_does_not_grade_own_homework(twin_and_world):
     main_rev = (emax * (spend ** eta)) / ((k ** eta) + (spend ** eta))
     
     assert twin_rev != main_rev, "Twin revenue should differ from main world revenue"
+
+
+# ===========================================================================
+# PHASE 4 TESTS — DB Seed & Queries
+# ===========================================================================
+import os
+from pathlib import Path
+from backend.db.seed import seed_db
+import backend.db.queries as queries
+
+TEST_DB_PATH = "data/test_adpilot.duckdb"
+
+@pytest.fixture(scope="module")
+def seeded_db():
+    seed_db(seed=42, db_path=TEST_DB_PATH)
+    yield
+    # Cleanup after tests
+    path = Path(TEST_DB_PATH)
+    if path.exists():
+        path.unlink()
+    if path.with_name(path.name + ".wal").exists():
+        path.with_name(path.name + ".wal").unlink()
+
+def test_seed_db_creates_file(seeded_db):
+    assert Path(TEST_DB_PATH).exists()
+    assert Path(TEST_DB_PATH).stat().st_size > 0
+
+def test_seed_db_populates_all_tables(seeded_db):
+    import backend.db.connection as conn_module
+    conn_module.DB_PATH = Path(TEST_DB_PATH)
+    conn = conn_module.get_connection()
+    
+    tables = [
+        "ad_performance", "sales", "sku_master", "inventory", 
+        "ga_funnel", "creatives", "external_events", "truth"
+    ]
+    for table in tables:
+        count = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+        assert count > 0, f"Table {table} is empty"
+        
+    downstream_tables = [
+        "incidents", "evidence", "diagnoses", "recommendations",
+        "policy_decisions", "actions", "outcomes", "memory", 
+        "audit_log", "opportunity_scores"
+    ]
+    for table in downstream_tables:
+        count = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+        assert count == 0, f"Table {table} should be empty"
+    conn.close()
+
+def test_seed_db_determinism():
+    temp_db_1 = "data/temp1.duckdb"
+    temp_db_2 = "data/temp2.duckdb"
+    
+    seed_db(seed=123, db_path=temp_db_1)
+    seed_db(seed=123, db_path=temp_db_2)
+    
+    import duckdb
+    conn1 = duckdb.connect(temp_db_1)
+    conn2 = duckdb.connect(temp_db_2)
+    
+    count1 = conn1.execute("SELECT COUNT(*) FROM ad_performance").fetchone()[0]
+    count2 = conn2.execute("SELECT COUNT(*) FROM ad_performance").fetchone()[0]
+    assert count1 == count2
+    
+    conn1.close()
+    conn2.close()
+    
+    Path(temp_db_1).unlink(missing_ok=True)
+    Path(temp_db_2).unlink(missing_ok=True)
+
+def test_get_ad_performance_filters(seeded_db):
+    import backend.db.connection as conn_module
+    conn_module.DB_PATH = Path(TEST_DB_PATH)
+    
+    df = queries.get_ad_performance("2024-06-01", "2024-06-10", platform="meta")
+    assert not df.empty
+    assert (df["platform"] == "meta").all()
+    
+    df2 = queries.get_ad_performance("2024-06-01", "2024-06-10", campaign_id="camp_meta_01")
+    assert not df2.empty
+    assert (df2["campaign_id"] == "camp_meta_01").all()
+
+def test_get_sku_inventory_margin_returns_skububble_shape(seeded_db):
+    import backend.db.connection as conn_module
+    conn_module.DB_PATH = Path(TEST_DB_PATH)
+    
+    bubbles = queries.get_sku_inventory_margin()
+    assert len(bubbles) > 0
+    
+    for b in bubbles:
+        assert "sku" in b
+        assert "name" in b
+        assert "category" in b
+        assert "margin_pct" in b
+        assert "days_of_cover" in b
+        assert "spend" in b
+        assert "revenue" in b
+        assert "quadrant" in b
+        assert "opportunity_score" in b
+        assert "provenance" in b
+
+def test_get_sku_inventory_margin_quadrants_valid(seeded_db):
+    import backend.db.connection as conn_module
+    conn_module.DB_PATH = Path(TEST_DB_PATH)
+    
+    bubbles = queries.get_sku_inventory_margin()
+    valid_quadrants = {"scale", "protect", "pause", "fix"}
+    for b in bubbles:
+        assert b["quadrant"] in valid_quadrants
+
+def test_get_sku_inventory_margin_opportunity_score_range(seeded_db):
+    import backend.db.connection as conn_module
+    conn_module.DB_PATH = Path(TEST_DB_PATH)
+    
+    bubbles = queries.get_sku_inventory_margin()
+    for b in bubbles:
+        assert 0.0 <= b["opportunity_score"] <= 100.0
+
+def test_get_campaign_summary_returns_aggregates(seeded_db):
+    import backend.db.connection as conn_module
+    conn_module.DB_PATH = Path(TEST_DB_PATH)
+    
+    df = queries.get_campaign_summary(days=7)
+    assert not df.empty
+    expected_cols = {
+        "campaign_id", "platform", "total_spend", "total_revenue",
+        "avg_roas", "avg_ctr", "avg_cpc", "total_purchases"
+    }
+    assert expected_cols.issubset(set(df.columns))
+
+def test_queries_handle_empty_tables_gracefully(seeded_db):
+    import backend.db.connection as conn_module
+    conn_module.DB_PATH = Path(TEST_DB_PATH)
+    
+    df = queries.get_incident_history()
+    assert isinstance(df, pd.DataFrame)
+    assert df.empty
