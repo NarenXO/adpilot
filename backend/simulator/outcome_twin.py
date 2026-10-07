@@ -1,4 +1,4 @@
-﻿"""
+"""
 backend/simulator/outcome_twin.py
 =================================
 Independent simulator (Outcome Twin) for unbiased evaluation of actions.
@@ -107,12 +107,13 @@ class OutcomeTwin:
         """
         if not budget_changes or rollout_pct == 0.0:
             noise = float(self.rng.normal(0, 0.05))
+            vals = sorted([float(self.rng.normal(0, 0.01)) for _ in range(3)])
             return {
                 "action_id": action_id,
                 "observed_profit_delta": noise,
-                "counterfactual_low": float(self.rng.normal(0, 0.01)),
-                "counterfactual_mid": float(self.rng.normal(0, 0.01)),
-                "counterfactual_high": float(self.rng.normal(0, 0.01)),
+                "counterfactual_low": vals[0],
+                "counterfactual_mid": vals[1],
+                "counterfactual_high": vals[2],
                 "success": False,
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
@@ -132,11 +133,11 @@ class OutcomeTwin:
             
             new_revenue = self._twin_hill_revenue(effective_spend, camp_id)
             new_cogs = self._estimate_cogs(new_revenue, camp_id)
-            new_profit = new_revenue - new_cogs
+            new_profit = new_revenue - new_cogs - effective_spend
             
             old_revenue = self._twin_hill_revenue(old_spend, camp_id)
             old_cogs = self._estimate_cogs(old_revenue, camp_id)
-            old_profit = old_revenue - old_cogs
+            old_profit = old_revenue - old_cogs - old_spend
             
             profit_delta_per_campaign = (new_profit - old_profit) * measurement_days
             total_profit_delta += profit_delta_per_campaign
@@ -152,6 +153,9 @@ class OutcomeTwin:
         cf_mid += float(self.rng.normal(0, base_noise))
         cf_low += float(self.rng.normal(0, base_noise))
         cf_high += float(self.rng.normal(0, base_noise))
+        
+        vals = sorted([cf_low, cf_mid, cf_high])
+        cf_low, cf_mid, cf_high = vals[0], vals[1], vals[2]
         
         success = observed_profit_delta > cf_mid
         

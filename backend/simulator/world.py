@@ -1,4 +1,4 @@
-﻿"""
+"""
 backend/simulator/world.py
 ==========================
 Deterministic 180-day synthetic data generator for AdPilot.
@@ -240,11 +240,11 @@ def generate_world(seed: int = 42, days: int = 180,
 
     # Initialise inventory per SKU
     stock: dict[str, int] = {
-        s: int(rng.integers(500, 3001)) for s in skus
+        s: int(rng.integers(1500, 4001)) for s in skus
     }
-    # Per-SKU restock countdown (every 14-21 days)
+    # Per-SKU restock countdown (every 10-15 days)
     restock_in: dict[str, int] = {
-        s: int(rng.integers(14, 22)) for s in skus
+        s: int(rng.integers(10, 16)) for s in skus
     }
     # Rolling 7-day sold units for days_of_cover
     sold_history: dict[str, list[int]] = {s: [] for s in skus}
@@ -406,10 +406,12 @@ def generate_world(seed: int = 42, days: int = 180,
 
             # Restock check
             restock_in[sku] -= 1
+            if stock[sku] < 200:
+                restock_in[sku] = 0
             if restock_in[sku] <= 0:
-                restock_qty  = int(rng.integers(500, 2001))
+                restock_qty  = int(rng.integers(1500, 3001))
                 stock[sku]  += restock_qty
-                restock_in[sku] = int(rng.integers(14, 22))
+                restock_in[sku] = int(rng.integers(10, 16))
 
             # Days of cover
             avg7 = np.mean(sold_history[sku]) if sold_history[sku] else 0

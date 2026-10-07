@@ -289,8 +289,11 @@ def test_creative_fatigue_symptoms(golden_world):
     cf_rows = truth_df[truth_df["incident_type"] == "CREATIVE_FATIGUE"]
     assert len(cf_rows) > 0, "No CREATIVE_FATIGUE entries in truth_df"
 
-    camp_id  = cf_rows["scope_campaign_id"].iloc[0]
-    cf_dates = set(cf_rows["sim_date"].values)
+    camp_id   = cf_rows["scope_campaign_id"].iloc[0]
+    # truth_df now has 1 row per incident (start date). Expand to full 14-day window.
+    from datetime import timedelta
+    cf_start  = pd.Timestamp(cf_rows["sim_date"].iloc[0])
+    cf_dates  = set(pd.date_range(cf_start, periods=14, freq="D"))
 
     base_ad = base["ad_performance"]
     mod_ad  = mod_dfs["ad_performance"]

@@ -1,4 +1,4 @@
-﻿"""
+"""
 backend/simulator/inject.py
 ============================
 Deterministic incident injectors for AdPilot Phase 2.
@@ -500,7 +500,7 @@ def inject_golden_path(
     current_dfs, cf_rows = inject_creative_fatigue(
         current_dfs, cf_campaign, cf_cre, cf_start, duration_days=14
     )
-    for r in cf_rows:
+    for r in cf_rows[:1]:
         recorder.record_incident(
             sim_date=r["sim_date"],
             incident_type=r["incident_type"],
@@ -515,7 +515,7 @@ def inject_golden_path(
     current_dfs, so_rows = inject_stockout(
         current_dfs, so_sku, so_start, duration_days=10
     )
-    for r in so_rows:
+    for r in so_rows[:1]:
         recorder.record_incident(
             sim_date=r["sim_date"],
             incident_type=r["incident_type"],
@@ -530,7 +530,7 @@ def inject_golden_path(
     current_dfs, tb_rows = inject_tracking_break(
         current_dfs, tb_platform, tb_campaign, tb_start, duration_days=7
     )
-    for r in tb_rows:
+    for r in tb_rows[:1]:
         recorder.record_incident(
             sim_date=r["sim_date"],
             incident_type=r["incident_type"],
@@ -545,7 +545,7 @@ def inject_golden_path(
     current_dfs, mq_rows = inject_margin_squeeze(
         current_dfs, mq_sku, mq_start, duration_days=14
     )
-    for r in mq_rows:
+    for r in mq_rows[:1]:
         recorder.record_incident(
             sim_date=r["sim_date"],
             incident_type=r["incident_type"],
@@ -560,7 +560,7 @@ def inject_golden_path(
     current_dfs, hd_rows = inject_holiday_spike_decoy(
         current_dfs, hd_start, duration_days=3
     )
-    for r in hd_rows:
+    for r in hd_rows[:1]:
         recorder.record_incident(
             sim_date=r["sim_date"],
             incident_type=r["incident_type"],
@@ -575,7 +575,7 @@ def inject_golden_path(
     current_dfs, pp_rows = inject_planned_promo_decoy(
         current_dfs, pp_campaign, pp_sku, pp_start, duration_days=5
     )
-    for r in pp_rows:
+    for r in pp_rows[:1]:
         recorder.record_incident(
             sim_date=r["sim_date"],
             incident_type=r["incident_type"],
