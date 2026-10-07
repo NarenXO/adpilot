@@ -1,0 +1,18 @@
+{
+  "labels": [
+    {
+      "sim_date": "2024-06-15",
+      "incident_type": "CREATIVE_FATIGUE",
+      "scope_campaign_id": "camp_meta_03",
+      "is_decoy": false,
+      "label": "alert"
+    },
+    {
+      "sim_date": "2024-06-15",
+      "incident_type": "HOLIDAY_DEMAND",
+      "scope_campaign_id": "camp_meta_01",
+      "is_decoy": true,
+      "label": "no_alert"
+    }
+  ]
+}

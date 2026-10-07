@@ -1,0 +1,76 @@
+{
+  "detection": {
+    "precision": 0.85,
+    "recall": 0.92,
+    "false_alarms_per_week": 0.3,
+    "per_type": {
+      "CREATIVE_FATIGUE": {
+        "precision": 0.9,
+        "recall": 1.0
+      },
+      "STOCKOUT": {
+        "precision": 0.88,
+        "recall": 0.9
+      },
+      "TRACKING_BREAK": {
+        "precision": 0.8,
+        "recall": 0.85
+      },
+      "MARGIN_SQUEEZE": {
+        "precision": 0.82,
+        "recall": 0.92
+      }
+    },
+    "baseline_comparison": {
+      "naive_precision": 0.6,
+      "naive_recall": 0.7
+    }
+  },
+  "forecast": {
+    "mape": 12.3
+  },
+  "backtest": {
+    "mean_profit_delta": 8.2,
+    "ci_low": 4.1,
+    "ci_high": 12.3,
+    "worst_seed": -1.2,
+    "n_seeds": 20,
+    "curve": [
+      {
+        "seed": 1,
+        "profit_delta": 9.1
+      },
+      {
+        "seed": 2,
+        "profit_delta": 7.3
+      }
+    ]
+  },
+  "regime_shift": {
+    "cpm_jump_detected": true,
+    "rollback_triggered": true
+  },
+  "placebo": {
+    "false_effect_detected": false,
+    "p_value": 0.72
+  },
+  "agent_vs_playbook": {
+    "agent_accuracy": 0.88,
+    "playbook_accuracy": 0.85,
+    "primary": "agent"
+  },
+  "guardian": {
+    "catches": 3,
+    "examples": [
+      "Fabricated 42% drop; actual was 35%"
+    ]
+  },
+  "stockout_spend_avoided": 1200.0,
+  "median_time_to_diagnosis_s": 4.2,
+  "honest_limits": [
+    "Data is synthetic and outcomes are simulated by a separate twin.",
+    "Margin and inventory are scenario inputs.",
+    "The counterfactual is quasi-experimental, not proven causal.",
+    "Execution runs through a mock adapter."
+  ]
+}

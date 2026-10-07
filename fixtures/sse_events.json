@@ -1,0 +1,32 @@
+{
+  "events": [
+    {
+      "type": "tick.started",
+      "sim_date": "2024-06-15",
+      "payload": {
+        "sim_date": "2024-06-15"
+      }
+    },
+    {
+      "type": "incident.detected",
+      "sim_date": "2024-06-15",
+      "payload": {
+        "id": "INC-001",
+        "sim_date": "2024-06-15",
+        "metric": "ctr",
+        "scope": {
+          "platform": "meta",
+          "campaign_id": "camp_meta_03",
+          "sku": "SKU-007"
+        },
+        "direction": "down",
+        "magnitude_pct": 35.2,
+        "detector": "ewma",
+        "confidence": 0.92,
+        "money_at_risk": 340.0,
+        "severity": 312.8,
+        "status": "open"
+      }
+    }
+  ]
+}

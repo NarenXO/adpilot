@@ -1,0 +1,23 @@
+{
+  "actions": [
+    {
+      "id": "ACT-001",
+      "recommendation_id": "REC-001",
+      "status": "rolling_out",
+      "rollout_pct": 50.0,
+      "rollback_guard": {
+        "metric": "roas",
+        "threshold": 3.0,
+        "window_days": 2
+      },
+      "changes": [
+        {
+          "campaign_id": "camp_meta_03",
+          "from_spend": 500.0,
+          "to_spend": 325.0
+        }
+      ],
+      "created_at": "2024-06-15T10:30:00Z"
+    }
+  ]
+}

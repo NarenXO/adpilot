@@ -1,0 +1,34 @@
+app:
+  name: AdPilot
+  version: "10.0.0"
+  env: dev
+sim:
+  seed: 42
+  start_date: "2024-01-01"
+  history_days: 180
+  n_campaigns: 12
+  n_skus: 20
+  n_creatives: 40
+features:
+  llm_agent: true
+  real_data_check: false
+  synthetic_control_placebo: true
+  memory_recall: false
+  light_theme: true
+  opportunity_score: true
+llm:
+  provider: ollama
+  model: qwen2.5:7b-instruct
+  temperature: 0
+  max_steps: 4
+  timeout_s: 30
+  cache_enabled: true
+db:
+  path: data/adpilot.duckdb
+api:
+  host: 0.0.0.0
+  port: 8000
+  cors_origins: ["http://localhost:5173", "http://127.0.0.1:5173"]
+frontend:
+  use_fixtures: true
+  api_base: "http://localhost:8000/api"

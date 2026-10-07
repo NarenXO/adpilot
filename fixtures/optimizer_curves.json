@@ -1,0 +1,25 @@
+{
+  "curves": [
+    {
+      "campaign_id": "camp_meta_03",
+      "sku": "SKU-007",
+      "data_points": [
+        {
+          "spend": 100.0,
+          "revenue_low": 380.0,
+          "revenue_mid": 420.0,
+          "revenue_high": 460.0
+        },
+        {
+          "spend": 200.0,
+          "revenue_low": 700.0,
+          "revenue_mid": 780.0,
+          "revenue_high": 860.0
+        }
+      ],
+      "current_spend": 500.0,
+      "recommended_spend": 325.0,
+      "opportunity_score": 32.0
+    }
+  ]
+}

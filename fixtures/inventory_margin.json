@@ -1,0 +1,28 @@
+{
+  "skus": [
+    {
+      "sku": "SKU-007",
+      "name": "Premium Moisturizer",
+      "category": "skincare",
+      "margin_pct": 62.0,
+      "days_of_cover": 4.2,
+      "spend": 500.0,
+      "revenue": 2100.0,
+      "quadrant": "fix",
+      "opportunity_score": 32.0,
+      "provenance": "scenario"
+    },
+    {
+      "sku": "SKU-012",
+      "name": "Vitamin C Serum",
+      "category": "skincare",
+      "margin_pct": 74.0,
+      "days_of_cover": 24.0,
+      "spend": 300.0,
+      "revenue": 2900.0,
+      "quadrant": "scale",
+      "opportunity_score": 87.0,
+      "provenance": "measured"
+    }
+  ]
+}

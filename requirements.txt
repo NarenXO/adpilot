@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+pyyaml
+duckdb
+pandas
+numpy
+python-dateutil
+sse-starlette
+httpx
+pytest
+pytest-asyncio

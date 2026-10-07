@@ -1,0 +1,38 @@
+{
+  "diagnosis": {
+    "incident_id": "INC-001",
+    "cause": "CREATIVE_FATIGUE",
+    "evidence_ids": [
+      "E12",
+      "E13"
+    ],
+    "explanation": "CTR dropped 35% (E12: 0.018 vs 0.028) while frequency rose to 8.2 (E12) and spend remained flat (E12: -2.1%). This matches creative fatigue.",
+    "source": "agent",
+    "guardian": "PASS"
+  },
+  "agent_trace": [
+    {
+      "step": 1,
+      "tool": "creative_breakdown",
+      "args": {
+        "incident_id": "INC-001",
+        "days": 14
+      },
+      "result_summary": "CTR dropped, frequency up to 8.2"
+    },
+    {
+      "step": 2,
+      "tool": "compare_periods",
+      "args": {
+        "metric": "ctr",
+        "campaign_id": "camp_meta_03"
+      },
+      "result_summary": "Confirmed 35% drop"
+    }
+  ],
+  "guardian_details": {
+    "numbers_verified": true,
+    "cause_signature_pass": true,
+    "issues": []
+  }
+}

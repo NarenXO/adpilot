@@ -1,0 +1,13 @@
+{
+  "decisions": [
+    {
+      "recommendation_id": "REC-001",
+      "verdict": "AUTO",
+      "reasons": [
+        "within_daily_risk_budget",
+        "profit_mode_conservative"
+      ],
+      "size_factor": 1.0
+    }
+  ]
+}

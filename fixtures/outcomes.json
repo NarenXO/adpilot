@@ -1,0 +1,14 @@
+{
+  "outcomes": [
+    {
+      "action_id": "ACT-001",
+      "observed_profit_delta": 115.0,
+      "counterfactual_profit_delta": {
+        "low": 40.0,
+        "mid": 110.0,
+        "high": 190.0
+      },
+      "success": true
+    }
+  ]
+}

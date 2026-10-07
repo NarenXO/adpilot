@@ -1,0 +1,40 @@
+{
+  "incidents": [
+    {
+      "id": "INC-001",
+      "sim_date": "2024-06-15",
+      "metric": "ctr",
+      "scope": {
+        "platform": "meta",
+        "campaign_id": "camp_meta_03",
+        "sku": "SKU-007",
+        "creative_id": "cr_042"
+      },
+      "direction": "down",
+      "magnitude_pct": 35.2,
+      "detector": "ewma",
+      "confidence": 0.92,
+      "money_at_risk": 340.0,
+      "severity": 312.8,
+      "status": "open"
+    },
+    {
+      "id": "INC-002",
+      "sim_date": "2024-06-15",
+      "metric": "days_of_cover",
+      "scope": {
+        "platform": "google",
+        "campaign_id": "camp_goog_01",
+        "sku": "SKU-002"
+      },
+      "direction": "down",
+      "magnitude_pct": 80.0,
+      "detector": "inventory_cover",
+      "confidence": 0.95,
+      "money_at_risk": 850.0,
+      "severity": 807.5,
+      "status": "open"
+    }
+  ],
+  "total": 2
+}

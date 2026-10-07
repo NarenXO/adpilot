@@ -1,0 +1,17 @@
+autonomy_level: supervised
+daily_risk_budget_pct: 10.0
+max_budget_change_pct: 30.0
+min_campaign_spend: 50.0
+min_days_of_cover: 7.0
+kill_switch_default: false
+rollback:
+  metric: roas
+  threshold: 3.0
+  window_days: 2
+verdicts:
+  block_if_stockout: true
+  block_if_margin_below: 15.0
+  review_if_confidence_below: 0.6
+  review_if_money_at_risk_above: 500.0
+modes:
+  default: profit

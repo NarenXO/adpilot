@@ -1,0 +1,28 @@
+{
+  "evidence": [
+    {
+      "id": "E12",
+      "tool": "creative_breakdown",
+      "description": "CTR by creative over last 14 days",
+      "values": {
+        "ctr_current": 0.018,
+        "ctr_prior": 0.028,
+        "frequency": 8.2,
+        "spend_change_pct": -2.1
+      },
+      "provenance": "measured"
+    },
+    {
+      "id": "E13",
+      "tool": "compare_periods",
+      "description": "Performance comparison for camp_meta_03",
+      "values": {
+        "spend": 500.0,
+        "impressions": 27777,
+        "clicks": 500,
+        "purchases": 12
+      },
+      "provenance": "measured"
+    }
+  ]
+}
