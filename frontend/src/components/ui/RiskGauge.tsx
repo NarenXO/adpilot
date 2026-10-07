@@ -32,33 +32,24 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({
 
   // Color by ratio threshold
   const fillColor = useMemo(() => {
-    if (ratioPercent < 50) return '#10b981'; // neon green
-    if (ratioPercent <= 80) return '#f59e0b'; // amber
-    return '#ef4444'; // red
-  }, [ratioPercent]);
-
-  const glowColor = useMemo(() => {
-    if (ratioPercent < 50) return 'rgba(16, 185, 129, 0.45)';
-    if (ratioPercent <= 80) return 'rgba(245, 158, 11, 0.45)';
-    return 'rgba(239, 68, 68, 0.45)';
+    if (ratioPercent < 50) return '#82e66f'; // lime
+    if (ratioPercent <= 80) return '#ffd23f'; // yellow
+    return '#f364cb'; // pink
   }, [ratioPercent]);
 
   // SVG dimensions
   const cx = size / 2;
-  const cy = size / 2 + size * 0.05; // push center down slightly so text fits
-  const strokeW = size * 0.1;
+  const cy = size / 2 + size * 0.05;
+  const strokeW = size * 0.12;
   const r = (size - strokeW * 2) / 2 - 4;
 
-  // Arc helpers — semi-circle from 180° to 0° (left to right)
+  // Arc helpers
   const degToRad = (deg: number) => (deg * Math.PI) / 180;
 
   const arcPoint = (angleDeg: number) => ({
     x: cx + r * Math.cos(degToRad(angleDeg)),
     y: cy + r * Math.sin(degToRad(angleDeg)),
   });
-
-  const startAngle = 180; // left
-  const endAngle = 0;     // right (going counter-clockwise by design feels wrong; use sweep via fill angle)
 
   // Background track: full 180° arc
   const trackStart = arcPoint(180);
@@ -68,8 +59,8 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({
     `A ${r} ${r} 0 0 1 ${trackEnd.x.toFixed(2)},${trackEnd.y.toFixed(2)}`,
   ].join(' ');
 
-  // Fill arc: 0 to ratio × 180° sweep, starting from left (180°)
-  const fillAngle = 180 + ratio * 180; // from 180° sweeping towards 360°=0°
+  // Fill arc
+  const fillAngle = 180 + ratio * 180;
   const fillEnd = arcPoint(fillAngle > 360 ? fillAngle - 360 : fillAngle);
   const largeArc = ratio > 0.5 ? 1 : 0;
 
@@ -113,32 +104,22 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({
         style={{ overflow: 'visible' }}
         aria-hidden="true"
       >
-        <defs>
-          <filter id={gradientId} x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation={strokeW * 0.6} result="blur" />
-          </filter>
-        </defs>
-
-        {/* Glow layer under fill */}
-        {fillPath && (
-          <path
-            d={fillPath}
-            fill="none"
-            stroke={fillColor}
-            strokeWidth={strokeW}
-            strokeLinecap="round"
-            opacity={0.3}
-            filter={`url(#${gradientId})`}
-          />
-        )}
+        {/* Background track black outline */}
+        <path
+          d={trackPath}
+          fill="none"
+          stroke="#000000"
+          strokeWidth={strokeW + 6}
+          strokeLinecap="square"
+        />
 
         {/* Background track */}
         <path
           d={trackPath}
           fill="none"
-          stroke="rgba(255,255,255,0.08)"
+          stroke="#e1e1d8"
           strokeWidth={strokeW}
-          strokeLinecap="round"
+          strokeLinecap="square"
         />
 
         {/* Fill arc */}
@@ -148,27 +129,9 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({
             fill="none"
             stroke={fillColor}
             strokeWidth={strokeW}
-            strokeLinecap="round"
-            style={{
-              filter: `drop-shadow(0 0 ${strokeW * 0.4}px ${glowColor})`,
-            }}
+            strokeLinecap="square"
           />
         )}
-
-        {/* Cap tick mark */}
-        {(() => {
-          const capAngle = 180 + (1.0) * 180;
-          const inner = { x: cx + (r - strokeW / 2) * Math.cos(degToRad(capAngle)), y: cy + (r - strokeW / 2) * Math.sin(degToRad(capAngle)) };
-          const outer = { x: cx + (r + strokeW / 2) * Math.cos(degToRad(capAngle)), y: cy + (r + strokeW / 2) * Math.sin(degToRad(capAngle)) };
-          return (
-            <line
-              x1={inner.x.toFixed(2)} y1={inner.y.toFixed(2)}
-              x2={outer.x.toFixed(2)} y2={outer.y.toFixed(2)}
-              stroke="rgba(255,255,255,0.25)"
-              strokeWidth={1.5}
-            />
-          );
-        })()}
 
         {/* Center Text: value */}
         <text
@@ -176,11 +139,10 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({
           y={cy - 4}
           textAnchor="middle"
           dominantBaseline="auto"
-          fill="var(--text-primary, #f8fafc)"
-          fontSize={size * 0.155}
+          fill="#000000"
+          fontSize={size * 0.16}
           fontWeight={700}
-          fontFamily="'JetBrains Mono', ui-monospace, monospace"
-          letterSpacing="-0.02em"
+          fontFamily="'Space Grotesk', monospace"
         >
           {valueText}
         </text>
@@ -191,33 +153,36 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({
           y={cy + size * 0.045}
           textAnchor="middle"
           dominantBaseline="hanging"
-          fill="var(--text-muted, #64748b)"
+          fill="#4a4a46"
           fontSize={size * 0.082}
-          fontFamily="'JetBrains Mono', ui-monospace, monospace"
+          fontFamily="'Space Grotesk', monospace"
+          fontWeight={600}
         >
           {capText}
         </text>
 
         {/* Left label "0%" */}
         <text
-          x={trackStart.x - 4}
-          y={trackStart.y + 2}
+          x={trackStart.x - 6}
+          y={trackStart.y + 4}
           textAnchor="end"
-          fill="var(--text-muted, #64748b)"
-          fontSize={size * 0.07}
-          fontFamily="'JetBrains Mono', ui-monospace, monospace"
+          fill="#000000"
+          fontSize={size * 0.075}
+          fontWeight={700}
+          fontFamily="'Space Grotesk', monospace"
         >
           0%
         </text>
 
         {/* Right label = cap */}
         <text
-          x={trackEnd.x + 4}
-          y={trackEnd.y + 2}
+          x={trackEnd.x + 6}
+          y={trackEnd.y + 4}
           textAnchor="start"
-          fill="var(--text-muted, #64748b)"
-          fontSize={size * 0.07}
-          fontFamily="'JetBrains Mono', ui-monospace, monospace"
+          fill="#000000"
+          fontSize={size * 0.075}
+          fontWeight={700}
+          fontFamily="'Space Grotesk', monospace"
         >
           {formatPct(capPct)}
         </text>
@@ -227,11 +192,12 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({
         <span
           style={{
             fontSize: '0.75rem',
-            fontWeight: 500,
-            color: 'var(--text-secondary, #94a3b8)',
-            marginTop: '0.25rem',
-            letterSpacing: '0.03em',
+            fontWeight: 700,
+            color: '#000000',
+            marginTop: '0.5rem',
+            letterSpacing: '0.04em',
             textTransform: 'uppercase',
+            fontFamily: "'Space Grotesk', system-ui, sans-serif",
           }}
         >
           {label}

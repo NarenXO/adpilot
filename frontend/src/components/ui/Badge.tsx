@@ -16,94 +16,59 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   className?: string;
 }
 
-interface VariantColorConfig {
-  color: string;
-  bg: string;
-  border: string;
-}
+const getVariantBg = (variant: BadgeVariant): string => {
+  if (variant === 'measured') return '#78dbf6'; // cyan
+  if (variant === 'derived') return '#f364cb';  // pink
+  if (variant === 'scenario') return '#ffd23f'; // yellow
 
-const getVariantConfig = (variant: BadgeVariant, outline?: boolean): VariantColorConfig => {
-  // Provenance variants (measured / derived / scenario)
-  if (variant === 'measured' || variant === 'derived' || variant === 'scenario') {
-    const prov = provenanceColor[variant];
-    return {
-      color: prov.color,
-      bg: prov.bgAlpha,
-      border: `1px solid ${prov.color}`,
-    };
-  }
-
-  // General Status Variants
   switch (variant) {
     case 'success':
-      return {
-        color: 'var(--accent-neon-green, #10b981)',
-        bg: outline ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.18)',
-        border: outline ? '1px solid var(--accent-neon-green, #10b981)' : '1px solid rgba(16, 185, 129, 0.3)',
-      };
+      return '#82e66f'; // lime
     case 'warning':
-      return {
-        color: 'var(--accent-amber, #f59e0b)',
-        bg: outline ? 'rgba(245, 158, 11, 0.12)' : 'rgba(245, 158, 11, 0.18)',
-        border: outline ? '1px solid var(--accent-amber, #f59e0b)' : '1px solid rgba(245, 158, 11, 0.3)',
-      };
+      return '#ffd23f'; // yellow
     case 'danger':
-      return {
-        color: 'var(--accent-red, #ef4444)',
-        bg: outline ? 'rgba(239, 68, 68, 0.12)' : 'rgba(239, 68, 68, 0.18)',
-        border: outline ? '1px solid var(--accent-red, #ef4444)' : '1px solid rgba(239, 68, 68, 0.3)',
-      };
+      return '#f364cb'; // pink
     case 'info':
-      return {
-        color: 'var(--accent-cyan, #38bdf8)',
-        bg: outline ? 'rgba(56, 189, 248, 0.12)' : 'rgba(56, 189, 248, 0.18)',
-        border: outline ? '1px solid var(--accent-cyan, #38bdf8)' : '1px solid rgba(56, 189, 248, 0.3)',
-      };
+      return '#78dbf6'; // cyan
     case 'neutral':
     default:
-      return {
-        color: 'var(--text-secondary, #94a3b8)',
-        bg: outline ? 'rgba(148, 163, 184, 0.08)' : 'rgba(148, 163, 184, 0.14)',
-        border: outline ? '1px solid var(--text-secondary, #94a3b8)' : '1px solid rgba(148, 163, 184, 0.25)',
-      };
+      return '#e1e1d8'; // gray
   }
 };
 
 export const Badge: React.FC<BadgeProps> = ({
   variant = 'neutral',
-  outline,
+  outline = false,
   children,
   className = '',
   style,
   ...rest
 }) => {
-  const isProvenance = variant === 'measured' || variant === 'derived' || variant === 'scenario';
-  const effectiveOutline = outline ?? isProvenance;
-  const config = getVariantConfig(variant, effectiveOutline);
+  const bg = getVariantBg(variant);
 
   const badgeStyle: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.25rem',
-    padding: '0.15rem 0.55rem',
-    borderRadius: '9999px',
-    fontSize: '0.6875rem', // 11px
-    fontWeight: 600,
+    padding: '0.15rem 0.5rem',
+    borderRadius: '0px',
+    fontSize: '0.6875rem',
+    fontWeight: 700,
     lineHeight: '1rem',
     letterSpacing: '0.04em',
-    textTransform: isProvenance ? 'uppercase' : 'none',
-    fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
-    color: config.color,
-    backgroundColor: config.bg,
-    border: config.border,
+    textTransform: 'uppercase',
+    fontFamily: "'Space Grotesk', monospace",
+    color: '#000000',
+    backgroundColor: outline ? '#ffffff' : bg,
+    border: '2px solid #000000',
+    boxShadow: outline ? `2px 2px 0px #000000` : 'none',
     whiteSpace: 'nowrap',
-    transition: 'all var(--transition-fast, 150ms cubic-bezier(0.4, 0, 0.2, 1))',
     ...style,
   };
 
   return (
     <span
-      className={`adpilot-badge ${className}`.trim()}
+      className={`adpilot-badge brutal-badge ${className}`.trim()}
       style={badgeStyle}
       {...rest}
     >

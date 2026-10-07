@@ -15,21 +15,21 @@ export interface SSEEvent {
 // ─── Color maps ───────────────────────────────────────────────────────────────
 
 export const MODULE_COLORS: Record<SSEEvent['module'], string> = {
-  sentinel:      '#38bdf8', // cyan  — detection
-  investigator:  '#a855f7', // purple — investigation
-  guardian:      '#10b981', // green  — verification / safety
-  strategist:    '#f59e0b', // amber  — recommendation
-  policy:        '#64748b', // muted  — policy check
-  executor:      '#f97316', // orange — execution
-  learner:       '#06b6d4', // teal   — learning
-  orchestrator:  '#e2e8f0', // near-white — orchestrator
+  sentinel:      '#ffd23f', // yellow — detection
+  investigator:  '#78dbf6', // cyan   — investigation
+  guardian:      '#82e66f', // lime   — verification / safety
+  strategist:    '#f364cb', // pink   — recommendation
+  policy:        '#e1e1d8', // gray   — policy check
+  executor:      '#82e66f', // lime   — execution
+  learner:       '#78dbf6', // cyan   — learning
+  orchestrator:  '#e1e1d8', // gray   — orchestrator
 };
 
 export const SEVERITY_COLORS: Record<NonNullable<SSEEvent['severity']>, string> = {
-  info:    '#38bdf8',
-  success: '#10b981',
-  warning: '#f59e0b',
-  danger:  '#ef4444',
+  info:    '#78dbf6',
+  success: '#82e66f',
+  warning: '#ffd23f',
+  danger:  '#f364cb',
 };
 
 // ─── Helper: format ISO → HH:MM:SS ───────────────────────────────────────────
@@ -62,18 +62,20 @@ const FeedRow: React.FC<FeedRowProps> = ({ event, isNewest }) => {
         alignItems: 'center',
         gap: '0.5rem',
         padding: '0.45rem 0.5rem',
-        borderRadius: '0.375rem',
-        backgroundColor: isNewest ? 'rgba(255,255,255,0.04)' : 'transparent',
-        borderLeft: isNewest ? `2px solid ${sevColor}` : '2px solid transparent',
-        transition: 'all 300ms cubic-bezier(0.4,0,0.2,1)',
+        borderRadius: '0px',
+        backgroundColor: isNewest ? '#ffffff' : 'transparent',
+        borderBottom: '2px solid #000000',
+        borderLeft: isNewest ? '4px solid #82e66f' : '4px solid transparent',
+        transition: 'all 150ms ease',
       }}
     >
       {/* Timestamp */}
       <span
         style={{
-          fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
+          fontFamily: "'Space Grotesk', monospace",
           fontSize: '0.6875rem',
-          color: 'var(--text-muted, #64748b)',
+          fontWeight: 700,
+          color: '#4a4a46',
           whiteSpace: 'nowrap',
           letterSpacing: '0.02em',
         }}
@@ -86,16 +88,17 @@ const FeedRow: React.FC<FeedRowProps> = ({ event, isNewest }) => {
         style={{
           display: 'inline-flex',
           alignItems: 'center',
+          justifyContent: 'center',
           padding: '0.1rem 0.45rem',
-          borderRadius: '9999px',
+          borderRadius: '0px',
           fontSize: '0.625rem',
           fontWeight: 700,
           letterSpacing: '0.05em',
           textTransform: 'uppercase',
-          fontFamily: 'var(--font-mono, monospace)',
-          backgroundColor: `${modColor}1a`,
-          color: modColor,
-          border: `1px solid ${modColor}44`,
+          fontFamily: "'Space Grotesk', monospace",
+          backgroundColor: modColor,
+          color: '#000000',
+          border: '2px solid #000000',
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -106,16 +109,15 @@ const FeedRow: React.FC<FeedRowProps> = ({ event, isNewest }) => {
         {event.module}
       </span>
 
-      {/* Severity dot */}
+      {/* Severity dot (10px square) */}
       <span
         style={{
-          width: '7px',
-          height: '7px',
-          borderRadius: '50%',
+          width: '10px',
+          height: '10px',
+          borderRadius: '0px',
           backgroundColor: sevColor,
-          boxShadow: `0 0 6px ${sevColor}`,
+          border: '1.5px solid #000000',
           flexShrink: 0,
-          animation: isNewest ? 'status-pulse 1.8s ease-in-out infinite' : undefined,
         }}
         aria-hidden="true"
       />
@@ -124,12 +126,13 @@ const FeedRow: React.FC<FeedRowProps> = ({ event, isNewest }) => {
       <span
         style={{
           fontSize: '0.8125rem',
-          color: isNewest ? 'var(--text-primary, #f8fafc)' : 'var(--text-secondary, #94a3b8)',
+          fontWeight: isNewest ? 700 : 500,
+          color: '#000000',
           lineHeight: 1.4,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
-          transition: 'color 300ms ease',
+          fontFamily: "'Space Grotesk', system-ui, sans-serif",
         }}
         title={event.message}
       >
@@ -177,14 +180,18 @@ export const AgentFeed: React.FC<AgentFeedProps> = ({
       {visible.length === 0 ? (
         <div
           style={{
-            padding: '1.5rem',
+            padding: '2rem 1.5rem',
             textAlign: 'center',
             fontSize: '0.875rem',
-            color: 'var(--text-muted, #64748b)',
-            fontFamily: 'var(--font-mono, monospace)',
+            fontWeight: 700,
+            color: '#000000',
+            fontFamily: "'Space Grotesk', monospace",
+            textTransform: 'uppercase',
+            border: '3px dashed #000000',
+            backgroundColor: '#ffffff',
           }}
         >
-          Awaiting agent events…
+          AWAITING AGENT ACTIVITY
         </div>
       ) : (
         <div
@@ -192,16 +199,15 @@ export const AgentFeed: React.FC<AgentFeedProps> = ({
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: '2px',
+            gap: '0px',
             maxHeight: '380px',
             overflowY: 'auto',
             overflowX: 'hidden',
-            // Hide scrollbar cross-browser
+            border: '2px solid #000000',
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
           }}
         >
-          {/* Inline style for webkit scrollbar hide */}
           <style>{`.adpilot-agent-feed-scroll::-webkit-scrollbar { display: none; }`}</style>
 
           {visible.map((evt, idx) => (

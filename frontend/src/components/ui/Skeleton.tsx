@@ -10,32 +10,20 @@ export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
 export const Skeleton: React.FC<SkeletonProps> = ({
   width = '100%',
   height = '1rem',
-  rounded = true,
+  rounded = false,
   className = '',
   style,
   ...rest
 }) => {
-  const getBorderRadius = (): string => {
-    if (typeof rounded === 'number') {
-      return `${rounded}px`;
-    }
-    if (typeof rounded === 'string') {
-      if (rounded === 'full') return '9999px';
-      if (rounded === 'sm') return '0.25rem';
-      if (rounded === 'md') return '0.375rem';
-      if (rounded === 'lg') return '0.5rem';
-      if (rounded === 'xl') return 'var(--radius-xl, 0.875rem)';
-      return rounded;
-    }
-    return rounded ? 'var(--radius-xl, 0.875rem)' : '0px';
-  };
-
   const skeletonStyle: React.CSSProperties = {
     width: typeof width === 'number' ? `${width}px` : width,
     height: typeof height === 'number' ? `${height}px` : height,
-    borderRadius: getBorderRadius(),
+    borderRadius: '0px',
+    backgroundColor: '#e1e1d8',
+    border: '3px solid #000000',
     display: 'inline-block',
     verticalAlign: 'middle',
+    boxSizing: 'border-box',
     ...style,
   };
 

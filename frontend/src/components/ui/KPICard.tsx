@@ -110,7 +110,6 @@ const InlineSparkline: React.FC<InlineSparklineProps> = ({ data, color }) => {
   });
 
   const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-  const areaPath = `${linePath} L ${width - padX},${height} L ${padX},${height} Z`;
 
   return (
     <svg
@@ -120,27 +119,22 @@ const InlineSparkline: React.FC<InlineSparklineProps> = ({ data, color }) => {
       style={{ overflow: 'visible', display: 'block' }}
       aria-hidden="true"
     >
-      <defs>
-        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.35" />
-          <stop offset="100%" stopColor={color} stopOpacity="0.0" />
-        </linearGradient>
-      </defs>
-      <path d={areaPath} fill={`url(#${gradientId})`} />
       <path
         d={linePath}
         fill="none"
         stroke={color}
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        strokeWidth="2.5"
+        strokeLinecap="square"
+        strokeLinejoin="miter"
       />
       {points.length > 0 && (
         <circle
           cx={points[points.length - 1].x}
           cy={points[points.length - 1].y}
-          r="2.5"
-          fill={color}
+          r="3"
+          fill="#000000"
+          stroke={color}
+          strokeWidth="2"
         />
       )}
     </svg>
@@ -163,14 +157,14 @@ export const KPICard: React.FC<KPICardProps> = ({
   const isNegative = deltaPct !== undefined && deltaPct < 0;
 
   const trendColor = isPositive
-    ? 'var(--accent-neon-green, #10b981)'
+    ? '#82e66f' // lime
     : isNegative
-    ? 'var(--accent-red, #ef4444)'
-    : 'var(--accent-cyan, #38bdf8)';
+    ? '#f364cb' // pink
+    : '#78dbf6'; // cyan
 
   return (
     <Card
-      className={`adpilot-kpi-card ${className}`.trim()}
+      className={`adpilot-kpi-card brutal-card-hover ${className}`.trim()}
       {...cardProps}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
@@ -186,10 +180,11 @@ export const KPICard: React.FC<KPICardProps> = ({
           <span
             style={{
               fontSize: '0.8125rem',
-              fontWeight: 500,
-              color: 'var(--text-secondary, #94a3b8)',
-              letterSpacing: '0.01em',
+              fontWeight: 700,
+              color: '#4a4a46',
+              letterSpacing: '0.04em',
               textTransform: 'uppercase',
+              fontFamily: "'Space Grotesk', system-ui, sans-serif",
             }}
           >
             {label}
@@ -224,10 +219,10 @@ export const KPICard: React.FC<KPICardProps> = ({
             {unit && (
               <span
                 style={{
-                  fontSize: '1.125rem',
-                  fontWeight: 600,
-                  color: 'var(--text-secondary, #94a3b8)',
-                  fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
+                  fontSize: '1.25rem',
+                  fontWeight: 700,
+                  color: '#4a4a46',
+                  fontFamily: "'Space Grotesk', monospace",
                 }}
               >
                 {unit}
@@ -236,11 +231,12 @@ export const KPICard: React.FC<KPICardProps> = ({
             <span
               className="mono"
               style={{
-                fontSize: '1.875rem', // 30px
+                fontSize: '2.125rem',
                 fontWeight: 700,
                 lineHeight: 1.1,
-                color: 'var(--text-primary, #f8fafc)',
+                color: '#000000',
                 letterSpacing: '-0.02em',
+                fontFamily: "'Space Grotesk', system-ui, sans-serif",
               }}
             >
               {animatedValue}

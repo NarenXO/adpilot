@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { ThemeMode } from './tokens';
 
-const STORAGE_KEY = 'adpilot-theme';
-
 export interface ThemeContextValue {
   theme: ThemeMode;
   toggleTheme: () => void;
@@ -16,38 +14,21 @@ export interface ThemeProviderProps {
   defaultTheme?: ThemeMode;
 }
 
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({
-  children,
-  defaultTheme = 'dark',
-}) => {
-  const [theme, setThemeState] = useState<ThemeMode>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
-      if (stored === 'dark' || stored === 'light') {
-        return stored;
-      }
-    }
-    return defaultTheme;
-  });
+export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+  const [theme] = useState<ThemeMode>('invente');
 
   useEffect(() => {
     if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-theme', theme);
-      try {
-        localStorage.setItem(STORAGE_KEY, theme);
-      } catch (err) {
-        // Handle storage quota or privacy mode gracefully
-        console.warn('Unable to persist theme to localStorage', err);
-      }
+      document.documentElement.setAttribute('data-theme', 'invente');
     }
-  }, [theme]);
-
-  const toggleTheme = React.useCallback(() => {
-    setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
   }, []);
 
-  const setTheme = React.useCallback((newTheme: ThemeMode) => {
-    setThemeState(newTheme);
+  const toggleTheme = React.useCallback(() => {
+    // No-op for Invente '26 light-only theme
+  }, []);
+
+  const setTheme = React.useCallback(() => {
+    // No-op for Invente '26 light-only theme
   }, []);
 
   const value = useMemo(

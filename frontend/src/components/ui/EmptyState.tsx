@@ -24,39 +24,43 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     justifyContent: 'center',
     textAlign: 'center',
     padding: '3rem 2rem',
-    borderRadius: 'var(--radius-xl, 0.875rem)',
-    border: '1px dashed var(--card-border, #1e293b)',
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
-    color: 'var(--text-secondary, #94a3b8)',
+    borderRadius: '0px',
+    border: '3px dashed #000000',
+    backgroundColor: '#ffffff',
+    color: '#000000',
     maxWidth: '480px',
     margin: '0 auto',
     width: '100%',
     boxSizing: 'border-box',
+    fontFamily: "'Space Grotesk', system-ui, sans-serif",
     ...style,
   };
 
   const iconWrapperStyle: React.CSSProperties = {
     width: '48px',
     height: '48px',
-    borderRadius: '50%',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: '0px',
+    backgroundColor: '#ffd23f',
+    border: '3px solid #000000',
+    boxShadow: '3px 3px 0px #000000',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: 'var(--text-muted, #64748b)',
+    color: '#000000',
     marginBottom: '1rem',
   };
 
   const titleStyle: React.CSSProperties = {
     fontSize: '1rem',
-    fontWeight: 600,
-    color: 'var(--text-primary, #f8fafc)',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    color: '#000000',
     marginBottom: '0.5rem',
   };
 
   const descriptionStyle: React.CSSProperties = {
     fontSize: '0.875rem',
-    color: 'var(--text-secondary, #94a3b8)',
+    color: '#4a4a46',
     lineHeight: 1.5,
     marginBottom: action ? '1.25rem' : '0',
     maxWidth: '360px',
@@ -64,7 +68,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
   return (
     <div
-      className={`adpilot-empty-state ${className}`.trim()}
+      className={`adpilot-empty-state brutal-card ${className}`.trim()}
       style={containerStyle}
       {...rest}
     >
@@ -78,9 +82,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            strokeWidth="2.5"
+            strokeLinecap="square"
+            strokeLinejoin="miter"
           >
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
