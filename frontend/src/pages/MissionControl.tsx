@@ -116,12 +116,13 @@ const STATUS_CONFIG: Record<Incident['status'], { statusType: 'safe' | 'warning'
 
 export const MissionControl: React.FC = () => {
   // TODO: wire to global Zustand store in Phase 3 (Naren's store/)
+  const [incidents, setIncidents] = useState<Incident[]>([...MOCK_INCIDENTS]);
   const [events, setEvents] = useState<SSEEvent[]>([...MOCK_SSE_EVENTS]);
   const [sseIndex, setSseIndex] = useState<number>(0);
 
   // Inject modal state
   const [showInjectModal, setShowInjectModal] = useState<boolean>(false);
-  const [selectedInjectType, setSelectedInjectType] = useState<string>(INJECT_TYPES[0].id);
+  const [selectedInjectType, setSelectedInjectType] = useState<string>('creative_fatigue');
 
   // TODO: replace with real EventSource in Checkpoint 2
   useEffect(() => {
@@ -151,8 +152,108 @@ export const MissionControl: React.FC = () => {
   }, [showInjectModal]);
 
   const handleConfirmInject = useCallback(() => {
-    // TODO: POST /api/sim/inject in Checkpoint 2
-    console.log('[MissionControl] Inject incident:', selectedInjectType);
+    const randomId = 'INC-' + Math.floor(100 + Math.random() * 900);
+    const nowIso = new Date().toISOString();
+
+    let newIncident: Incident;
+    let newEvent: SSEEvent;
+
+    switch (selectedInjectType) {
+      case 'stockout':
+        newIncident = {
+          id: randomId,
+          metric: 'CVR',
+          scope: 'sku_SKU-042',
+          direction: 'down',
+          magnitude_pct: -100.0,
+          confidence: 0.98,
+          severity: 'critical',
+          status: 'investigating',
+        };
+        newEvent = {
+          ts: nowIso,
+          type: 'detection',
+          module: 'sentinel',
+          message: 'Synthetic trigger: Stockout injected on SKU-042 (0 units remaining)',
+          severity: 'danger',
+        };
+        break;
+
+      case 'tracking_break':
+        newIncident = {
+          id: randomId,
+          metric: 'CVR',
+          scope: 'camp_google_07',
+          direction: 'down',
+          magnitude_pct: -40.0,
+          confidence: 0.89,
+          severity: 'high',
+          status: 'investigating',
+        };
+        newEvent = {
+          ts: nowIso,
+          type: 'detection',
+          module: 'sentinel',
+          message: 'Synthetic trigger: Tracking break injected on camp_google_07 (-40% gap)',
+          severity: 'warning',
+        };
+        break;
+
+      case 'margin_squeeze':
+        newIncident = {
+          id: randomId,
+          metric: 'Margin',
+          scope: 'sku_SKU-018',
+          direction: 'down',
+          magnitude_pct: -12.0,
+          confidence: 0.85,
+          severity: 'medium',
+          status: 'investigating',
+        };
+        newEvent = {
+          ts: nowIso,
+          type: 'detection',
+          module: 'sentinel',
+          message: 'Synthetic trigger: Margin squeeze injected on SKU-018 (+12% COGS)',
+          severity: 'warning',
+        };
+        break;
+
+      case 'creative_fatigue':
+      default:
+        newIncident = {
+          id: randomId,
+          metric: 'CTR',
+          scope: 'camp_meta_03',
+          direction: 'down',
+          magnitude_pct: -32.4,
+          confidence: 0.91,
+          severity: 'high',
+          status: 'investigating',
+        };
+        newEvent = {
+          ts: nowIso,
+          type: 'detection',
+          module: 'sentinel',
+          message: 'Synthetic trigger: CTR anomaly injected on camp_meta_03 (-32.4%)',
+          severity: 'warning',
+        };
+        break;
+    }
+
+    // Prepend new incident to state
+    setIncidents((prev) => [newIncident, ...prev]);
+
+    // Push new event to top of agent feed
+    setEvents((prev) => [newEvent, ...prev].slice(0, 8));
+
+    // Try real API, fallback to local mock state
+    fetch('/api/sim/inject', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: selectedInjectType }),
+    }).catch(() => {});
+
     setShowInjectModal(false);
   }, [selectedInjectType]);
 
@@ -271,12 +372,12 @@ export const MissionControl: React.FC = () => {
           title="Active Incidents"
           action={
             <Badge variant="warning" style={{ fontSize: '0.625rem' }}>
-              {MOCK_INCIDENTS.filter((i) => i.status !== 'resolved').length} open
+              {incidents.filter((i) => i.status !== 'resolved').length} open
             </Badge>
           }
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {MOCK_INCIDENTS.map((inc) => {
+            {incidents.map((inc) => {
               const sev = SEVERITY_CONFIG[inc.severity];
               const statusCfg = STATUS_CONFIG[inc.status];
               const dirSign = inc.direction === 'up' ? '+' : '';
