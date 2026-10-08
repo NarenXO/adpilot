@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { KPICard } from '../components/ui/KPICard';
@@ -6,22 +6,12 @@ import { Button } from '../components/ui/Button';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { Badge } from '../components/ui/Badge';
 import { RiskGauge } from '../components/ui/RiskGauge';
-import { AgentFeed } from '../components/ui/AgentFeed';
-import type { SSEEvent } from '../components/ui/AgentFeed';
 import { useAppState } from '../context/AppStateContext';
-
-const MOCK_SSE_EVENTS: SSEEvent[] = [
-  { ts: new Date().toISOString(), type: 'detection', module: 'sentinel', message: 'CTR anomaly detected on Meta Summer Promo (-32.4%, conf 0.91)', severity: 'warning' },
-  { ts: new Date().toISOString(), type: 'investigation', module: 'investigator', message: 'Executing creative_breakdown via Ollama Qwen2.5', severity: 'info' },
-  { ts: new Date().toISOString(), type: 'verification', module: 'guardian', message: 'Verified math claim vs DuckDB warehouse: PASS', severity: 'success' },
-  { ts: new Date().toISOString(), type: 'recommendation', module: 'strategist', message: 'Recommendation: shift ₹1,20,000/day to Google Ads', severity: 'info' },
-];
 
 export const MissionControl: React.FC = () => {
   const navigate = useNavigate();
   const { appState, toggleAutonomy, injectAnomaly } = useAppState();
 
-  const [liveEvents, setLiveEvents] = useState<SSEEvent[]>(MOCK_SSE_EVENTS);
   const [showInjectModal, setShowInjectModal] = useState<boolean>(false);
   const [showDatasetModal, setShowDatasetModal] = useState<boolean>(false);
   const [selectedIncidentType, setSelectedIncidentType] = useState<string>('creative_fatigue');
@@ -30,14 +20,6 @@ export const MissionControl: React.FC = () => {
 
   const handleInjectIncident = () => {
     injectAnomaly(selectedIncidentType);
-    const newEvent: SSEEvent = {
-      ts: new Date().toISOString(),
-      type: 'detection',
-      module: 'sentinel',
-      message: `Synthetic Injection: ${selectedIncidentType.replace('_', ' ')} detected.`,
-      severity: 'danger',
-    };
-    setLiveEvents((prev) => [newEvent, ...prev].slice(0, 8));
     setShowInjectModal(false);
   };
 
@@ -50,23 +32,16 @@ export const MissionControl: React.FC = () => {
         width: '100%',
         boxSizing: 'border-box',
         fontFamily: "'Space Grotesk', system-ui, sans-serif",
-        backgroundColor: '#f3f3ed', // Very light brutalist background
-        minHeight: '100vh',
-        padding: '1.5rem'
+        padding: '2rem'
       }}
     >
-      {/* ── Page heading ────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.02em', color: '#000000', margin: 0 }}>
             Mission Control
           </h1>
           <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: '#000000', fontWeight: 600 }}>
-            SIM DATE:{' '}
-            <span style={{ fontFamily: "'Space Grotesk', monospace", color: '#000000', backgroundColor: '#78dbf6', padding: '0.1rem 0.4rem', border: '2px solid #000' }}>
-              {appState.sim_date}
-            </span>
-            {' '}·{' '}REAL-TIME AD OPERATIONS COMMAND CENTER
+            REAL-TIME AD OPERATIONS COMMAND CENTER
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -79,27 +54,30 @@ export const MissionControl: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Visual Pipeline Indicator (Closed Loop) ─────────────────────── */}
+      {/* Visual Pipeline Indicator (Closed Loop) */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', padding: '1rem 2rem', border: '3px solid #000', boxShadow: '5px 5px 0px #000' }}>
         {[
-          { label: 'SEE', desc: 'Sentinel detects anomaly', color: '#f364cb' },
-          { label: 'WHY', desc: 'Investigator finds root cause', color: '#ffd23f' },
-          { label: 'DECIDE', desc: 'Strategist reallocates budget', color: '#78dbf6' },
-          { label: 'PROVE', desc: 'Learner verifies ROI lift', color: '#82e66f' }
-        ].map((stage, i) => (
-          <React.Fragment key={stage.label}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', flex: 1 }}>
-              <div style={{ padding: '0.25rem 1rem', backgroundColor: stage.color, border: '2px solid #000', fontWeight: 800, fontSize: '0.875rem' }}>
-                {i + 1}. {stage.label}
+          { label: 'SEE', desc: 'Sentinel detects anomaly', color: '#f364cb', stageIndex: 1 },
+          { label: 'WHY', desc: 'Investigator finds root cause', color: '#ffd23f', stageIndex: 2 },
+          { label: 'DECIDE', desc: 'Strategist reallocates budget', color: '#78dbf6', stageIndex: 3 },
+          { label: 'PROVE', desc: 'Learner verifies ROI lift', color: '#82e66f', stageIndex: 4 }
+        ].map((stage, i) => {
+          const isActive = appState.pipeline_stage === stage.stageIndex;
+          return (
+            <React.Fragment key={stage.label}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', flex: 1, opacity: isActive ? 1 : 0.4 }}>
+                <div style={{ padding: '0.25rem 1rem', backgroundColor: stage.color, border: '2px solid #000', fontWeight: 800, fontSize: '0.875rem', boxShadow: isActive ? '3px 3px 0 #000' : 'none' }}>
+                  {i + 1}. {stage.label}
+                </div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#000' }}>{stage.desc}</span>
               </div>
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#000' }}>{stage.desc}</span>
-            </div>
-            {i < 3 && <div style={{ height: '4px', width: '40px', backgroundColor: '#000' }} />}
-          </React.Fragment>
-        ))}
+              {i < 3 && <div style={{ height: '4px', width: '40px', backgroundColor: '#000', opacity: 0.4 }} />}
+            </React.Fragment>
+          );
+        })}
       </div>
 
-      {/* ── Brutalist AI Explanation ────────────────────────────────────── */}
+      {/* Brutalist AI Explanation */}
       <div style={{ backgroundColor: '#ffffff', border: '3px solid #000', boxShadow: '5px 5px 0px #000', padding: '1.25rem' }}>
         <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: 800, textTransform: 'uppercase' }}>
           🧠 AI Operations Brief ({appState.sim_date})
@@ -116,15 +94,15 @@ export const MissionControl: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Row 1: 4-up KPI Cards ───────────────────────────────────────── */}
+      {/* Row 1: 4-up KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem' }}>
         {appState.kpis.map((kpi) => (
           <KPICard key={kpi.label} label={kpi.label} value={kpi.value} unit={kpi.unit} deltaPct={kpi.delta_pct} sparklineData={kpi.sparkline} />
         ))}
       </div>
 
-      {/* ── Row 2: Autonomy | Risk Gauge | Active Incidents ─────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', alignItems: 'start' }}>
+      {/* Row 2: Autonomy | Agent Feed | Active Incidents */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
         <Card title="Autonomy Level">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -138,24 +116,31 @@ export const MissionControl: React.FC = () => {
                 : <><strong style={{ backgroundColor: '#ffd23f', padding: '0 4px', border: '1px solid #000' }}>Supervised</strong> active. Human approval required.</>
               }
             </p>
+            <RiskGauge usedPct={appState.risk_budget.used_pct} capPct={appState.risk_budget.cap_pct} size={150} label="Spend at Risk" />
             <Button variant={isAutopilot ? 'secondary' : 'primary'} size="sm" onClick={toggleAutonomy}>
               Switch to {isAutopilot ? 'Supervised' : 'Autopilot'}
             </Button>
           </div>
         </Card>
 
-        <Card title="Daily Risk Budget">
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-            <RiskGauge usedPct={appState.risk_budget.used_pct} capPct={appState.risk_budget.cap_pct} size={150} label="Spend at Risk" />
-            <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, textAlign: 'center', textTransform: 'uppercase' }}>
-              Daily budget safely consumed.
-            </p>
+        <Card title="Live Agent Feed">
+          <div style={{ backgroundColor: '#111', color: '#00ff66', fontFamily: 'monospace', padding: '1rem', border: '2px solid #000', height: '280px', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.75rem' }}>
+              {appState.agent_feed.map((ev, idx) => (
+                <div key={idx} style={{ opacity: idx === 0 ? 1 : 0.7 }}>
+                  <span style={{ color: '#888' }}>[{ev.ts}]</span>
+                  <span style={{ color: '#78dbf6', fontWeight: 'bold', margin: '0 0.5rem' }}>[{ev.module.toUpperCase()}]</span>
+                  <span style={{ color: ev.severity === 'danger' ? '#f364cb' : ev.severity === 'warning' ? '#ffd23f' : ev.severity === 'success' ? '#82e66f' : '#00ff66' }}>
+                    {ev.message}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </Card>
 
         <Card title="Anomaly Radar" action={<Badge variant="warning">{appState.active_incidents.length} OPEN</Badge>}>
-          {/* MAX HEIGHT & OVERFLOW FIX FOR RADAR */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', maxHeight: '200px', overflowY: 'auto', paddingRight: '4px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', maxHeight: '280px', overflowY: 'auto', paddingRight: '4px' }}>
             {appState.active_incidents.map((inc) => (
               <div
                 key={inc.id}
@@ -180,7 +165,6 @@ export const MissionControl: React.FC = () => {
         </Card>
       </div>
 
-      {/* ── Dataset Modal ─────────────────────────────────────────────── */}
       {showDatasetModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
           <div style={{ backgroundColor: '#ffffff', border: '3px solid #000', boxShadow: '8px 8px 0px #000', padding: '1.5rem', width: '100%', maxWidth: '600px' }}>
@@ -195,7 +179,6 @@ export const MissionControl: React.FC = () => {
         </div>
       )}
 
-      {/* ── Inject Incident Modal ────────────────────────────────────────── */}
       {showInjectModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
           <div style={{ backgroundColor: '#ffffff', border: '3px solid #000000', boxShadow: '8px 8px 0px #000000', padding: '1.75rem', maxWidth: '440px', width: '100%', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
